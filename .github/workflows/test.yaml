@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+    pull_request:
+        branches: [main, develop]
+
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        if: contains(github.event.pull_request.labels.*.name, 'release') == false
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version-file: '.python-version'
+
+            - name: Install uv and dependencies
+              run: |
+                  curl -LsSf https://astral.sh/uv/install.sh | sh
+                  uv sync --no-dev --group=test
+
+            - name: Run pytest
+              run: uv run pytest --cov --cov-report=xml -v

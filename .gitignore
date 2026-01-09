@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[cod]
+*.py[oc]
+*$py.class
+build/
+dist/
+wheels/
+*.egg-info
+
+# C extensions
+*.so
+
+# Unit test / coverage reports
+.coverage
+.coverage.*
+.pytest_cache/
+coverage.xml
+
+# Linters and formatters
+.ruff_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv
+.DS_Store
+desktop.ini
+thumbs.db
