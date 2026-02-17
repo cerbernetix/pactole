@@ -16,6 +16,8 @@ __all__ = [
     "CombinationValues",
     "CombinationWinningPattern",
     "CombinationWinningRanks",
+    "EuroDreamsCombination",
+    "EuroMillionsCombination",
     "get_combination_from_rank",
     "get_combination_rank",
     "LotteryCombination",
@@ -36,6 +38,8 @@ from .combination import (
     get_combination_from_rank,
     get_combination_rank,
 )
+from .eurodreams_combination import EuroDreamsCombination
+from .euromillions_combination import EuroMillionsCombination
 from .lottery_combination import (
     CombinationComponents,
     CombinationFactory,
