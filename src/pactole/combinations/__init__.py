@@ -1,6 +1,7 @@
 """Combinations package."""
 
 __all__ = [
+    "BoundCombination",
     "comb",
     "Combination",
     "CombinationInput",
@@ -16,6 +17,7 @@ __all__ = [
 ]
 
 from .combination import (
+    BoundCombination,
     Combination,
     CombinationInput,
     CombinationInputOrRank,

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import random
 from functools import cache, cached_property
+from math import ceil
 from math import comb as math_comb
 from typing import Iterable, Iterator, TypedDict
 
 DEFAULT_START = 1
+DEFAULT_END = 50
+DEFAULT_COUNT = 5
 
 CombinationRank = int
 CombinationNumber = int
@@ -522,3 +526,230 @@ class CombinationInputWithRank(TypedDict):
 CombinationInputValues = CombinationNumbers | Combination
 CombinationInput = CombinationRank | CombinationInputValues
 CombinationInputOrRank = CombinationInput | CombinationInputWithRank
+
+
+class BoundCombination(Combination):
+    """A class representing a bound combination of values.
+
+    Args:
+        values (CombinationInputOrRank | None): The values of the combination.
+            If an integer is provided, it is treated as the lexicographic rank of the combination.
+        rank (CombinationRank | None, optional): The lexicographic rank of the combination.
+            If not provided, it will be calculated on demand from the values. Defaults to None.
+        start (int | None): The start value of the combination range. Defaults to DEFAULT_START.
+        end (int | None): The end value of the combination range. Defaults to DEFAULT_END.
+        count (int | None): The count of numbers in the combination. Defaults to DEFAULT_COUNT.
+        combinations (int | None): The total number of possible combinations. If not provided,
+            it is calculated based on the start, end, and count.
+
+    Examples:
+        >>> bound_comb = BoundCombination(values=10, start=1, end=50, count=5)
+        >>> bound_comb.values
+        [2, 3, 4, 5, 7]
+        >>> bound_comb.end
+        50
+        >>> bound_comb.count
+        5
+        >>> bound_comb.combinations
+        2118760
+    """
+
+    _end: int
+    _count: int
+    _combinations: int
+
+    def __init__(
+        self,
+        values: CombinationInputOrRank | None = None,
+        rank: CombinationRank | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        count: int | None = None,
+        combinations: int | None = None,
+    ) -> None:
+        if start is None:
+            start = DEFAULT_START
+        if end is None:
+            end = DEFAULT_END
+        if count is None:
+            count = DEFAULT_COUNT
+        if combinations is None:
+            combinations = comb(end - start + 1, count)
+
+        if isinstance(values, dict):
+            rank = values.get("rank") if rank is None else rank
+            values = values.get("values")
+
+        if isinstance(values, Combination):
+            rank = values._rank if rank is None else rank
+            values = values.get_values(start)
+        elif isinstance(values, int):
+            rank = rank if rank is not None else values
+            values = get_combination_from_rank(values, length=count, offset=start)
+        elif not values:
+            if rank is not None:
+                values = get_combination_from_rank(rank, length=count, offset=start)
+            else:
+                values = []
+                rank = None
+        values = [min(max(value, start), end) for value in list(values)[:count]]
+
+        super().__init__(values=values, rank=rank, start=start)
+        self._end = end
+        self._count = count
+        self._combinations = combinations
+
+    @property
+    def end(self) -> int:
+        """Return the end value of the combination range.
+
+        Returns:
+            int: The end value.
+
+        Examples:
+            >>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+            >>> bound_comb.end
+            50
+        """
+        return self._end
+
+    @property
+    def count(self) -> int:
+        """Return the count of numbers in the combination.
+
+        Returns:
+            int: The count of numbers.
+
+        Examples:
+            >>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+            >>> bound_comb.count
+            5
+        """
+        return self._count
+
+    @property
+    def combinations(self) -> int:
+        """Return the total number of possible combinations.
+
+        Returns:
+            int: The total number of combinations.
+
+        Examples:
+            >>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+            >>> bound_comb.combinations
+            2118760
+        """
+        return self._combinations
+
+    def generate(self, n: int = 1, partitions: int = 1) -> list[BoundCombination]:
+        """Generate a list of random combinations within the bounds.
+
+        Args:
+            n (int): The number of combinations to generate. Defaults to 1.
+            partitions (int): The number of partitions to divide the range into for generation.
+                Defaults to 1.
+
+        Returns:
+            list[BoundCombination]: A list of randomly generated combinations.
+
+        Examples:
+            >>> bound_comb = BoundCombination(start=1, end=50, count=5)
+            >>> random_combs = bound_comb.generate()
+            >>> len(random_combs)
+            1
+            >>> random_combs[0].values
+            [3, 15, 22, 34, 45]
+        """
+        n = max(1, n)
+        partitions = max(1, partitions)
+        combinations = self.combinations
+        partition = ceil(combinations / partitions)
+
+        return [
+            self.copy(
+                values=random.randint(
+                    partition * (i % partitions),
+                    min(partition * (i % partitions + 1) - 1, combinations - 1),
+                )
+            )
+            for i in range(n)
+        ]
+
+    def copy(
+        self,
+        values: CombinationInputOrRank | None = None,
+        rank: CombinationRank | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        count: int | None = None,
+        combinations: int | None = None,
+    ) -> BoundCombination:
+        """Return a copy of the BoundCombination with optional modifications.
+
+        Args:
+            values (CombinationInputOrRank | None): The values of the combination.
+                If an integer is provided, it is treated as the lexicographic rank of the
+                combination. If None, the current values are used. Defaults to None.
+            rank (CombinationRank | None, optional): The lexicographic rank of the combination. If
+                not provided, it will be calculated on demand from the values. Defaults to None.
+            start (int | None): The start value of the combination range. If None, the current start
+                is used. Defaults to None.
+            end (int | None): The end value of the combination range. If None, the current end is
+                used. Defaults to None.
+            count (int | None): The count of numbers in the combination. If None, the current count
+                is used. Defaults to None.
+            combinations (int | None): The total number of possible combinations. If None, the
+                current combinations are used. Defaults to None.
+
+        Returns:
+            BoundCombination: A new BoundCombination instance with the specified modifications.
+
+        Examples:
+            >>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+            >>> new_comb = bound_comb.copy(values=15)
+            >>> new_comb.values
+             [1, 2, 5, 6, 7]
+        """
+        if start is None:
+            start = self._start
+        if end is None:
+            end = self._end
+        if count is None:
+            count = self._count
+        if (
+            combinations is None
+            and start == self._start
+            and end == self._end
+            and count == self._count
+        ):
+            combinations = self._combinations
+        if values is None:
+            values = self.get_values(start)
+            rank = self._rank if self._rank is not None else rank
+
+        return BoundCombination(
+            values=values,
+            rank=rank,
+            start=start,
+            end=end,
+            count=count,
+            combinations=combinations,
+        )
+
+    def __str__(self) -> str:
+        n = len(str(self._end))
+        sep = ", "
+        width = n * self.count + (self.count - 1) * len(sep)
+        return f"[{sep.join(f'{value:>{n}}' for value in self.values).rjust(width)}]"
+
+    def __repr__(self) -> str:
+        return (
+            "BoundCombination("
+            f"values={self.values}, "
+            f"rank={self._rank}, "
+            f"start={self._start}, "
+            f"end={self._end}, "
+            f"count={self._count}, "
+            f"combinations={self._combinations}"
+            ")"
+        )
