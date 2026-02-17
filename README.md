@@ -4,17 +4,25 @@ A Python library for managing lottery results.
 
 ## Installation
 
-To add `pactole` to your project:
+Add `pactole` to your project:
 
 ```sh
 pip install -U pactole
 ```
 
-or better, with `uv`:
+Or with `uv`:
 
 ```sh
 uv add -U pactole
 ```
+
+## Documentation
+
+See the complete documentation index: [Documentation](./docs/README.md).
+
+## Requirements
+
+Requires **`Python 3`** (version `3.10` or newer).
 
 ## Usage
 
@@ -22,49 +30,38 @@ uv add -U pactole
 import pactole
 ```
 
-## Requirements
+### EuroMillions combinations
 
-The application is written in **`Python 3`** and requires version `3.10`.
+```python
+from pactole import EuroMillionsCombination
 
-In source code, dependencies are managed by [`uv`](https://docs.astral.sh/uv/).
+# Build a known combination
+euro_millions = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
 
-## Installation from sources
+print(euro_millions.numbers.values)
+print(euro_millions.stars.values)
+print(euro_millions.rank)
 
-For getting the last unstable version, the package needs to be installed from the source code. The following command will grab the last develop version:
-
-- HTTP
-    ```sh
-    pip install --upgrade git+https://github.com/cerbernetix/pactole.git@develop
-    ```
-- SSH
-    ```sh
-    pip install --upgrade git+ssh://git@github.com/cerbernetix/pactole.git@develop
-    ```
-
-or better, with `uv`:
-
-- HTTP:
-    ```sh
-    uv add -U git+https://github.com/cerbernetix/pactole.git@develop
-    ```
-- SSH
-    ```sh
-    uv add -U git+ssh://git@github.com/cerbernetix/pactole.git@develop
-    ```
-
-## Development
-
-Check out the repository:
-
-```sh
-git clone git@github.com:cerbernetix/pactole.git
+# Generate 3 random combinations
+combinations = EuroMillionsCombination().generate(3)
+print(combinations)
 ```
 
-Then, create the virtual env and install the dependencies:
+### EuroDreams combinations
 
-```sh
-cd pactole
-uv sync
+```python
+from pactole import EuroDreamsCombination
+
+# Build a known combination
+euro_dreams = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+
+print(euro_dreams.numbers.values)
+print(euro_dreams.dream.values)
+print(euro_dreams.rank)
+
+# Generate 3 random combinations
+combinations = EuroDreamsCombination().generate(3)
+print(combinations)
 ```
 
 ## License

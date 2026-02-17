@@ -9,4 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--   Basic structure
+- Initial project structure.
+- Implemented combination classes: `Combination`, `BoundCombination`, `LotteryCombination`,
+  `EuroMillionsCombination`, and `EuroDreamsCombination`.
