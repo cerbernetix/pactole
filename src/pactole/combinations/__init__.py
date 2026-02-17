@@ -4,6 +4,8 @@ __all__ = [
     "BoundCombination",
     "comb",
     "Combination",
+    "CombinationComponents",
+    "CombinationFactory",
     "CombinationInput",
     "CombinationInputOrRank",
     "CombinationInputValues",
@@ -12,8 +14,11 @@ __all__ = [
     "CombinationNumbers",
     "CombinationRank",
     "CombinationValues",
+    "CombinationWinningPattern",
+    "CombinationWinningRanks",
     "get_combination_from_rank",
     "get_combination_rank",
+    "LotteryCombination",
 ]
 
 from .combination import (
@@ -30,4 +35,11 @@ from .combination import (
     comb,
     get_combination_from_rank,
     get_combination_rank,
+)
+from .lottery_combination import (
+    CombinationComponents,
+    CombinationFactory,
+    CombinationWinningPattern,
+    CombinationWinningRanks,
+    LotteryCombination,
 )
