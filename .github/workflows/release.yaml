@@ -12,7 +12,7 @@ permissions:
     id-token: write
 
 jobs:
-    merge_pull_request:
+    generate_documentation:
         if: >-
             contains(github.event.pull_request.labels.*.name, 'release') &&
             github.event.pull_request.head.repo.full_name == github.repository
@@ -45,12 +45,39 @@ jobs:
               run: uv run doc
 
             - name: Commit API documentation updates
+              id: commit_docs
               run: |
                   git add docs/
-                  git commit -m "doc: update API documentation [ci skip]" || echo "No changes to commit"
+                  if git diff --cached --quiet; then
+                      echo "No documentation changes to commit"
+                      echo "committed=false" >> "$GITHUB_OUTPUT"
+                  else
+                      git commit -m "doc: update API documentation [ci skip]"
+                      echo "committed=true" >> "$GITHUB_OUTPUT"
+                  fi
 
             - name: Push changes to release branch
+              if: steps.commit_docs.outputs.committed == 'true'
               run: git push origin "${{ github.event.pull_request.head.ref }}"
+
+    build_and_publish:
+        needs: generate_documentation
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.pull_request.head.ref }}
+                  fetch-depth: 0
+                  fetch-tags: true
+
+            - name: Setup Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version-file: '.python-version'
+
+            - name: Setup uv
+              uses: astral-sh/setup-uv@v7
 
             - name: Install production dependencies
               run: uv sync --no-dev
@@ -60,6 +87,22 @@ jobs:
 
             - name: Publish release on PyPI
               run: uv publish
+
+    merge_tag_and_release:
+        needs: build_and_publish
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.pull_request.head.ref }}
+                  fetch-depth: 0
+                  fetch-tags: true
+
+            - name: Configure git
+              run: |
+                  git config user.name "github-actions"
+                  git config user.email "github-actions@github.com"
 
             - name: Automerge pull request
               env:
