@@ -15,6 +15,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+doc = "scripts.generate_docs:main"
+
 [project.urls]
 "Homepage" = "https://github.com/cerbernetix/pactole"
 "Bug Tracker" = "https://github.com/cerbernetix/pactole/issues"
