@@ -2,7 +2,8 @@
 
 __all__ = [
     "Day",
+    "DrawDays",
     "Weekday",
 ]
 
-from .days import Day, Weekday
+from .days import Day, DrawDays, Weekday

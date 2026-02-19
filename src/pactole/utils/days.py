@@ -617,3 +617,103 @@ class Weekday(Enum):
             )
 
         return from_date
+
+
+class DrawDays:
+    """Utility class to handle lottery draw days.
+
+    Args:
+        days (Iterable[Day | Weekday]): An iterable of Day or Weekday representing draw days.
+
+    Examples:
+        >>> draw_days = DrawDays([Weekday.MONDAY, Weekday.THURSDAY])
+        >>> draw_days.get_last_draw_date(date(2024, 6, 5))
+        datetime.date(2024, 6, 3)
+        >>> draw_days.get_next_draw_date(date(2024, 6, 5))
+        datetime.date(2024, 6, 6)
+    """
+
+    _days: tuple[Weekday, ...]
+
+    def __init__(self, days: Iterable[Day | Weekday]) -> None:
+        self._days = tuple(Weekday.get_day(day) for day in days)
+
+    @property
+    def days(self) -> tuple[Weekday, ...]:
+        """Return the draw days.
+
+        Returns:
+            tuple[Weekday, ...]: The draw days.
+
+        Examples:
+            >>> draw_days = DrawDays([Weekday.MONDAY, Weekday.THURSDAY])
+            >>> draw_days.days
+            (Weekday.MONDAY, Weekday.THURSDAY)
+        """
+        return self._days
+
+    def get_last_draw_date(
+        self,
+        from_date: Day | Weekday | None = None,
+        closest: bool = True,
+    ) -> date:
+        """Return the date of the last lottery draw.
+
+        Args:
+            from_date (Day | Weekday | None, optional): The starting date.
+
+                A timestamp can be provided as an integer or float representing
+                seconds since the epoch. When a string is provided, it must be in the ISO format
+                'YYYY-MM-DD'. Finally, a date object can be provided directly.
+
+                Defaults to None.
+
+        Returns:
+            date: The date of the last lottery draw.
+
+        Raises:
+            TypeError: If the provided date is not a string, timestamp, or date object.
+            ValueError: If the string is not a valid date in ISO format.
+
+        Examples:
+            >>> draw_days = DrawDays([Weekday.MONDAY, Weekday.THURSDAY])
+            >>> draw_days.get_last_draw_date(date(2024, 6, 5))
+            datetime.date(2024, 6, 3)
+        """
+        day = Weekday.get_day(from_date)
+        if not closest or day not in self._days:
+            day = day.previous(self._days)
+        return day.previous_date(from_date, closest=closest)
+
+    def get_next_draw_date(
+        self,
+        from_date: Day | Weekday | None = None,
+        closest: bool = True,
+    ) -> date:
+        """Return the date of the next lottery draw.
+
+        Args:
+            from_date (Day | Weekday | None, optional): The starting date.
+
+                A timestamp can be provided as an integer or float representing
+                seconds since the epoch. When a string is provided, it must be in the ISO format
+                'YYYY-MM-DD'. Finally, a date object can be provided directly.
+
+                Defaults to None.
+
+        Returns:
+            date: The date of the next lottery draw.
+
+        Raises:
+            TypeError: If the provided date is not a string, timestamp, or date object.
+            ValueError: If the string is not a valid date in ISO format.
+
+        Examples:
+            >>> draw_days = DrawDays([Weekday.MONDAY, Weekday.THURSDAY])
+            >>> draw_days.get_next_draw_date(date(2024, 6, 5))
+            datetime.date(2024, 6, 6)
+        """
+        day = Weekday.get_day(from_date)
+        if not closest or day not in self._days:
+            day = day.next(self._days)
+        return day.next_date(from_date, closest=closest)
