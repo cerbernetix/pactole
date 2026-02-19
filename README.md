@@ -30,37 +30,53 @@ Requires **`Python 3`** (version `3.10` or newer).
 import pactole
 ```
 
-### EuroMillions combinations
+### EuroMillions lottery
 
 ```python
-from pactole import EuroMillionsCombination
+from datetime import date
 
-# Build a known combination
-euro_millions = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+from pactole import EuroMillions
 
-print(euro_millions.numbers.values)
-print(euro_millions.stars.values)
-print(euro_millions.rank)
+lottery = EuroMillions()
+
+# Build a known ticket
+ticket = lottery.get_combination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+print(lottery.draw_days.days)
+print(lottery.get_last_draw_date(from_date=date(2026, 2, 19)))
+print(lottery.get_next_draw_date(from_date=date(2026, 2, 19)))
+print(lottery.get_next_draw_date())  # From today
+print(ticket.numbers.values)
+print(ticket.stars.values)
+print(ticket.rank)
 
 # Generate 3 random combinations
-combinations = EuroMillionsCombination().generate(3)
+combinations = lottery.generate(3)
 print(combinations)
 ```
 
-### EuroDreams combinations
+### EuroDreams lottery
 
 ```python
-from pactole import EuroDreamsCombination
+from datetime import date
 
-# Build a known combination
-euro_dreams = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+from pactole import EuroDreams
 
-print(euro_dreams.numbers.values)
-print(euro_dreams.dream.values)
-print(euro_dreams.rank)
+lottery = EuroDreams()
+
+# Build a known ticket
+ticket = lottery.get_combination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+
+print(lottery.draw_days.days)
+print(lottery.get_last_draw_date(from_date=date(2026, 2, 19)))
+print(lottery.get_next_draw_date(from_date=date(2026, 2, 19)))
+print(lottery.get_next_draw_date())  # From today
+print(ticket.numbers.values)
+print(ticket.dream.values)
+print(ticket.rank)
 
 # Generate 3 random combinations
-combinations = EuroDreamsCombination().generate(3)
+combinations = lottery.generate(3)
 print(combinations)
 ```
 
