@@ -1,6 +1,6 @@
-[Pactole](../README.md) / [Documentation](./README.md)
+[Pactole](../../README.md) / [Documentation](../README.md) / [Usage](./README.md)
 
-# Combinations Usage
+# Combinations
 
 Pactole exposes dedicated classes to represent and manipulate lottery combinations:
 
