@@ -152,3 +152,10 @@ jobs:
                       --notes-file release_notes.txt \
                       --verify-tag \
                       --latest
+
+            - name: Merge main into develop
+              run: |
+                  git fetch --prune origin develop
+                  git checkout -B develop origin/develop
+                  git merge --no-edit origin/main
+                  git push origin develop
