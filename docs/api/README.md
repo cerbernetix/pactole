@@ -9,6 +9,8 @@
 - [`combinations.eurodreams_combination`](./combinations.eurodreams_combination.md#module-combinationseurodreams_combination): Module for EuroDreams combination representation and manipulation.
 - [`combinations.euromillions_combination`](./combinations.euromillions_combination.md#module-combinationseuromillions_combination): Module for EuroMillions combination representation and manipulation.
 - [`combinations.lottery_combination`](./combinations.lottery_combination.md#module-combinationslottery_combination): Module for Lottery combination representation and manipulation.
+- [`utils`](./utils.md#module-utils): Utilities package.
+- [`utils.days`](./utils.days.md#module-utilsdays): Utilities related to days of the week and lottery draw days.
 
 ## Classes
 
@@ -19,6 +21,8 @@
 - [`euromillions_combination.EuroMillionsCombination`](./combinations.euromillions_combination.md#class-euromillionscombination): Class representing a EuroMillions combination.
 - [`lottery_combination.CombinationFactory`](./combinations.lottery_combination.md#class-combinationfactory): Protocol for a combination factory.
 - [`lottery_combination.LotteryCombination`](./combinations.lottery_combination.md#class-lotterycombination): Class representing a Lottery combination.
+- [`days.DrawDays`](./utils.days.md#class-drawdays): Utility class to handle lottery draw days.
+- [`days.Weekday`](./utils.days.md#class-weekday): Enumeration for the days of the week.
 
 ## Functions
 
