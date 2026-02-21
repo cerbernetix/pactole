@@ -11,6 +11,7 @@ __all__ = [
     "get_cache_path",
     "get_float",
     "get_int",
+    "MemoryCache",
     "read_csv_file",
     "read_zip_file",
     "Weekday",
@@ -18,6 +19,7 @@ __all__ = [
     "write_json_file",
 ]
 
+from .cache import MemoryCache
 from .days import Day, DrawDays, Weekday
 from .file import (
     EnhancedJSONEncoder,
