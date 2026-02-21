@@ -8,7 +8,172 @@ from unittest.mock import patch
 
 import pytest
 
-from pactole.utils import EnhancedJSONEncoder, read_csv_file, write_csv_file, write_json_file
+from pactole.utils import (
+    EnhancedJSONEncoder,
+    ensure_directory,
+    get_cache_path,
+    read_csv_file,
+    write_csv_file,
+    write_json_file,
+)
+
+
+class TestEnsureDirectory:
+    """Tests for ensure_directory function."""
+
+    def test_ensure_directory_creates_parent_directory(self, tmp_path):
+        """Test ensure_directory creates missing parent directories."""
+
+        target = tmp_path / "nested" / "folder" / "file.txt"
+        ensure_directory(target)
+
+        assert (tmp_path / "nested" / "folder").exists()
+        assert (tmp_path / "nested" / "folder").is_dir()
+
+    def test_ensure_directory_handles_existing_directory(self, tmp_path):
+        """Test ensure_directory does nothing if directory already exists."""
+
+        existing = tmp_path / "existing"
+        existing.mkdir()
+        target = existing / "file.txt"
+        ensure_directory(target)
+
+        assert existing.exists()
+        assert existing.is_dir()
+
+    def test_ensure_directory_accepts_string_path(self, tmp_path):
+        """Test ensure_directory accepts string paths."""
+
+        target = tmp_path / "string" / "path" / "file.txt"
+        ensure_directory(str(target))
+
+        assert (tmp_path / "string" / "path").exists()
+        assert (tmp_path / "string" / "path").is_dir()
+
+
+class TestGetCachePath:
+    """Tests for get_cache_path function."""
+
+    def test_get_cache_path_default(self):
+        """Test get_cache_path returns default cache path."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path()
+            assert isinstance(result, Path)
+
+    def test_get_cache_path_with_string_folder(self):
+        """Test get_cache_path with a string folder argument."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("data")
+            expected = cache_path / "data"
+            assert result == expected
+
+    def test_get_cache_path_with_path_folder(self):
+        """Test get_cache_path with a Path folder argument."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path(Path("data"))
+            expected = cache_path / "data"
+            assert result == expected
+
+    def test_get_cache_path_with_nested_folder(self):
+        """Test get_cache_path with nested folder paths."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("data/subfolder")
+            expected = cache_path / "data/subfolder"
+            assert result == expected
+
+    def test_get_cache_path_strips_leading_dot_slash(self):
+        """Test that leading './' is stripped from folder paths."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("./data")
+            expected = cache_path / "data"
+            assert result == expected
+
+            result = get_cache_path("../../data")
+            expected = cache_path / "data"
+            assert result == expected
+
+    def test_get_cache_path_strips_leading_slash(self):
+        """Test that leading '/' is stripped from folder paths."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("/data")
+            expected = cache_path / "data"
+            assert result == expected
+
+    def test_get_cache_path_strips_trailing_slash(self):
+        """Test that trailing '/' is stripped from folder paths."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("data/")
+            expected = cache_path / "data"
+            assert result == expected
+
+    def test_get_cache_path_create_false_doesnt_create(self, tmp_path):
+        """Test that create=False doesn't create directories."""
+
+        with patch("pactole.utils.file.CACHE_PATH", tmp_path):
+            test_folder = "test_folder"
+            result = get_cache_path(test_folder, create=False)
+            assert result == tmp_path / test_folder
+            assert not result.exists()
+
+    def test_get_cache_path_create_true_creates_directory(self, tmp_path):
+        """Test that create=True creates the directory."""
+
+        with patch("pactole.utils.file.CACHE_PATH", tmp_path):
+            test_folder = "test_folder"
+            result = get_cache_path(test_folder, create=True)
+            assert result == tmp_path / test_folder
+            assert result.exists()
+            assert result.is_dir()
+
+    def test_get_cache_path_create_true_creates_nested_directories(self, tmp_path):
+        """Test that create=True creates nested directories."""
+
+        with patch("pactole.utils.file.CACHE_PATH", tmp_path):
+            test_folder = "test_folder/nested/deep"
+            result = get_cache_path(test_folder, create=True)
+            assert result == tmp_path / "test_folder/nested/deep"
+            assert result.exists()
+            assert result.is_dir()
+
+    def test_get_cache_path_create_true_on_existing_directory(self, tmp_path):
+        """Test that create=True works when directory already exists."""
+
+        with patch("pactole.utils.file.CACHE_PATH", tmp_path):
+            test_folder = "existing_folder"
+            (tmp_path / test_folder).mkdir()
+            result = get_cache_path(test_folder, create=True)
+            assert result == tmp_path / test_folder
+            assert result.exists()
+
+    def test_get_cache_path_no_folder_with_create_false(self):
+        """Test get_cache_path with no folder and create=False."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path(folder=None, create=False)
+            assert result == cache_path
+
+    def test_get_cache_path_empty_string_folder(self):
+        """Test get_cache_path with empty string folder."""
+
+        cache_path = Path("/tmp/cache")
+        with patch("pactole.utils.file.CACHE_PATH", cache_path):
+            result = get_cache_path("")
+            assert result == cache_path
 
 
 class TestReadCsvFile:

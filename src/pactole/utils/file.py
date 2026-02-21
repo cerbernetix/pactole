@@ -5,12 +5,62 @@ from __future__ import annotations
 import csv
 import json
 from itertools import tee
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import IO, Any, Iterable
+
+# The path to the cache folder
+CACHE_PATH = Path("~/.cache")
 
 # The amount of bytes to read for auto-detecting the CSV dialect
 CSV_SAMPLE_SIZE = 4096
 CSV_MAX_TRIES = 8
+
+
+def ensure_directory(path: Path | str) -> None:
+    """Ensure that the directory for the given path exists.
+
+    Args:
+        path (Path | str): The file path for which to ensure the directory exists.
+
+    Examples:
+        >>> ensure_directory('data/archive.csv')
+        >>> Path('data').exists()
+        True
+    """
+    directory = Path(path).parent
+    if directory and not directory.exists():
+        directory.mkdir(parents=True, exist_ok=True)
+
+
+def get_cache_path(folder: Path | str = None, create: bool = False) -> Path:
+    """Return the cache path, optionally creating it.
+
+    Args:
+        folder (Path | str, optional): A subpath within the cache directory.
+            Defaults to None.
+        create (bool, optional): Whether to create the directory if it does not exist.
+            Defaults to False.
+
+    Returns:
+        Path: The cache path.
+
+    Raises:
+        OSError: If the directory cannot be created.
+
+    Examples:
+        >>> get_cache_path()
+        PosixPath('/home/user/.cache')
+        >>> get_cache_path('data', create=True)
+        PosixPath('/home/user/.cache/data')
+    """
+    cache_path = CACHE_PATH.expanduser()
+    if folder is not None:
+        cache_path = cache_path / Path(folder).as_posix().strip("./").replace("..", "_")
+
+    if create and not cache_path.exists():
+        cache_path.mkdir(parents=True, exist_ok=True)
+
+    return cache_path
 
 
 def read_csv_file(
