@@ -7,6 +7,7 @@ __all__ = [
     "ensure_directory",
     "fetch_content",
     "File",
+    "FileCache",
     "FileType",
     "get_cache_path",
     "get_float",
@@ -21,7 +22,7 @@ __all__ = [
     "write_json_file",
 ]
 
-from .cache import MemoryCache, TimeoutCache
+from .cache import FileCache, MemoryCache, TimeoutCache
 from .days import Day, DrawDays, Weekday
 from .file import (
     EnhancedJSONEncoder,

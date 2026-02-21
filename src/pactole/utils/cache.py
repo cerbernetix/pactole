@@ -1,9 +1,12 @@
-"""Cache utilities for in-memory caching with optional timeout support."""
+"""Cache utilities for in-memory and file-based caching with optional timeout support."""
 
 from __future__ import annotations
 
+import datetime
+from pathlib import Path
 from typing import Any, Protocol
 
+from .file import File, FileType
 from .timeout import Timeout
 
 
@@ -341,3 +344,114 @@ class TimeoutCache(MemoryCache):
             True
         """
         return self._timeout.expired
+
+
+class FileCache(MemoryCache):
+    """A cache that stores data in memory, with a loader function to fetch data from files.
+
+    Args:
+        file_path (Path | str): The path to the file to cache.
+        file_type (FileType | str, optional): The type of the file (e.g., "csv", "json", "txt").
+            If not provided, it will be inferred from the file extension. Defaults to None.
+        transformer (CacheTransformer | None, optional): A callable that transforms the cached data.
+            If not provided, it defaults to a function that returns the data unchanged.
+            Defaults to None.
+
+    Examples:
+        >>> cache = FileCache("data.csv")
+        >>> cache.load()  # Loads data from data.csv
+        [{'name': 'Alice', 'age': 30}, {'name': 'Bob', 'age': 25}]
+        >>> cache.set([{'name': 'Charlie', 'age': 35}])  # Updates the cache and writes to data.csv
+        >>> cache.load()  # Loads the updated data from data.csv
+        [{'name': 'Charlie', 'age': 35}]
+    """
+
+    _transformer: CacheTransformer
+    _file: File
+
+    def __init__(
+        self,
+        file_path: Path | str,
+        file_type: FileType | str | None = None,
+        transformer: CacheTransformer | None = None,
+    ) -> None:
+        super().__init__(loader=lambda: self._file.read(throw=False), transformer=transformer)
+        self._file = File(file_path, file_type=file_type)
+
+    def _write(self, data: Any) -> None:
+        self._file.write(data, throw=False)
+        super()._write(data)
+
+    def _clear(self) -> None:
+        self._file.delete(throw=False)
+        super()._clear()
+
+    @property
+    def path(self) -> Path:
+        """Get the file path of the cache.
+
+        Returns:
+            Path: The file path of the cache.
+
+        Examples:
+            >>> cache = FileCache("data.csv")
+            >>> cache.path
+            PosixPath('data.csv')
+        """
+        return self._file.path
+
+    @property
+    def type(self) -> FileType:
+        """Get the file type of the cache.
+
+        Returns:
+            FileType: The file type of the cache.
+
+        Examples:
+            >>> cache = FileCache("data.csv")
+            >>> cache.type
+            <FileType.CSV: 'csv'>
+        """
+        return self._file.type
+
+    def exists(self) -> bool:
+        """Check if the cache file exists.
+
+        Returns:
+            bool: True if the cache file exists, False otherwise.
+
+        Examples:
+            >>> cache = FileCache("data.csv")
+            >>> cache.exists()
+            False  # Assuming data.csv does not exist yet
+        """
+        return self._file.exists()
+
+    def date(self) -> datetime.datetime:
+        """Get the last modification date of the cache file.
+
+        Returns:
+            datetime.datetime: The last modification date of the cache file.
+
+        Raises:
+            FileNotFoundError: If the cache file does not exist.
+
+        Examples:
+            >>> cache = FileCache("data.csv")
+            >>> cache.date()
+            datetime.datetime(2024, 6, 1, 12, 0, 0)  # Example modification time
+        """
+        return self._file.date()
+
+    def size(self) -> int:
+        """Get the size of the cache file in bytes.
+
+        Returns:
+            int: The size of the cache file in bytes.
+
+        Examples:
+            >>> cache = FileCache("data.csv")
+            >>> cache.size()
+            1024  # Example file size in bytes
+        """
+        return self._file.size()
