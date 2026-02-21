@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
 import os
+import re
 
 import bs4
 
-from ...utils import TimeoutCache, fetch_content
+from ...utils import TimeoutCache, fetch_content, get_float, get_int
+from ..base_parser import BaseParser
 from ..base_resolver import BaseResolver
+from ..models import DrawRecord, WinningRank
 
 logger = logging.getLogger(__name__)
 
@@ -89,3 +93,146 @@ class FDJResolver(BaseResolver):
                 f"It must contain the placeholder '{{name}}'."
             )
         return url_template.format(name=name)
+
+
+class FDJParser(BaseParser):
+    """Parser for FDJ archives.
+
+    Args:
+        combination_factory (CombinationFactory | None): A factory function or class to create a
+            combination instance. If None, a default LotteryCombination instance will be used.
+            Default is None.
+
+    Examples:
+        >>> parser = FDJParser()
+        >>> data = {
+        ...     "date_de_tirage": "01/02/2022",
+        ...     "date_de_forclusion": "15/02/2022",
+        ...     "nombre_de_gagnant_au_rang1_en_europe": "2",
+        ...     "rapport_du_rang1": "1000000,00",
+        ...     "boule_1": "1",
+        ...     "boule_2": "2",
+        ...     "boule_3": "3",
+        ...     "boule_4": "4",
+        ...     "boule_5": "5",
+        ...     "etoile_1": "1",
+        ...     "etoile_2": "2",
+        ... }
+        >>> parsed = parser(data)
+        >>> parsed
+        {
+            "draw_date": "2022-02-01",
+            "deadline_date": "2022-02-15",
+            "winning_rank_1_winners": 2,
+            "winning_rank_1_gain": 1000000.00,
+            "number_1": 1,
+            "number_2": 2,
+            "number_3": 3,
+            "number_4": 4,
+            "number_5": 5,
+            "star_1": 1,
+            "star_2": 2,
+        }
+    """
+
+    SOURCE_DRAW_DATE = "date_de_tirage"
+    SOURCE_DEADLINE_DATE = "date_de_forclusion"
+    SOURCE_NUMBERS_MAPPING = {
+        "boule": "numbers",
+        "etoile": "stars",
+        "numero_dream": "dream",
+    }
+
+    RE_NUMBER = re.compile(r"^(?P<component>\w+)_(?P<index>\d+)$")
+    RE_WINNERS = re.compile(r"^nombre_de_gagnant_au_rang(?P<rank>\d+)\w*$")
+    RE_GAIN = re.compile(r"^rapport_du_rang(?P<rank>\d+)\w*$")
+
+    def __call__(self, data: dict) -> DrawRecord:
+        draw_date = self._format_date(data.get(self.SOURCE_DRAW_DATE, "1970-01-01"))
+        deadline_date = self._format_date(data.get(self.SOURCE_DEADLINE_DATE, "1970-01-01"))
+
+        numbers = {}
+        winners = {}
+        gains = {}
+
+        known = set([self.SOURCE_DRAW_DATE, self.SOURCE_DEADLINE_DATE])
+        for key, value in data.items():
+            key = str(key)  # Ensure the key is a string for regex matching
+            if key in known:
+                continue
+
+            if key in self.SOURCE_NUMBERS_MAPPING:
+                numbers.setdefault(self.SOURCE_NUMBERS_MAPPING[key], []).append(get_int(value))
+                continue
+
+            if match := self.RE_NUMBER.match(key):
+                component_name = match.group("component")
+                if component_name in self.SOURCE_NUMBERS_MAPPING:
+                    component_name = self.SOURCE_NUMBERS_MAPPING[component_name]
+                numbers.setdefault(component_name, []).append(get_int(value))
+                continue
+
+            if match := self.RE_WINNERS.match(key):
+                rank_number = get_int(match.group("rank"))
+                if rank_number not in winners:
+                    winners[rank_number] = get_int(value)
+                continue
+
+            if match := self.RE_GAIN.match(key):
+                rank_number = get_int(match.group("rank"))
+                if rank_number not in gains:
+                    gains[rank_number] = get_float(value)
+                continue
+
+        combination = self._combination_factory(**numbers)
+        winning_ranks = []
+
+        min_rank = combination.min_winning_rank
+        if min_rank is None:
+            min_rank = 1
+        max_rank = combination.max_winning_rank
+        if max_rank is None:
+            max_rank = max(winners.keys() | gains.keys() | {0})
+        for rank in range(min_rank, max_rank + 1):
+            winning_ranks.append(
+                WinningRank(rank=rank, winners=winners.get(rank, 0), gain=gains.get(rank, 0.0))
+            )
+
+        return DrawRecord(
+            period="",
+            draw_date=datetime.date.fromisoformat(draw_date),
+            deadline_date=datetime.date.fromisoformat(deadline_date),
+            combination=combination,
+            numbers=numbers,
+            winning_ranks=winning_ranks,
+        )
+
+    def _format_date(self, value: str) -> str:
+        """Format a date string into ISO format (YYYY-MM-DD).
+
+        The method checks the format of the input date string and converts it to ISO format.
+        It supports various date formats, including:
+        - RFC format (YYYY-MM-DD) and RFC-like format (YYYYMMDD)
+        - French format (DD/MM/YYYY), including cases where the year is presented in 2-digit format,
+            (e.g., DD/MM/YY)
+        """
+        if "-" in value:
+            # The date is presented in RFC format
+            return value
+
+        if "/" in value:
+            # The date is presented in French format
+            date_parts = value.split("/")
+        else:
+            # The date is presented in RFC-like format
+            date_parts = [
+                value[6:8],
+                value[4:6],
+                value[0:4],
+            ]
+
+        # Correct the year when presented in 2-digits format
+        if len(date_parts[2]) == 2:
+            date_parts[2] = f"20{date_parts[2]}"
+
+        return "-".join(date_parts[::-1])

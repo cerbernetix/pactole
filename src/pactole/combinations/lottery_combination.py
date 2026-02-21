@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from functools import cached_property
 from math import ceil, prod
-from typing import Iterator, Protocol
+from typing import Any, Iterator, Protocol
 
 from .combination import (
     BoundCombination,
@@ -293,6 +293,50 @@ class LotteryCombination:
         if not self._winning_ranks:
             return None
         return max(self._winning_ranks.values())
+
+    @staticmethod
+    def get_combination_factory(
+        combination_factory: CombinationFactory | LotteryCombination | Any,
+    ) -> CombinationFactory:
+        """Get the combination factory.
+
+        It check that the provided combination_factory is a callable, and if not, it returns a
+        default factory from LotteryCombination, which is in this case will produce combinations
+        with no components and no winning ranks.
+
+        An instance of a LotteryCombination can be used to produce a factory.
+
+        Args:
+            combination_factory (CombinationFactory | LotteryCombination | Any): A factory function
+                or class to create a combination instance. If None, a default LotteryCombination
+                instance will be used. Default is None.
+
+        Returns:
+            CombinationFactory: The combination factory.
+
+        Examples:
+            >>> factory = LotteryCombination.get_combination_factory(None)
+            factory(main=[1, 2, 3, 4, 5], bonus=[6])
+            LotteryCombination()
+            >>> factory = LotteryCombination.get_combination_factory(LotteryCombination(
+            ...     main=BoundCombination(start=1, end=50, count=5)
+            ... ))
+            factory(main=[1, 2, 3, 4, 5])
+            LotteryCombination(main=BoundCombination(...))
+            >>> factory = LotteryCombination.get_combination_factory(lambda **components:
+            ...     LotteryCombination(**{
+            ...         k: BoundCombination(start=min(v), end=max(v), count=len(v))
+            ...         for k, v in components.items()
+            ...     })
+            ... )
+            factory(main=[1, 2, 3, 4, 5], bonus=[6])
+            LotteryCombination(main=BoundCombination(...), bonus=BoundCombination(...))
+        """
+        if isinstance(combination_factory, LotteryCombination):
+            return combination_factory.get_combination
+        if not callable(combination_factory):
+            return LotteryCombination().get_combination
+        return combination_factory
 
     def generate(self, n: int = 1, partitions: int = 1) -> list[LotteryCombination]:
         """Generate a list of random LotteryCombination with similar components.
