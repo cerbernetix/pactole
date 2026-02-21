@@ -9,6 +9,7 @@ description = "A library for managing lottery results."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "beautifulsoup4>=4.14.3",
     "requests>=2.32.5",
 ]
 classifiers = [
