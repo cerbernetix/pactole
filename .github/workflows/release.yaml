@@ -14,6 +14,7 @@ permissions:
 jobs:
     generate_documentation:
         if: >-
+            github.actor != 'github-actions[bot]' &&
             contains(github.event.pull_request.labels.*.name, 'release') &&
             github.event.pull_request.head.repo.full_name == github.repository
         runs-on: ubuntu-latest
