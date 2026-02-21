@@ -6,11 +6,14 @@ import datetime
 import logging
 import os
 import re
+from typing import Iterable
 
 import bs4
 
-from ...utils import TimeoutCache, fetch_content, get_float, get_int
+from ...combinations import CombinationFactory
+from ...utils import DrawDays, TimeoutCache, Weekday, fetch_content, get_float, get_int
 from ..base_parser import BaseParser
+from ..base_provider import BaseProvider
 from ..base_resolver import BaseResolver
 from ..models import DrawRecord, WinningRank
 
@@ -236,3 +239,53 @@ class FDJParser(BaseParser):
             date_parts[2] = f"20{date_parts[2]}"
 
         return "-".join(date_parts[::-1])
+
+
+class FDJProvider(BaseProvider):
+    """Data provider for FDJ archives.
+
+    Args:
+        resolver (BaseResolver | str): An instance of BaseResolver or the URL of the archives page.
+            If a string is provided, a default FDJResolver will be used with the given URL.
+        parser (BaseParser | None): An instance of a parser to process the archive content. If None,
+            a default FDJParser will be used. Defaults to None.
+        draw_days (DrawDays | Iterable[Weekday], optional): An instance of DrawDays or an iterable
+            of Weekday representing the draw days of the lottery. Defaults to an empty tuple.
+        draw_day_refresh_time (str | int | datetime.time, optional): Refresh threshold time used on
+            draw days. It can be provided as a string in "HH:MM" format, an integer representing
+            the hour, or a datetime.time object. Defaults to None, which will be interpreted as
+            22:00 (10 PM).
+        combination_factory (CombinationFactory | None): A factory function or class to create a
+            combination instance. If None, a default LotteryCombination instance will be used.
+            Default is None.
+        cache_name (str, optional): The name of the cache. Defaults to "fdj".
+
+    Examples:
+        >>> provider = FDJProvider("https://www.fdj.fr/...")
+        >>> provider.refresh()
+    """
+
+    DEFAULT_CACHE_NAME = "fdj"
+
+    def __init__(
+        self,
+        resolver: BaseResolver | str,
+        parser: BaseParser | None = None,
+        draw_days: DrawDays | Iterable[Weekday] = (),
+        draw_day_refresh_time: str | int | datetime.time | None = None,
+        combination_factory: CombinationFactory | None = None,
+        cache_name: str = DEFAULT_CACHE_NAME,
+    ) -> None:
+        if isinstance(resolver, str):
+            resolver = FDJResolver(resolver)
+        if parser is None:
+            parser = FDJParser(combination_factory=combination_factory)
+
+        super().__init__(
+            resolver,
+            parser,
+            draw_days=draw_days,
+            draw_day_refresh_time=draw_day_refresh_time,
+            combination_factory=combination_factory,
+            cache_name=cache_name,
+        )

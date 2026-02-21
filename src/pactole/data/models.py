@@ -5,14 +5,39 @@ from __future__ import annotations
 import datetime
 import re
 from dataclasses import dataclass
+from typing import TypedDict
 
-from ..combinations import CombinationFactory, CombinationInputWithRank, LotteryCombination
+from ..combinations import (
+    CombinationFactory,
+    CombinationInputWithRank,
+    CombinationRank,
+    LotteryCombination,
+)
 from ..utils import get_float, get_int
 
 RE_NUMBER = re.compile(r"^(?P<component>\w+)_(?P<index>\d+)$")
 RE_RANK = re.compile(r"^(?P<component>\w+)_rank$")
 RE_WINNERS = re.compile(r"^rank_(?P<rank>\d+)_winners$")
 RE_GAIN = re.compile(r"^rank_(?P<rank>\d+)_gain$")
+
+
+class ArchiveContentInfo(TypedDict):
+    """A dictionary containing information about the content of an archive."""
+
+    count: int
+    period: str | None
+    first_date: str | None
+    last_date: str | None
+
+
+class ArchiveInfo(ArchiveContentInfo):
+    """A dictionary containing information about an archive."""
+
+    name: str
+    url: str
+
+
+Manifest = list[ArchiveInfo]
 
 
 @dataclass
@@ -209,3 +234,14 @@ class DrawRecord:
             numbers=numbers,
             winning_ranks=winning_ranks,
         )
+
+
+@dataclass
+class FoundCombination:
+    """A class representing a found combination in a lottery search."""
+
+    record: DrawRecord
+    """The draw record where the combination was found."""
+
+    rank: CombinationRank
+    """The rank of the found combination in the draw."""

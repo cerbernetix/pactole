@@ -6,7 +6,8 @@ import datetime
 from unittest.mock import patch
 
 from pactole.combinations import LotteryCombination
-from pactole.data.providers.fdj import FDJParser, FDJResolver
+from pactole.data import BaseParser, BaseResolver, DrawRecord
+from pactole.data.providers.fdj import FDJParser, FDJProvider, FDJResolver
 
 
 class TestFDJResolver:
@@ -193,3 +194,43 @@ class TestFDJParser:
         record = parser(data)
 
         assert not record.winning_ranks
+
+
+class TestFDJProvider:
+    """Tests for the FDJProvider class."""
+
+    def test_init_accepts_resolver_url(self) -> None:
+        """Test the provider accepts a resolver URL without error."""
+
+        provider = FDJProvider("https://local.test/archives")
+
+        assert isinstance(provider, FDJProvider)
+
+    def test_init_accepts_draw_day_refresh_time(self) -> None:
+        """Test the provider forwards draw_day_refresh_time to the base provider."""
+
+        provider = FDJProvider(
+            "https://local.test/archives",
+            draw_day_refresh_time="21:30",
+        )
+
+        assert provider.draw_day_refresh_time == datetime.time(21, 30)
+
+    def test_init_accepts_resolver_and_parser_instances(self) -> None:
+        """Test the provider accepts resolver and parser instances."""
+
+        class SampleResolver(BaseResolver):
+            """Resolver for provider tests."""
+
+            def _load_cache(self) -> dict[str, str]:
+                return {}
+
+        class SampleParser(BaseParser):
+            """Parser for provider tests."""
+
+            def __call__(self, data: dict) -> DrawRecord:
+                return DrawRecord.from_dict({})
+
+        provider = FDJProvider(SampleResolver(), parser=SampleParser())
+
+        assert isinstance(provider, FDJProvider)

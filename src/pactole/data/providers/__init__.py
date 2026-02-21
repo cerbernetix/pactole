@@ -2,7 +2,8 @@
 
 __all__ = [
     "FDJParser",
+    "FDJProvider",
     "FDJResolver",
 ]
 
-from .fdj import FDJParser, FDJResolver
+from .fdj import FDJParser, FDJProvider, FDJResolver
