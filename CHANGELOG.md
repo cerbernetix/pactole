@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Introduced the data layer with `BaseProvider`, `BaseResolver`, `BaseParser`, and FDJ-specific
+  implementations for fetching and parsing archives.
+- Added data models for draw history (`DrawRecord`, `WinningRank`, `FoundCombination`).
+- Added cache utilities including file-backed caching and timeout-aware in-memory caching.
+- Added history helpers to lotteries: `get_records()`, `find_records()`, `count()`, and `dump()`.
+- Added developer and environment documentation pages plus expanded usage examples.
+
+### Changed
+
+- Refactored lottery classes to use providers as the source of draw data.
+- Extended utilities for file handling, system helpers, and typed conversions.
+
+### Dependencies
+
+- Added `requests` and `beautifulsoup4` for archive fetching and HTML parsing.
+
+### Breaking Changes
+
+- `BaseLottery` now requires a provider instance; custom lotteries must pass
+  `provider=BaseProvider(...)` to `super().__init__`.
+
 ## v0.2.0 [2026-02-20]
 
 ### Added
