@@ -35,16 +35,15 @@ Pactole follows a layered architecture with clear separation of concerns:
 │  - Manages draw dates, combinations, queries      │
 └───────────────────────────────────────────────────┘
                            │
-          ┌────────────────┴────────────────┐
-          ▼                                 ▼
-┌─────────────────────┐            ┌──────────────────┐
-│  Combination Layer  │            │     Data Layer   │
-│                     │            │                  │
-│  - Lottery          │            │  - BaseProvider  │
-│    Combination      │            │  - BaseParser    │
-│  - EuroMillions     │            │  - BaseResolver  │
-│  - EuroDreams       │            │                  │
-└─────────────────────┘            └──────────────────┘
+            ┌──────────────┴────────────────┐
+            ▼                               ▼
+┌────────────────────────┐         ┌──────────────────┐
+│  Combination Layer     │         │     Data Layer   │
+│                        │         │                  │
+│  - LotteryCombination  │         │  - BaseProvider  │
+│  - EuroMillions        │         │  - BaseParser    │
+│  - EuroDreams          │         │  - BaseResolver  │
+└────────────────────────┘         └──────────────────┘
                                              │
                             ┌────────────────┴───────────────┐
                             ▼                                ▼
