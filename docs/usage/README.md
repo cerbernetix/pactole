@@ -7,4 +7,4 @@ This section contains practical guides for using Pactole public classes.
 ## Pages
 
 - [Combinations](./combinations.md): Create, compare, and rank lottery combinations.
-- [Lottery classes](./lotteries.md): Handle draw days and generate combinations by lottery.
+- [Lottery classes](./lotteries.md): Handle draw days, generate combinations, and query draw history.

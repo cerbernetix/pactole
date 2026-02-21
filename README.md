@@ -53,6 +53,11 @@ print(ticket.rank)
 # Generate 3 random combinations
 combinations = lottery.generate(3)
 print(combinations)
+
+# Query historical records
+records = list(lottery.get_records())
+matches = list(lottery.find_records(ticket))
+print(len(records), len(matches))
 ```
 
 ### EuroDreams lottery
@@ -78,7 +83,17 @@ print(ticket.rank)
 # Generate 3 random combinations
 combinations = lottery.generate(3)
 print(combinations)
+
+# Query historical records
+records = list(lottery.get_records())
+matches = list(lottery.find_records(ticket))
+print(len(records), len(matches))
 ```
+
+See detailed usage guides:
+
+- [Combinations](./docs/usage/combinations.md)
+- [Lottery classes](./docs/usage/lotteries.md)
 
 ## License
 

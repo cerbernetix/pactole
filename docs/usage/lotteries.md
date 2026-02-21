@@ -4,7 +4,7 @@
 
 Pactole exposes lottery-handling classes in `pactole.lottery`:
 
-- `BaseLottery`: Generic implementation for draw-day handling and combination creation.
+- `BaseLottery`: Generic implementation for draw-day handling, combination creation, and history search.
 - `EuroMillions`: Preconfigured lottery (`Tuesday`, `Friday`) using `EuroMillionsCombination`.
 - `EuroDreams`: Preconfigured lottery (`Monday`, `Thursday`) using `EuroDreamsCombination`.
 
@@ -53,20 +53,54 @@ print(played)
 print(random_tickets)
 ```
 
+## Work with historical draw records
+
+Lottery classes expose helper methods backed by their configured provider.
+
+```python
+from pactole import EuroMillions
+
+lottery = EuroMillions()
+ticket = lottery.get_combination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+print(lottery.count())
+print(lottery.dump(force=False)[:1])
+
+records = list(lottery.get_records())
+matches = list(lottery.find_records(ticket, strict=False))
+
+print(len(records))
+print(matches[:3])
+```
+
 ## Build your own lottery class
 
-Subclass `BaseLottery` to define custom draw days and your own combination class.
+Subclass `BaseLottery` by passing a configured provider to `super().__init__`.
 
 ```python
 from pactole.combinations import EuroMillionsCombination
+from pactole.data.providers import FDJProvider
 from pactole.lottery import BaseLottery
-from pactole.utils import Weekday
 
 
 class CustomLottery(BaseLottery):
     def __init__(self) -> None:
         super().__init__(
-            draw_days=[Weekday.MONDAY, Weekday.THURSDAY],
-            combination_factory=EuroMillionsCombination,
+            provider=FDJProvider(
+                "euromillions-my-million",
+                draw_days=["MONDAY", "THURSDAY"],
+                combination_factory=EuroMillionsCombination,
+                cache_name="custom_lottery",
+            )
         )
 ```
+
+## Configure built-in lotteries with environment variables
+
+`EuroMillions` and `EuroDreams` can be customized without subclassing.
+
+- `EUROMILLIONS_PROVIDER_CLASS`, `EURODREAMS_PROVIDER_CLASS`
+- `EUROMILLIONS_DRAW_DAYS`, `EURODREAMS_DRAW_DAYS`
+- `EUROMILLIONS_DRAW_DAY_REFRESH_TIME`, `EURODREAMS_DRAW_DAY_REFRESH_TIME`
+- `EUROMILLIONS_CACHE_NAME`, `EURODREAMS_CACHE_NAME`
+- `EUROMILLIONS_ARCHIVES_PAGE`, `EURODREAMS_ARCHIVES_PAGE`
