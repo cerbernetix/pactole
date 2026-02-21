@@ -9,6 +9,8 @@ __all__ = [
     "File",
     "FileType",
     "get_cache_path",
+    "get_float",
+    "get_int",
     "read_csv_file",
     "read_zip_file",
     "Weekday",
@@ -29,3 +31,4 @@ from .file import (
     write_csv_file,
     write_json_file,
 )
+from .types import get_float, get_int
