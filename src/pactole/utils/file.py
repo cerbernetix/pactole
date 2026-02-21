@@ -6,10 +6,13 @@ import csv
 import datetime
 import json
 import logging
+import zipfile
 from enum import Enum
 from itertools import tee
 from pathlib import Path, PurePath
-from typing import IO, Any, Iterable, Iterator
+from typing import IO, Any, Iterable, Iterator, Literal
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +69,104 @@ def get_cache_path(folder: Path | str = None, create: bool = False) -> Path:
         cache_path.mkdir(parents=True, exist_ok=True)
 
     return cache_path
+
+
+def fetch_content(
+    url: str,
+    binary: bool = False,
+    timeout: int | tuple = (6, 30),
+    **kwargs,
+) -> str | bytes:
+    """Fetch content from a URL.
+
+    Args:
+        url (str): The URL to fetch content from.
+        binary (bool, optional): Whether to return content as bytes. Defaults to False.
+        timeout (int | tuple, optional): Timeout for the request. Defaults to (6, 30).
+        **kwargs: Additional arguments to pass to requests
+
+    Returns:
+        str | bytes: The content fetched from the URL.
+
+    Raises:
+        requests.RequestException: If the request fails.
+
+    Examples:
+        >>> content = fetch_content('https://example.com/data.txt')
+        >>> print(content)
+        '...'
+        >>> binary_content = fetch_content('https://example.com/image.png', binary=True)
+        >>> print(binary_content)
+        b'...'
+    """
+    response = requests.get(url=url, timeout=timeout, **kwargs)
+    response.raise_for_status()
+    return response.content if binary else response.text
+
+
+def read_zip_file(
+    file: IO[bytes],
+    filename: str = None,
+    ext: str = None,
+    encoding: str | None = None,
+    decoding_errors: Literal["ignore", "strict", "replace"] = "ignore",
+) -> bytes | str:
+    """Read a specific file from a ZIP archive in memory.
+
+    Args:
+        file (IO[bytes]): The file object of the ZIP archive. It must be opened in binary mode.
+        filename (str, optional): The exact filename to extract. Defaults to None.
+        ext (str, optional): The file extension to filter by if filename is not provided.
+            Defaults to None.
+        encoding (str | None, optional): The encoding to decode the file content.
+            If None, returns bytes. Defaults to None.
+        decoding_errors (Literal["ignore", "strict", "replace"], optional): The error
+            handling scheme for decoding. Defaults to "ignore".
+
+    Returns:
+        bytes | str: The content of the extracted file.
+
+    Raises:
+        FileNotFoundError: If no file matches the given criteria.
+
+    Examples:
+        >>> with open('archive.zip', 'rb') as f:
+        ...     content = read_zip_file(f, filename='data.csv', encoding='utf-8')
+        >>> print(content)
+        'col1,col2\\n1,2\\n3,4'
+        >>> with open('archive.zip', 'rb') as f:
+        ...     content = read_zip_file(f, ext='.json')
+        >>> print(content)
+        b'{"key": "value"}'
+    """
+    with zipfile.ZipFile(file) as zip_file:
+        found = False
+        for info in zip_file.infolist():
+            if filename:
+                if filename == info.filename:
+                    found = True
+                    break
+
+            elif ext:
+                file_extension = Path(info.filename).suffix
+                if file_extension.lower() == ext.lower():
+                    filename = info.filename
+                    found = True
+                    break
+            else:
+                filename = info.filename
+                found = True
+                break
+
+        if not found:
+            raise FileNotFoundError("The file does not exist in the archive.")
+
+        with zip_file.open(filename, "r") as nested_file:
+            content = nested_file.read()
+
+        if encoding:
+            return content.decode(encoding, errors=decoding_errors)
+        return content
 
 
 def read_csv_file(

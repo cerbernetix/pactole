@@ -3,16 +3,20 @@
 import csv
 import io
 import json
+import zipfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+import requests
 
 from pactole.utils import (
     EnhancedJSONEncoder,
     ensure_directory,
+    fetch_content,
     get_cache_path,
     read_csv_file,
+    read_zip_file,
     write_csv_file,
     write_json_file,
 )
@@ -174,6 +178,206 @@ class TestGetCachePath:
         with patch("pactole.utils.file.CACHE_PATH", cache_path):
             result = get_cache_path("")
             assert result == cache_path
+
+
+class TestFetchContent:
+    """Tests for fetch_content function."""
+
+    def test_fetch_content_text_success(self):
+        """Test fetching text content successfully."""
+
+        mock_response = Mock()
+        mock_response.text = "Sample text content"
+        mock_response.raise_for_status = Mock()
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response):
+            result = fetch_content("https://local.test/data.txt")
+            assert result == "Sample text content"
+            assert isinstance(result, str)
+
+    def test_fetch_content_binary_success(self):
+        """Test fetching binary content successfully."""
+
+        mock_response = Mock()
+        mock_response.content = b"Binary data"
+        mock_response.raise_for_status = Mock()
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response):
+            result = fetch_content("https://local.test/image.png", binary=True)
+            assert result == b"Binary data"
+            assert isinstance(result, bytes)
+
+    def test_fetch_content_default_timeout(self):
+        """Test that default timeout is used."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content("https://local.test/data.txt")
+            mock_get.assert_called_once_with(url="https://local.test/data.txt", timeout=(6, 30))
+
+    def test_fetch_content_custom_timeout(self):
+        """Test fetching content with custom timeout."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content("https://local.test/data.txt", timeout=10)
+            mock_get.assert_called_once_with(url="https://local.test/data.txt", timeout=10)
+
+    def test_fetch_content_with_kwargs(self):
+        """Test fetching content with additional kwargs."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content("https://local.test/data.txt", headers={"Authorization": "Bearer token"})
+            mock_get.assert_called_once_with(
+                url="https://local.test/data.txt",
+                timeout=(6, 30),
+                headers={"Authorization": "Bearer token"},
+            )
+
+    def test_fetch_content_raises_on_error(self):
+        """Test that fetch_content raises exception on request error."""
+
+        mock_response = Mock()
+        mock_response.raise_for_status.side_effect = requests.RequestException("Error")
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response):
+            with pytest.raises(requests.RequestException):
+                fetch_content("https://local.test/data.txt")
+
+
+class TestReadZipFile:
+    """Tests for read_zip_file function."""
+
+    def test_read_zip_file_by_filename_bytes(self):
+        """Test reading a file from ZIP by exact filename returning bytes."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", "Hello, World!")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, filename="data.txt")
+        assert result == b"Hello, World!"
+        assert isinstance(result, bytes)
+
+    def test_read_zip_file_by_filename_with_encoding(self):
+        """Test reading a file from ZIP by filename with encoding."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", "Hello, UTF-8! 🎉")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, filename="data.txt", encoding="utf-8")
+        assert result == "Hello, UTF-8! 🎉"
+        assert isinstance(result, str)
+
+    def test_read_zip_file_by_extension(self):
+        """Test reading a file from ZIP by extension."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.csv", "col1,col2\n1,2")
+            zip_file.writestr("other.txt", "Other content")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, ext=".csv", encoding="utf-8")
+        assert result == "col1,col2\n1,2"
+
+    def test_read_zip_file_case_insensitive_extension(self):
+        """Test that extension matching is case-insensitive."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.CSV", "col1,col2\n1,2")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, ext=".csv", encoding="utf-8")
+        assert result == "col1,col2\n1,2"
+
+    def test_read_zip_file_first_file_no_criteria(self):
+        """Test reading first file when no criteria specified."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("first.txt", "First file")
+            zip_file.writestr("second.txt", "Second file")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, encoding="utf-8")
+        assert result == "First file"
+
+    def test_read_zip_file_filename_not_found(self):
+        """Test that FileNotFoundError is raised when filename not found."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", "content")
+        zip_buffer.seek(0)
+
+        with pytest.raises(FileNotFoundError, match="does not exist in the archive"):
+            read_zip_file(zip_buffer, filename="missing.txt")
+
+    def test_read_zip_file_extension_not_found(self):
+        """Test that FileNotFoundError is raised when extension not found."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", "content")
+        zip_buffer.seek(0)
+
+        with pytest.raises(FileNotFoundError, match="does not exist in the archive"):
+            read_zip_file(zip_buffer, ext=".csv")
+
+    def test_read_zip_file_decoding_errors_ignore(self):
+        """Test decoding errors with 'ignore' mode."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", b"Hello \xff World")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(zip_buffer, filename="data.txt", encoding="utf-8")
+        assert "Hello" in result
+        assert "World" in result
+
+    def test_read_zip_file_decoding_errors_replace(self):
+        """Test decoding errors with 'replace' mode."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", b"Hello \xff World")
+        zip_buffer.seek(0)
+
+        result = read_zip_file(
+            zip_buffer, filename="data.txt", encoding="utf-8", decoding_errors="replace"
+        )
+        assert "Hello" in result
+        assert "\ufffd" in result
+        assert "World" in result
+
+    def test_read_zip_file_decoding_errors_strict(self):
+        """Test decoding errors with 'strict' mode."""
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("data.txt", b"Hello \xff World")
+        zip_buffer.seek(0)
+
+        with pytest.raises(UnicodeDecodeError):
+            read_zip_file(
+                zip_buffer, filename="data.txt", encoding="utf-8", decoding_errors="strict"
+            )
 
 
 class TestReadCsvFile:
