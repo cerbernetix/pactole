@@ -10,6 +10,7 @@ Pactole is a Python library for managing lottery results.
 - [Usage](./usage/README.md): Practical guides for combinations and lottery classes.
     - [Combinations](./usage/combinations.md): Create, compare, and rank combinations.
     - [Lottery classes](./usage/lotteries.md): Handle draw days and generate combinations.
+- [Environment variables](./environment.md): Configuration variables for built-in lotteries.
 - [API reference](./api/README.md): Generated API documentation by module.
 
 ## License
