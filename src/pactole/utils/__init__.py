@@ -5,6 +5,8 @@ __all__ = [
     "DrawDays",
     "EnhancedJSONEncoder",
     "ensure_directory",
+    "File",
+    "FileType",
     "get_cache_path",
     "read_csv_file",
     "Weekday",
@@ -15,6 +17,8 @@ __all__ = [
 from .days import Day, DrawDays, Weekday
 from .file import (
     EnhancedJSONEncoder,
+    File,
+    FileType,
     ensure_directory,
     get_cache_path,
     read_csv_file,

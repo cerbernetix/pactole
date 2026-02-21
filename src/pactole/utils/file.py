@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import csv
+import datetime
 import json
+import logging
+from enum import Enum
 from itertools import tee
 from pathlib import Path, PurePath
-from typing import IO, Any, Iterable
+from typing import IO, Any, Iterable, Iterator
+
+logger = logging.getLogger(__name__)
 
 # The path to the cache folder
 CACHE_PATH = Path("~/.cache")
@@ -242,3 +247,353 @@ def write_json_file(
         ensure_ascii=ensure_ascii,
         **kwargs,
     )
+
+
+class FileType(Enum):
+    """Enumeration of file types."""
+
+    CSV = "csv"
+    JSON = "json"
+    TEXT = "txt"
+
+    @classmethod
+    def get(cls, file_type: FileType | str) -> FileType:
+        """Get the FileType from a file extension or type string.
+
+        Unknown types default to TEXT.
+
+        Args:
+            file_type (FileType | str): The file extension (e.g., ".csv", ".json", ".txt"),
+                or the file type string (e.g., "csv", "json", "txt"). If a FileType enum member
+                is passed, it will be returned as is.
+
+        Returns:
+            FileType: The corresponding FileType enum member.
+
+        Examples:
+            >>> FileType.get(".csv")
+            <FileType.CSV: 'csv'>
+            >>> FileType.get(".json")
+            <FileType.JSON: 'json'>
+            >>> FileType.get(".txt")
+            <FileType.TEXT: 'txt'>
+            >>> FileType.get(".log")
+            <FileType.TEXT: 'txt'>
+            >>> FileType.get(FileType.CSV)
+            <FileType.CSV: 'csv'>
+        """
+        if isinstance(file_type, cls):
+            return file_type
+
+        try:
+            return cls(str(file_type).lower().lstrip("."))
+        except ValueError:
+            return cls.TEXT
+
+
+class File:
+    """A class representing a file with its path, type, and encoding.
+
+    Args:
+        path (Path | str): The file path.
+        file_type (FileType | str | None, optional): The file type or extension.
+            If None, it will be inferred from the file extension. Defaults to None.
+        encoding (str, optional): The file encoding. Defaults to "utf-8".
+
+    Examples:
+        >>> file = File('data.csv')
+        >>> file.path
+        PosixPath('data.csv')
+        >>> file.type
+        <FileType.CSV: 'csv'>
+        >>> file.encoding
+        'utf-8'
+    """
+
+    _path: Path
+    _type: FileType
+    _encoding: str
+
+    def __init__(
+        self,
+        path: Path | str,
+        file_type: FileType | str | None = None,
+        encoding: str = "utf-8",
+    ) -> None:
+        self._path = Path(path)
+        self._encoding = encoding
+        self._type = FileType.get(file_type or self._path.suffix)
+
+    @property
+    def path(self) -> Path:
+        """Return the file path.
+
+        Returns:
+            Path: The file path.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.path
+            PosixPath('data.csv')
+        """
+        return self._path
+
+    @property
+    def type(self) -> FileType:
+        """Return the file type.
+
+        Returns:
+            FileType: The file type.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.type
+            <FileType.CSV: 'csv'>
+        """
+        return self._type
+
+    @property
+    def encoding(self) -> str:
+        """Return the file encoding.
+
+        Returns:
+            str: The file encoding.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.encoding
+            'utf-8'
+        """
+        return self._encoding
+
+    def exists(self) -> bool:
+        """Check if the file exists.
+
+        Returns:
+            bool: True if the file exists, False otherwise.
+
+        Examples:
+            >>> file = File('nonexistent_file.txt')
+            >>> file.exists()
+            False  # Assuming nonexistent_file.txt does not exist yet
+            >>> file = File('existing_file.txt')
+            >>> file.exists()
+            True  # Assuming existing_file.txt exists
+        """
+        return self._path.exists()
+
+    def date(self) -> datetime.datetime:
+        """Return the last modification time of the file as a timestamp.
+
+        Returns:
+            datetime.datetime: The last modification time as a datetime object.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.date()
+            datetime.datetime(2024, 6, 1, 12, 0, 0)  # Example modification time
+        """
+        timestamp = self._path.stat().st_mtime
+        return datetime.datetime.fromtimestamp(timestamp)
+
+    def size(self) -> int:
+        """Return the size of the file in bytes.
+
+        Returns:
+            int: The size of the file in bytes.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.size()
+            1024  # Example size in bytes
+        """
+        if not self._path.exists():
+            return 0
+        return self._path.stat().st_size
+
+    def read(self, throw: bool = True) -> Any | None:
+        """Read the file content.
+
+        Args:
+            throw (bool, optional): Whether to throw exceptions on errors. Defaults to True.
+
+        Returns:
+            Any | None: The content of the file, with respect to its type,
+                or None if the file does not exist or cannot be read.
+
+        Raises:
+            FileNotFoundError: If the file does not exist and throw is True.
+            IOError: If there is an error reading the file.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.read()
+            [{'col1': '1', 'col2': '2'}, {'col1': '3', 'col2': '4'}]  # Example CSV content
+            >>> file = File('data.json')
+            >>> file.read()
+            {'key': 'value', 'items': [1, 2, 3]}  # Example JSON content
+            >>> file = File('note.txt')
+            >>> file.read()
+            'hello world'  # Example text content
+            >>> file = File('nonexistent_file.txt')
+            >>> file.read(False)
+            None  # Assuming nonexistent_file.txt does not exist yet
+            >>> file.read()
+            Traceback (most recent call last):
+                ...
+            FileNotFoundError: The file nonexistent_file.txt does not exist.
+        """
+        if not self._path.exists():
+            if throw:
+                raise FileNotFoundError(f"The file {self._path} does not exist.")
+            return None
+
+        with self.open() as file:
+            if self._type == FileType.CSV:
+                try:
+                    return read_csv_file(file)
+                except csv.Error as e:
+                    if throw:
+                        raise IOError(f"Failed to read CSV file: {self._path}") from e
+                    logger.warning("Failed to read CSV file: %s, error: %s", self._path, e)
+                    return None
+
+            if self._type == FileType.JSON:
+                try:
+                    return json.load(file)
+                except json.JSONDecodeError as e:
+                    if throw:
+                        raise IOError(f"Failed to read JSON file: {self._path}") from e
+                    logger.warning("Failed to read JSON file: %s, error: %s", self._path, e)
+                    return None
+
+            return file.read()
+
+    def readlines(self, throw: bool = True) -> Iterator:
+        """Read the file content as lines.
+
+        Args:
+            throw (bool, optional): Whether to throw exceptions on errors. Defaults to True.
+
+        Returns:
+            Iterator: An iterator over the lines of the file, or an empty iterator if the file
+                does not exist or cannot be read.
+
+        Raises:
+            FileNotFoundError: If the file does not exist and throw is True.
+            IOError: If there is an error reading the file.
+
+        Examples:
+            >>> file = File('note.txt')
+            >>> for line in file.readlines():
+            ...     print(line)
+            hello world  # Example content of note.txt
+        """
+        if not self._path.exists():
+            if throw:
+                raise FileNotFoundError(f"The file {self._path} does not exist.")
+            return
+
+        with self.open() as file:
+            if self._type == FileType.CSV:
+                try:
+                    yield from read_csv_file(file, iterator=True)
+                except csv.Error as e:
+                    if throw:
+                        raise IOError(f"Failed to read CSV file: {self._path}") from e
+                    logger.warning("Failed to read CSV file: %s, error: %s", self._path, e)
+                return
+
+            for line in file:
+                yield line.rstrip("\n")
+
+    def write(self, content: Any, throw: bool = True) -> None:
+        """Write content to the file.
+
+        Ensures the parent directory exists before writing.
+
+        Args:
+            content (Any): The content to write to the file. The type of content should match
+                the file type (e.g., list of dicts for CSV, dict for JSON, string for text).
+            throw (bool, optional): Whether to throw exceptions on errors. Defaults to True.
+
+        Raises:
+            IOError: If there is an error writing to the file.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.write([{'col1': '1', 'col2': '2'}, {'col1': '3', 'col2': '4'}])
+            >>> file = File('data.json')
+            >>> file.write({'key': 'value', 'items': [1, 2, 3]})
+            >>> file = File('note.txt')
+            >>> file.write('hello world')
+        """
+        with self.open("w") as file:
+            if self._type == FileType.CSV:
+                try:
+                    write_csv_file(file, content)
+                except csv.Error as e:
+                    if throw:
+                        raise IOError(f"Failed to write CSV file: {self._path}") from e
+                    logger.warning("Failed to write CSV file: %s, error: %s", self._path, e)
+
+            elif self._type == FileType.JSON:
+                try:
+                    write_json_file(file, content)
+                except json.JSONDecodeError as e:
+                    if throw:
+                        raise IOError(f"Failed to write JSON file: {self._path}") from e
+                    logger.warning("Failed to write JSON file: %s, error: %s", self._path, e)
+
+            else:
+                file.write(content)
+
+    def delete(self, throw: bool = True) -> None:
+        """Delete the file.
+
+        Args:
+            throw (bool, optional): Whether to throw exceptions on errors. Defaults to True.
+
+        Raises:
+            FileNotFoundError: If the file does not exist and throw is True.
+            IOError: If there is an error deleting the file.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> file.delete()
+        """
+        if not self._path.exists():
+            if throw:
+                raise FileNotFoundError(f"The file {self._path} does not exist.")
+            return
+
+        self._path.unlink()
+
+    def open(self, mode: str = "r") -> IO[Any]:
+        """Open the file with the appropriate mode and encoding.
+
+        If the mode includes writing, ensure the parent directory exists.
+
+        Args:
+            mode (str, optional): The mode to open the file. Defaults to "r".
+
+        Returns:
+            IO[Any]: The opened file object.
+
+        Raises:
+            IOError: If there is an error opening the file.
+
+        Examples:
+            >>> file = File('data.csv')
+            >>> with file.open('w') as f:
+            ...     f.write('new content')
+            >>> with file.open() as f:
+            ...     content = f.read()
+        """
+        if "w" in mode or "a" in mode:
+            ensure_directory(self._path)
+
+        return self._path.open(mode, encoding=self._encoding)
