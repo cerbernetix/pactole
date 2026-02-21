@@ -12,6 +12,7 @@ __all__ = [
     "get_cache_path",
     "get_float",
     "get_int",
+    "import_namespace",
     "MemoryCache",
     "read_csv_file",
     "read_zip_file",
@@ -36,5 +37,6 @@ from .file import (
     write_csv_file,
     write_json_file,
 )
+from .system import import_namespace
 from .timeout import Timeout
 from .types import get_float, get_int
