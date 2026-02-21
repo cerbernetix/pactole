@@ -2,11 +2,13 @@
 
 import csv
 import io
+import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from pactole.utils import read_csv_file, write_csv_file
+from pactole.utils import EnhancedJSONEncoder, read_csv_file, write_csv_file, write_json_file
 
 
 class TestReadCsvFile:
@@ -261,3 +263,36 @@ class TestWriteCsvFile:
 
         file.seek(0)
         assert file.read() == ""
+
+
+class TestEnhancedJsonEncoder:
+    """Tests for EnhancedJSONEncoder."""
+
+    def test_enhanced_json_encoder_serializes_path(self):
+        """Test serializing Path objects."""
+
+        encoded = json.dumps({"path": Path("/tmp/data.json")}, cls=EnhancedJSONEncoder)
+
+        assert json.loads(encoded) == {"path": "/tmp/data.json"}
+
+    def test_enhanced_json_encoder_raises_for_unknown_types(self):
+        """Test that unknown types still raise a TypeError."""
+
+        with pytest.raises(TypeError):
+            json.dumps({"value": object()}, cls=EnhancedJSONEncoder)
+
+
+class TestWriteJsonFile:
+    """Tests for write_json_file function."""
+
+    def test_write_json_file_serializes_path_and_model(self):
+        """Test writing JSON with Path and Pydantic model values."""
+
+        file = io.StringIO()
+        data = {"path": Path("/tmp/data.json")}
+
+        write_json_file(file, data)
+
+        file.seek(0)
+        payload = json.loads(file.read())
+        assert payload == {"path": "/tmp/data.json"}

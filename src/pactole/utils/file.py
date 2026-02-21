@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import csv
+import json
 from itertools import tee
-from typing import IO, Iterable
+from pathlib import PurePath
+from typing import IO, Any, Iterable
 
 # The amount of bytes to read for auto-detecting the CSV dialect
 CSV_SAMPLE_SIZE = 4096
@@ -134,3 +136,59 @@ def write_csv_file(
 
     if writer:
         writer.writerows(walk)
+
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+    """JSON encoder that handles additional types like Path objects.
+
+    Examples:
+        >>> json.dumps({'path': Path('/home/user/file.txt')}, cls=EnhancedJSONEncoder)
+        '{"path": "/home/user/file.txt"}'
+    """
+
+    def default(self, o: Any) -> Any:
+        """Convert unhandled objects for JSON serialization.
+
+        Args:
+            o (Any): The object to serialize.
+
+        Returns:
+            Any: The serialized object.
+        """
+        if isinstance(o, PurePath):
+            return str(o)
+        return super().default(o)
+
+
+def write_json_file(
+    file: IO[str],
+    data: Any,
+    indent: int | str | None = None,
+    ensure_ascii: bool = False,
+    **kwargs,
+) -> None:
+    """Write data to a JSON file.
+
+    Args:
+        file (IO[str]): The file object to write to. It must be opened in text mode.
+        data (Any): The data to write to the JSON file.
+        indent (int | str | None, optional): The indentation level for pretty-printing the JSON
+            data. Defaults to None.
+        ensure_ascii (bool, optional): Whether to escape non-ASCII characters. Defaults to False.
+        **kwargs: Additional arguments to pass to json.dump.
+
+    Raises:
+        TypeError: If the data cannot be serialized to JSON.
+
+    Examples:
+        >>> with open('output.json', 'w', encoding='utf-8') as f:
+        ...     write_json_file(f, {'key': 'value'})
+    """
+    json.dump(
+        data,
+        file,
+        cls=EnhancedJSONEncoder,
+        indent=indent,
+        ensure_ascii=ensure_ascii,
+        **kwargs,
+    )
