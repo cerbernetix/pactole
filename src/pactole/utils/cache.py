@@ -1,8 +1,10 @@
-"""Cache utilities for in-memory caching."""
+"""Cache utilities for in-memory caching with optional timeout support."""
 
 from __future__ import annotations
 
 from typing import Any, Protocol
+
+from .timeout import Timeout
 
 
 class CacheLoader(Protocol):
@@ -201,3 +203,141 @@ class MemoryCache:
         """
         self._clear()
         self._loaded = False
+
+
+class TimeoutCache(MemoryCache):
+    """A simple in-memory cache with timeout support.
+
+    Args:
+        data (Any, optional): Initial data to populate the cache.
+            Defaults to None.
+        loader (CacheLoader | None, optional): A callable that loads the data to be cached.
+            If not provided, it defaults to a function that returns None. Defaults to None.
+        transformer (CacheTransformer | None, optional): A callable that transforms the cached data.
+            If not provided, it defaults to a function that returns the data unchanged.
+            Defaults to None.
+        cache_timeout (float, optional): The cache timeout in seconds.
+            Defaults to 3600 seconds (1 hour).
+
+    Examples:
+        >>> def loader():
+        ...     return {"data": "value"}
+        ...
+        >>> cache = TimeoutCache(loader=loader, cache_timeout=1)
+        >>> cache.data
+        None
+        >>> cache.load()
+        {'data': 'value'}
+        >>> cache.data
+        {'data': 'value'}
+        >>> cache.expired
+        False
+        >>> time.sleep(1.1)
+        >>> cache.expired
+        True
+        >>> cache.load()  # This will reload the cache
+        {'data': 'value'}
+        >>> cache.clear()
+        >>> cache.data
+        None
+    """
+
+    DEFAULT_CACHE_TIMEOUT = 3600.0
+
+    _timeout: Timeout
+
+    def __init__(
+        self,
+        data: Any = None,
+        loader: CacheLoader | None = None,
+        transformer: CacheTransformer | None = None,
+        cache_timeout: float = DEFAULT_CACHE_TIMEOUT,
+    ) -> None:
+        super().__init__(data=data, loader=loader, transformer=transformer)
+        self._timeout = Timeout(cache_timeout, start=data is not None)
+
+    def _refresh_condition(self) -> bool:
+        return super()._refresh_condition() or self._timeout.expired
+
+    def _read(self) -> Any:
+        data = super()._read()
+        self._timeout.start()
+        return data
+
+    def _write(self, data: Any) -> None:
+        super()._write(data)
+        self._timeout.start()
+
+    def _clear(self) -> None:
+        self._cache = None
+        self._timeout.stop()
+
+    @property
+    def timeout(self) -> float:
+        """Get the cache timeout in seconds.
+
+        Returns:
+            float: The cache timeout in seconds.
+
+        Examples:
+            >>> def loader():
+            ...     return {"data": "value"}
+            ...
+            >>> cache = TimeoutCache(loader=loader, cache_timeout=10)
+            >>> cache.timeout
+            10.0
+        """
+        return self._timeout.seconds
+
+    @timeout.setter
+    def timeout(self, value: float) -> None:
+        """Set the cache timeout in seconds.
+
+        Args:
+            value (float): The new cache timeout in seconds.
+
+        Examples:
+        """
+        self._timeout.seconds = value
+
+    @property
+    def age(self) -> float:
+        """Get the age of the cache in seconds.
+
+        Returns:
+            float: The age of the cache in seconds.
+
+        Examples:
+            >>> def loader():
+            ...     return {"data": "value"}
+            ...
+            >>> cache = TimeoutCache(loader=loader, cache_timeout=10.0)
+            >>> cache.load()
+            {'data': 'value'}
+            >>> age = cache.age
+            >>> 0 <= age < 0.1
+            True
+        """
+        return self._timeout.elapsed
+
+    @property
+    def expired(self) -> bool:
+        """Check if the cache has expired.
+
+        Returns:
+            bool: True if the cache has expired, False otherwise.
+
+        Examples:
+            >>> def loader():
+            ...     return {"data": "value"}
+            ...
+            >>> cache = TimeoutCache(loader=loader, cache_timeout=1)
+            >>> cache.load()
+            {'data': 'value'}
+            >>> cache.expired
+            False
+            >>> time.sleep(1.1)
+            >>> cache.expired
+            True
+        """
+        return self._timeout.expired
