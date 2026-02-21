@@ -1,0 +1,263 @@
+"""Tests for file-related utilities."""
+
+import csv
+import io
+from unittest.mock import patch
+
+import pytest
+
+from pactole.utils import read_csv_file, write_csv_file
+
+
+class TestReadCsvFile:
+    """Tests for read_csv_file function."""
+
+    def test_read_csv_file_with_headers(self):
+        """Test reading CSV file with headers as dictionaries."""
+
+        csv_content = "col1,col2\n1,2\n3,4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel")
+        assert len(result) == 2
+        assert result[0] == {"col1": "1", "col2": "2"}
+        assert result[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_without_headers(self):
+        """Test reading CSV file without headers as lists."""
+
+        csv_content = "col1,col2\n1,2\n3,4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel", fieldnames=False)
+        assert len(result) == 3
+        assert result[0] == ["col1", "col2"]
+        assert result[1] == ["1", "2"]
+        assert result[2] == ["3", "4"]
+
+    def test_read_csv_file_auto_dialect(self):
+        """Test reading CSV file with auto-detected dialect."""
+
+        csv_content = "col1;col2\n1;2\n3;4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="auto")
+        assert len(result) == 2
+        assert result[0] == {"col1": "1", "col2": "2"}
+        assert result[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_with_iterator(self):
+        """Test reading CSV file with iterator mode."""
+
+        csv_content = "col1,col2\n1,2\n3,4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel", iterator=True)
+        assert hasattr(result, "__iter__")
+        rows = list(result)
+        assert len(rows) == 2
+        assert rows[0] == {"col1": "1", "col2": "2"}
+        assert rows[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_with_iterator_no_headers(self):
+        """Test reading CSV file with iterator mode and no headers."""
+
+        csv_content = "col1,col2\n1,2\n3,4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel", iterator=True, fieldnames=False)
+        assert hasattr(result, "__iter__")
+        rows = list(result)
+        assert len(rows) == 3
+        assert rows[0] == ["col1", "col2"]
+        assert rows[1] == ["1", "2"]
+        assert rows[2] == ["3", "4"]
+
+    def test_read_csv_file_with_custom_delimiter(self):
+        """Test reading CSV file with custom delimiter."""
+
+        csv_content = "col1|col2\n1|2\n3|4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel", delimiter="|")
+        assert len(result) == 2
+        assert result[0] == {"col1": "1", "col2": "2"}
+        assert result[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_empty_file(self):
+        """Test reading empty CSV file."""
+
+        csv_content = ""
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel")
+        assert len(result) == 0
+
+    def test_read_csv_file_tab_separated(self):
+        """Test reading tab-separated CSV file with auto-detection."""
+
+        csv_content = "col1\tcol2\n1\t2\n3\t4\n"
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="auto")
+        assert len(result) == 2
+        assert result[0] == {"col1": "1", "col2": "2"}
+        assert result[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_with_quotes(self):
+        """Test reading CSV file with quoted fields."""
+
+        csv_content = 'col1,col2\n"value, with comma","normal"\n'
+        file = io.StringIO(csv_content)
+
+        result = read_csv_file(file, dialect="excel")
+        assert len(result) == 1
+        assert result[0] == {"col1": "value, with comma", "col2": "normal"}
+
+    def test_read_csv_file_auto_dialect_file_position_reset(self):
+        """Test that file position is reset after dialect detection."""
+
+        csv_content = "col1,col2\n1,2\n3,4\n"
+        file = io.StringIO(csv_content)
+
+        result1 = read_csv_file(file, dialect="auto")
+        assert len(result1) == 2
+
+        file.seek(0)
+        result2 = read_csv_file(file, dialect="auto")
+        assert len(result2) == 2
+        assert result1 == result2
+
+    def test_read_csv_file_auto_dialect_retries_until_success(self):
+        """Test that auto-detection retries until it succeeds."""
+
+        csv_content = "col1;col2\n1;2\n3;4\n"
+        file = io.StringIO(csv_content)
+        sniff_calls = []
+
+        class SemiDialect(csv.Dialect):
+            """CSV dialect for semicolon-delimited data."""
+
+            delimiter = ";"
+            quotechar = '"'
+            doublequote = True
+            skipinitialspace = False
+            lineterminator = "\n"
+            quoting = csv.QUOTE_MINIMAL
+
+        def sniff_side_effect(data):
+            sniff_calls.append(data)
+            if len(sniff_calls) == 1:
+                raise csv.Error("sniff failed")
+            return SemiDialect
+
+        with patch("pactole.utils.file.csv.Sniffer.sniff", side_effect=sniff_side_effect):
+            result = read_csv_file(file, dialect="auto", sample_size=4, max_tries=3)
+
+        assert len(sniff_calls) == 2
+        assert len(sniff_calls[1]) > len(sniff_calls[0])
+        assert len(result) == 2
+        assert result[0] == {"col1": "1", "col2": "2"}
+        assert result[1] == {"col1": "3", "col2": "4"}
+
+    def test_read_csv_file_auto_dialect_raises_after_retries(self):
+        """Test that auto-detection raises after exhausting retries."""
+
+        csv_content = "col1;col2\n1;2\n3;4\n"
+        file = io.StringIO(csv_content)
+
+        with patch("pactole.utils.file.csv.Sniffer.sniff", side_effect=csv.Error("fail")) as sniff:
+            with pytest.raises(csv.Error, match="auto-detect CSV dialect"):
+                read_csv_file(file, dialect="auto", sample_size=4, max_tries=3)
+
+        assert sniff.call_count == 3
+
+
+class TestWriteCsvFile:
+    """Tests for write_csv_file function."""
+
+    def test_write_csv_file_dicts_infers_headers(self):
+        """Test writing dictionaries with inferred headers."""
+
+        file = io.StringIO()
+        data = [
+            {"col1": "1", "col2": "2"},
+            {"col1": "3", "col2": "4"},
+        ]
+
+        write_csv_file(file, data)
+
+        file.seek(0)
+        assert file.read() == "col1,col2\r\n1,2\r\n3,4\r\n"
+
+    def test_write_csv_file_dicts_with_fieldnames(self):
+        """Test writing dictionaries with explicit headers."""
+
+        file = io.StringIO()
+        data = [
+            {"col1": "1", "col2": "2"},
+            {"col1": "3", "col2": "4"},
+        ]
+
+        write_csv_file(file, data, fieldnames=["col2", "col1"])
+
+        file.seek(0)
+        assert file.read() == "col2,col1\r\n2,1\r\n4,3\r\n"
+
+    def test_write_csv_file_dicts_without_header(self):
+        """Test writing dictionaries without a header row."""
+
+        file = io.StringIO()
+        data = [
+            {"col1": "1", "col2": "2"},
+            {"col1": "3", "col2": "4"},
+        ]
+
+        write_csv_file(file, data, fieldnames=["col1", "col2"], header=False)
+
+        file.seek(0)
+        assert file.read() == "1,2\r\n3,4\r\n"
+
+    def test_write_csv_file_objects_with_to_dict(self):
+        """Test writing objects that expose to_dict instead of being dicts."""
+
+        class SampleRow:
+            """Simple row object with a to_dict implementation."""
+
+            def __init__(self, col1: str, col2: str) -> None:
+                self.col1 = col1
+                self.col2 = col2
+
+            def to_dict(self) -> dict[str, str]:
+                """Return the row as a dictionary."""
+
+                return {"col1": self.col1, "col2": self.col2}
+
+        file = io.StringIO()
+        data = [SampleRow("1", "2"), SampleRow("3", "4")]
+
+        write_csv_file(file, data)
+
+        file.seek(0)
+        assert file.read() == "col1,col2\r\n1,2\r\n3,4\r\n"
+
+    def test_write_csv_file_lists(self):
+        """Test writing list rows without headers."""
+
+        file = io.StringIO()
+        data = [["col1", "col2"], ["1", "2"], ["3", "4"]]
+
+        write_csv_file(file, data)
+
+        file.seek(0)
+        assert file.read() == "col1,col2\r\n1,2\r\n3,4\r\n"
+
+    def test_write_csv_file_empty_data(self):
+        """Test writing with no data leaves file empty."""
+
+        file = io.StringIO()
+
+        write_csv_file(file, [])
+
+        file.seek(0)
+        assert file.read() == ""
