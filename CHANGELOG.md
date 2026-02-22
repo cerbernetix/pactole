@@ -15,12 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added cache utilities including file-backed caching and timeout-aware in-memory caching.
 - Added history helpers to lotteries: `get_records()`, `find_records()`, `count()`, and `dump()`.
 - Added developer and environment documentation pages plus expanded usage examples.
+- Added MkDocs project configuration and API documentation generation tooling with `handsdown`.
+- Added CI workflows for documentation publication and release requirements alignment.
 
 ### Changed
 
 - Refactored lottery classes to use providers as the source of draw data.
 - Extended utilities for file handling, system helpers, and typed conversions.
 - Updated usage documentation with clearer real-world examples and provider customization guidance.
+- Enhanced README examples for `EuroMillions` and `EuroDreams`.
+- Updated documentation links to the hosted site and simplified documentation navigation.
 
 ### Dependencies
 
