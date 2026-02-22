@@ -17,6 +17,4 @@ Pactole is a Python library for managing lottery results.
 
 ## License
 
-Copyright (c) 2026 Jean-Sébastien CONAN
-
-Distributed under the MIT License.
+MIT License - See LICENSE file for details.
