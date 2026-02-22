@@ -34,6 +34,8 @@ lint = ["ruff", "pylint"]
 test = ["pytest-cov", "pytest"]
 doc = [
     "handsdown>=2.1.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.2",
 ]
 
 [tool.hatch.build.targets.wheel]

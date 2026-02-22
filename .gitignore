@@ -5,6 +5,7 @@ __pycache__/
 *$py.class
 build/
 dist/
+static/
 wheels/
 *.egg-info
 
