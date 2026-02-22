@@ -18,16 +18,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[project.scripts]
-doc = "scripts.generate_docs:main"
-
 [project.urls]
 "Homepage" = "https://github.com/cerbernetix/pactole"
 "Bug Tracker" = "https://github.com/cerbernetix/pactole/issues"
 
 [dependency-groups]
 dev = [
-    "lazydocs>=0.4.8",
     "pre-commit>=4.3.0",
     "pylint>=3.3.9",
     "pytest>=8.4.2",
@@ -36,7 +32,11 @@ dev = [
 ]
 lint = ["ruff", "pylint"]
 test = ["pytest-cov", "pytest"]
-doc = ['lazydocs']
+doc = [
+    "handsdown>=2.1.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.2",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pactole"]
