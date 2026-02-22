@@ -8,7 +8,7 @@ import os
 import zipfile
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, cast
 from unittest.mock import patch
 
 import pytest
@@ -313,6 +313,103 @@ class TestBaseProvider:
         assert len(records) == 1
         assert isinstance(records[0], DrawRecord)
         assert records[0].numbers == {"main": [5, 12]}
+
+    def test_load_raw_returns_cached_raw_data(self) -> None:
+        """Test load_raw returns untransformed cached records."""
+
+        cache_name = "records-raw-force"
+        draw_days = DrawDays([Weekday.TUESDAY])
+        last_draw_date = draw_days.get_last_draw_date(closest=False)
+        resolver = SampleResolver({"archive-1": "https://local.test/archive-1.csv"})
+        provider = BaseProvider(
+            resolver=resolver,
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            cache_name=cache_name,
+        )
+        csv_content = build_source_csv(
+            [
+                {
+                    "draw_date": last_draw_date.isoformat(),
+                    "deadline_date": (last_draw_date + datetime.timedelta(days=7)).isoformat(),
+                    "main_1": "5",
+                    "main_2": "12",
+                    "rank_1_winners": "1",
+                    "rank_1_gain": "100.0",
+                }
+            ]
+        )
+
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: csv_content.encode("utf-8"),
+        ):
+            raw_records = cast(list[dict[str, Any]], provider.load_raw(force=True))
+
+        assert isinstance(raw_records, list)
+        assert len(raw_records) == 1
+        first_record = next(iter(raw_records), None)
+        assert first_record is not None
+        assert isinstance(first_record, dict)
+        assert first_record["draw_date"] == last_draw_date.isoformat()
+        assert str(first_record["main_1"]) == "5"
+
+    def test_load_raw_uses_cache_when_fresh(self) -> None:
+        """Test load_raw uses cache without refreshing when data is fresh."""
+
+        cache_name = "records-raw-fresh"
+        draw_days = DrawDays([Weekday.TUESDAY])
+        last_draw_date = draw_days.get_last_draw_date(closest=False)
+        resolver = SampleResolver({"archive-1": "https://local.test/archive-1.csv"})
+        provider = BaseProvider(
+            resolver=resolver,
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            cache_name=cache_name,
+        )
+        csv_content = build_source_csv(
+            [
+                {
+                    "draw_date": last_draw_date.isoformat(),
+                    "deadline_date": (last_draw_date + datetime.timedelta(days=7)).isoformat(),
+                    "main_1": "5",
+                    "main_2": "12",
+                    "rank_1_winners": "1",
+                    "rank_1_gain": "100.0",
+                }
+            ]
+        )
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: csv_content.encode("utf-8"),
+        ):
+            provider.refresh(force=True)
+
+        set_future_mtime(data_path(cache_name))
+        fresh_provider = BaseProvider(
+            resolver=SampleResolver({}),
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            cache_name=cache_name,
+        )
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: (_ for _ in ()).throw(AssertionError("refresh not expected")),
+        ):
+            raw_records = cast(list[dict[str, Any]], fresh_provider.load_raw())
+
+        assert isinstance(raw_records, list)
+        assert len(raw_records) == 1
+        first_record = next(iter(raw_records), None)
+        assert first_record is not None
+        assert isinstance(first_record, dict)
+        assert first_record["draw_date"] == last_draw_date.isoformat()
 
     def test_need_refresh_returns_true_when_cache_outdated(self) -> None:
         """Test outdated cache data triggers refresh."""
