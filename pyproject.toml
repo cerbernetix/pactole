@@ -32,7 +32,9 @@ dev = [
 ]
 lint = ["ruff", "pylint"]
 test = ["pytest-cov", "pytest"]
-doc = []
+doc = [
+    "handsdown>=2.1.0",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pactole"]

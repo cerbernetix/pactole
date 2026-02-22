@@ -43,7 +43,9 @@ jobs:
               run: uv sync --no-dev --group=doc
 
             - name: Generate API documentation
-              run: rm -rf docs/api
+              run: |
+                  rm -rf docs/api
+                  uv run handsdown --external `git config --get remote.origin.url` -o docs/api -i src/pactole --source-code-path src/pactole
 
             - name: Commit API documentation updates
               id: commit_docs
