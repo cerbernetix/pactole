@@ -1,4 +1,4 @@
-[Pactole](../README.md) / [Documentation](./README.md)
+[Documentation](./README.md)
 
 # Installation
 

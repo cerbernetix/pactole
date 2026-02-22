@@ -230,6 +230,40 @@ class TestLotteryCombination:
         with pytest.raises(AttributeError):
             _ = LotteryCombination().numbers
 
+    def test_get_combination_factory(self):
+        """Test get_combination_factory static method behaviors."""
+
+        def custom_factory(
+            combination=None,
+            **components,
+        ) -> LotteryCombination:
+            return LotteryCombination().get_combination(combination, **components)
+
+        factory = LotteryCombination.get_combination_factory(custom_factory)
+        assert factory is custom_factory
+
+        template = LotteryCombination(
+            numbers=BoundCombination(
+                count=NUMBER_COUNT,
+                start=NUMBER_START,
+                end=NUMBER_END,
+                combinations=NUMBER_COMBINATIONS,
+            )
+        )
+
+        factory = LotteryCombination.get_combination_factory(template)
+        assert callable(factory)
+        assert factory(numbers=[1, 2, 3, 4, 5]) == template.get_combination(numbers=[1, 2, 3, 4, 5])
+
+        fallback_factory = LotteryCombination.get_combination_factory(None)
+        fallback_combination = fallback_factory()
+        assert isinstance(fallback_combination, LotteryCombination)
+        assert fallback_combination.components == {}
+        assert fallback_combination.winning_ranks == {}
+
+        fallback_factory = LotteryCombination.get_combination_factory(object())
+        assert fallback_factory().components == {}
+
     def test_combination_generate(self):
         """Test the generate method of LotteryCombination."""
 

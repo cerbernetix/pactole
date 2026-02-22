@@ -4,19 +4,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pactole"
-version = "0.2.0"
+version = "0.3.0"
 description = "A library for managing lottery results."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
-dependencies = []
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "requests>=2.32.5",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
-[project.scripts]
-doc = "scripts.generate_docs:main"
 
 [project.urls]
 "Homepage" = "https://github.com/cerbernetix/pactole"
@@ -24,7 +24,6 @@ doc = "scripts.generate_docs:main"
 
 [dependency-groups]
 dev = [
-    "lazydocs>=0.4.8",
     "pre-commit>=4.3.0",
     "pylint>=3.3.9",
     "pytest>=8.4.2",
@@ -33,7 +32,11 @@ dev = [
 ]
 lint = ["ruff", "pylint"]
 test = ["pytest-cov", "pytest"]
-doc = ['lazydocs']
+doc = [
+    "handsdown>=2.1.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.2",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pactole"]
