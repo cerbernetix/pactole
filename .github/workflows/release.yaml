@@ -43,7 +43,7 @@ jobs:
               run: uv sync --no-dev --group=doc
 
             - name: Generate API documentation
-              run: uv run doc
+              run: rm -rf docs/api
 
             - name: Commit API documentation updates
               id: commit_docs
