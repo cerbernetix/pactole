@@ -18,7 +18,7 @@ uv add -U pactole
 
 ## Documentation
 
-See the complete documentation index: [Documentation](./docs/README.md).
+See the complete documentation index: [Documentation](https://cerbernetix.github.io/pactole/).
 
 ## Requirements
 
@@ -92,8 +92,8 @@ print(len(records), len(matches))
 
 See detailed usage guides:
 
-- [Combinations](./docs/usage/combinations.md)
-- [Lottery classes](./docs/usage/lotteries.md)
+- [Combinations](https://cerbernetix.github.io/pactole/usage/combinations/)
+- [Lottery classes](https://cerbernetix.github.io/pactole/usage/lotteries/)
 
 ## License
 
