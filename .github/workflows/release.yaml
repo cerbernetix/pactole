@@ -13,7 +13,7 @@ permissions:
 
 jobs:
     generate_documentation:
-        if: >-
+        if: &release_pr_guard >-
             github.actor != 'github-actions[bot]' &&
             contains(github.event.pull_request.labels.*.name, 'release') &&
             github.event.pull_request.head.repo.full_name == github.repository
@@ -63,8 +63,62 @@ jobs:
               if: steps.commit_docs.outputs.committed == 'true'
               run: git push origin "${{ github.event.pull_request.head.ref }}"
 
-    build_and_publish:
+    align_requirements:
         needs: generate_documentation
+        if: *release_pr_guard
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.pull_request.head.ref }}
+                  fetch-depth: 0
+                  fetch-tags: true
+
+            - name: Configure git
+              run: |
+                  git config user.name "github-actions"
+                  git config user.email "github-actions@github.com"
+
+            - name: Setup Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version-file: '.python-version'
+
+            - name: Setup uv
+              uses: astral-sh/setup-uv@v7
+
+            - name: Align requirements.txt with uv.lock
+              run: |
+                  uv sync --no-dev
+                  uv pip freeze | sed 's@^-e file://.*@-e .@' > requirements.txt
+
+            - name: Align requirements-dev.txt with uv.lock
+              run: |
+                  uv sync
+                  uv pip freeze | sed 's@^-e file://.*@-e .@' > requirements-dev.txt
+
+            - name: Commit requirements updates
+              id: commit_requirements
+              run: |
+                  git add requirements.txt requirements-dev.txt
+                  if git diff --cached --quiet; then
+                      echo "No requirements changes to commit"
+                      echo "committed=false" >> "$GITHUB_OUTPUT"
+                  else
+                      git commit -m "chore: align requirements with uv.lock [ci skip]"
+                      echo "committed=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Push changes to release branch
+              if: steps.commit_requirements.outputs.committed == 'true'
+              run: git push origin "${{ github.event.pull_request.head.ref }}"
+
+    build_and_publish:
+        needs:
+            - generate_documentation
+            - align_requirements
+        if: *release_pr_guard
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -93,6 +147,7 @@ jobs:
 
     merge_tag_and_release:
         needs: build_and_publish
+        if: *release_pr_guard
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
