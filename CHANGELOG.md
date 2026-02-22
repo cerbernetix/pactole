@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactored lottery classes to use providers as the source of draw data.
 - Extended utilities for file handling, system helpers, and typed conversions.
+- Updated usage documentation with clearer real-world examples and provider customization guidance.
 
 ### Dependencies
 

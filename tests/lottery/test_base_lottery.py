@@ -23,12 +23,19 @@ class DummyProvider:
         self.draw_days = draw_days
         self.combination_factory = combination_factory
         self._records = list(records)
+        self._raw_records = [record.to_dict() for record in self._records]
         self.load_calls: list[bool] = []
+        self.load_raw_calls: list[bool] = []
 
     def load(self, force: bool = False) -> list[DrawRecord]:
         """Return the cached records."""
         self.load_calls.append(force)
         return list(self._records)
+
+    def load_raw(self, force: bool = False) -> list[dict]:
+        """Return cached raw records."""
+        self.load_raw_calls.append(force)
+        return list(self._raw_records)
 
 
 def build_combination_factory() -> tuple[Callable[..., LotteryCombination], LotteryCombination]:
@@ -155,7 +162,8 @@ class TestBaseLottery:
         result = lottery.dump(force=True)
 
         assert result == [record.to_dict()]
-        assert provider.load_calls == [True]
+        assert provider.load_raw_calls == [True]
+        assert not provider.load_calls
 
     def test_get_records_yields_cached_records(self) -> None:
         """Yield cached records and pass the force flag."""

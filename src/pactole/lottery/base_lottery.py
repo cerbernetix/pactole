@@ -236,6 +236,13 @@ class BaseLottery:
     def dump(self, force: bool = False) -> list[dict]:
         """Dump the cached data as a list of dictionaries.
 
+        If the cache is missing or outdated, it will be refreshed before dumping the data.
+
+        The returned list of dictionaries will have the same structure as the data stored in
+        the cache file, without being transformed into DrawRecord instances. This can be useful
+        for debugging or for scenarios where raw data manipulation is required, like exporting
+        to Pandas DataFrame or performing custom analyses.
+
         Args:
             force (bool, optional): If True, forces a refresh of the cache before dumping.
                 Defaults to False.
@@ -274,7 +281,7 @@ class BaseLottery:
                 ...
             ]
         """
-        return [record.to_dict() for record in self._provider.load(force=force)]
+        return self._provider.load_raw(force=force)
 
     def get_records(self, force: bool = False) -> Iterator[DrawRecord]:
         """Get the cached data as an iterator of DrawRecord instances.

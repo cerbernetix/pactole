@@ -218,6 +218,52 @@ class BaseProvider:
         self._refresh_if_needed(force=force)
         return self._cache.load()
 
+    def load_raw(self, force: bool = False) -> list[dict]:
+        """Get the cached data as a list of dictionaries.
+
+        If the cache is missing or outdated, it will be refreshed before returning the data.
+
+        The returned list of dictionaries will have the same structure as the data stored in
+        the cache file, without being transformed into DrawRecord instances. This can be useful
+        for debugging or for scenarios where raw data manipulation is required, like exporting
+        to Pandas DataFrame or performing custom analyses.
+
+        Args:
+            force (bool, optional): If True, forces a refresh of the cache before getting the data.
+                Defaults to False.
+
+        Returns:
+            list[dict]: A list of dictionaries representing the cached data.
+
+        Examples:
+            >>> provider = BaseProvider(
+            ...     resolver=MyResolver(),
+            ...     parser=MyParser(),
+            ...     draw_days=[Weekday.TUESDAY, Weekday.FRIDAY],
+            ...     combination_factory=EuroMillionsCombination,
+            ...     cache_name="euromillions"
+            ... )
+            >>> provider.load_raw()
+            [
+                {
+                    'period': '202001',
+                    'draw_date': '2020-01-01',
+                    'deadline_date': '2020-01-15',
+                    'numbers_1': '5',
+                    'numbers_2': '12',
+                    'numbers_3': '23',
+                    'numbers_4': '34',
+                    'numbers_5': '45',
+                    'stars_1': '2',
+                    'stars_2': '9',
+                    ...
+                },
+                ...
+            ]
+        """
+        self._refresh_if_needed(force=force)
+        return self._cache.load_raw()
+
     def refresh(self, force: bool = False) -> None:
         """Refresh the provider's cache.
 

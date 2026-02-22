@@ -97,6 +97,4 @@ See detailed usage guides:
 
 ## License
 
-Copyright (c) 2026 Jean-Sébastien CONAN
-
-Distributed under the MIT License.
+MIT License - See LICENSE file for details.
