@@ -329,7 +329,8 @@ class BaseProvider:
         if self._refresh_timeout.started and not self._refresh_timeout.expired:
             return False
 
-        last_draw_date = self._draw_days.get_last_draw_date(closest=False)
+        # Is the current time is before the refresh threshold on a draw day?
+        last_draw_date = self._draw_days.get_last_draw_date(closest=True)
         last_draw_datetime = datetime.datetime.combine(last_draw_date, self._draw_day_refresh_time)
         if self._cache.date() < last_draw_datetime:
             return True
@@ -337,7 +338,9 @@ class BaseProvider:
         records = self._cache.load()
         if not records:
             return True
-        return records[-1].draw_date < last_draw_date
+
+        # Is the last record's draw date before the last draw date according to the draw days?
+        return records[-1].draw_date < self._draw_days.get_last_draw_date(closest=False)
 
     def _load_manifest(self, force: bool) -> Manifest:
         """Load the manifest of archives."""
