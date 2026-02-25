@@ -2,7 +2,6 @@ name: Lint
 
 on:
     pull_request:
-        branches: [main, develop]
 
     workflow_dispatch:
 
@@ -22,10 +21,11 @@ jobs:
               with:
                   python-version-file: '.python-version'
 
-            - name: Install uv and dependencies
-              run: |
-                  curl -LsSf https://astral.sh/uv/install.sh | sh
-                  uv sync --only-group=lint
+            - name: Setup uv
+              uses: astral-sh/setup-uv@v7
+
+            - name: Install dependencies
+              run: uv sync --group=lint
 
             - name: Run Ruff
               run: uv run ruff check .
