@@ -46,8 +46,12 @@ This project is a Python library for managing lottery results.
 ## Development Workflow
 
 - Use `uv sync` to install dependencies.
-- Use `uv run` to execute scripts and tests, e.g., `uv run pytest` for testing.
-- Use `ruff check .` and `ruff format .` to lint and format code.
+- Use the following commands for development tasks (replace `$path` with the target file or directory):
+    - **Code check (ruff)**: `uv run ruff check $path`
+    - **Code check (pylint)**: `uv run pylint $path`
+    - **Code format**: `uv run ruff format $path`
+    - **Unit tests**: `uv run pytest`
+    - **Unit tests with coverage**: `uv run pytest --cov`
 - When generating code, ensure it is compatible with Python 3.10.
 - Prefer using `pathlib` for file system operations.
 - Use the standard `logging` module for logging.
@@ -67,16 +71,15 @@ Before finishing work on generated code:
 
 - Use `pytest` for testing.
 - Ensure tests are placed in a `tests/` directory.
-- Target complete coverage when writing unit tests, make sure to test all functions and methods; pay also attention to unmet conditions.
-- Prefer `unittest.mock.patch` over `monkeypatch` in tests.
-- Prefer mocked time (e.g., `time.monotonic` via `unittest.mock.patch`) over `time.sleep()`.
-- Only mock external dependencies; use real internal classes and utilities when practical.
-- Always run tests after making code or test changes. Default to `pytest` unless tests are known to be long-running.
-- If tests cannot be run, explain why and provide the exact command that should be run.
-- Run coverage checks before finishing a code task when feasible; otherwise, note that coverage was skipped.
-- Always fix failing tests before finishing a code task.
-- Intercept logging events using the `caplog` fixture to verify log messages.
-- Ensure test messages do not leak into the test runner output (stdout/stderr).
+- **Coverage**: Target complete coverage when writing unit tests. Test all functions and methods, paying special attention to unmet conditions and edge cases.
+- **Mocking**:
+    - Prefer `unittest.mock.patch` over `monkeypatch` in tests.
+    - Only mock external dependencies; use real internal classes and utilities when practical.
+    - Prefer mocked time (e.g., `time.monotonic` via `unittest.mock.patch`) over `time.sleep()`.
+- **Test Execution Discipline**:
+    - Always run tests after making code or test changes.
+    - Always fix failing tests before finishing a code task.
+    - Run coverage checks before finishing a code task when feasible; otherwise, note that coverage was skipped.
 - **Structure**:
     - Global functions: Single unit test functions are acceptable.
     - Classes: Use a single unit test class per module (e.g., `class TestClassName:`).
@@ -87,3 +90,6 @@ Before finishing work on generated code:
     - Add one blank line between preparation steps and the first assertion in tests.
     - Keep unit tests ordered to match the order of the source code under test.
     - Do not add dummy comments in unit tests unless intent needs to be explained.
+- **Logging**:
+    - Intercept logging events using the `caplog` fixture to verify log messages.
+    - Ensure test messages do not leak into the test runner output (stdout/stderr).
