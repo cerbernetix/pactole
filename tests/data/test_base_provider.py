@@ -245,6 +245,67 @@ class TestBaseProvider:
 
         assert provider.draw_day_refresh_time is refresh_time
 
+    def test_init_uses_cache_root_name_parameter(self, tmp_path: Path) -> None:
+        """Test cache root name from parameter takes precedence over environment variable."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {"PACTOLE_CACHE_ROOT": "env-root"}):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                    cache_root_name="param-root",
+                )
+
+        assert captured_root_names == ["param-root"]
+
+    def test_init_uses_cache_root_name_from_environment(self, tmp_path: Path) -> None:
+        """Test cache root name is read from environment when parameter is not provided."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {"PACTOLE_CACHE_ROOT": "env-root"}, clear=False):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                )
+
+        assert captured_root_names == ["env-root"]
+
+    def test_init_uses_default_cache_root_name_when_not_provided(self, tmp_path: Path) -> None:
+        """Test cache root name defaults to 'pactole' when unset in parameter and environment."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                )
+
+        assert captured_root_names == [BaseProvider.CACHE_ROOT_NAME]
+
     def test_generate_uses_combination_factory(self) -> None:
         """Test combination_factory returns the provided factory."""
 

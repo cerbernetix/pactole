@@ -121,6 +121,22 @@ See detailed usage guides:
 - [Combinations](https://cerbernetix.github.io/pactole/usage/combinations/)
 - [Lottery classes](https://cerbernetix.github.io/pactole/usage/lotteries/)
 
+## Environment variables
+
+Built-in lotteries and providers can be configured with environment variables.
+
+- `PACTOLE_CACHE_ROOT`
+- `FDJ_ARCHIVES_PAGE_URL`
+- `EUROMILLIONS_PROVIDER_CLASS`, `EUROMILLIONS_DRAW_DAYS`,
+  `EUROMILLIONS_DRAW_DAY_REFRESH_TIME`, `EUROMILLIONS_CACHE_NAME`,
+  `EUROMILLIONS_ARCHIVES_PAGE`
+- `EURODREAMS_PROVIDER_CLASS`, `EURODREAMS_DRAW_DAYS`,
+  `EURODREAMS_DRAW_DAY_REFRESH_TIME`, `EURODREAMS_CACHE_NAME`,
+  `EURODREAMS_ARCHIVES_PAGE`
+
+See the full reference with defaults and behavior:
+[Environment variables](https://cerbernetix.github.io/pactole/environment/).
+
 ## License
 
 MIT License - See LICENSE file for details.

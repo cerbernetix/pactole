@@ -6,6 +6,19 @@ Pactole can be configured with environment variables to override built-in defaul
 and lotteries. These settings are read when creating a lottery instance without explicitly
 providing a provider.
 
+## Global provider cache
+
+Base provider cache root configuration used by `pactole.data.base_provider.BaseProvider`.
+
+| Name                 | Default value | Description                                                                                 |
+| -------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `PACTOLE_CACHE_ROOT` | `pactole`     | Root cache directory name used by providers when `cache_root_name` is not provided in code. |
+
+Notes:
+
+- `cache_root_name` constructor parameter takes precedence over `PACTOLE_CACHE_ROOT`.
+- If neither `cache_root_name` nor `PACTOLE_CACHE_ROOT` is provided, the default is `pactole`.
+
 ## EuroMillions
 
 EuroMillions lottery configuration used when instantiating `pactole.lottery.euromillions.EuroMillions`.
