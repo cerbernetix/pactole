@@ -6,6 +6,7 @@ import datetime
 import json
 import os
 import zipfile
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Generator, cast
@@ -160,6 +161,46 @@ def set_future_mtime(path: Path) -> None:
     os.utime(path, (future, future))
 
 
+@contextmanager
+def freeze_provider_clock(
+    *,
+    today: datetime.date,
+    now: datetime.datetime,
+) -> Generator[None, None, None]:
+    """Freeze current date/time for BaseProvider refresh-condition tests."""
+
+    class FrozenDate(datetime.date):
+        """Frozen date class for deterministic tests."""
+
+        @classmethod
+        def today(cls) -> datetime.date:
+            return cls(today.year, today.month, today.day)
+
+    class FrozenDateTime(datetime.datetime):
+        """Frozen datetime class for deterministic tests."""
+
+        @classmethod
+        def now(cls, tz: datetime.tzinfo | None = None) -> datetime.datetime:
+            frozen_now = cls(
+                now.year,
+                now.month,
+                now.day,
+                now.hour,
+                now.minute,
+                now.second,
+                now.microsecond,
+            )
+            if tz is not None:
+                return frozen_now.replace(tzinfo=tz)
+            return frozen_now
+
+    with (
+        patch("pactole.utils.days.datetime.date", FrozenDate),
+        patch.object(base_provider_module.datetime, "datetime", FrozenDateTime),
+    ):
+        yield
+
+
 class DummyCombination:
     """Combination stub with a predictable generate method for tests."""
 
@@ -244,6 +285,67 @@ class TestBaseProvider:
         )
 
         assert provider.draw_day_refresh_time is refresh_time
+
+    def test_init_uses_cache_root_name_parameter(self, tmp_path: Path) -> None:
+        """Test cache root name from parameter takes precedence over environment variable."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {"PACTOLE_CACHE_ROOT": "env-root"}):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                    cache_root_name="param-root",
+                )
+
+        assert captured_root_names == ["param-root"]
+
+    def test_init_uses_cache_root_name_from_environment(self, tmp_path: Path) -> None:
+        """Test cache root name is read from environment when parameter is not provided."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {"PACTOLE_CACHE_ROOT": "env-root"}, clear=False):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                )
+
+        assert captured_root_names == ["env-root"]
+
+    def test_init_uses_default_cache_root_name_when_not_provided(self, tmp_path: Path) -> None:
+        """Test cache root name defaults to 'pactole' when unset in parameter and environment."""
+
+        resolver = SampleResolver({})
+        parser = SampleParser()
+        captured_root_names: list[str] = []
+
+        def fake_get_cache_path(root_name: str) -> Path:
+            captured_root_names.append(root_name)
+            return tmp_path
+
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(base_provider_module, "get_cache_path", fake_get_cache_path):
+                BaseProvider(
+                    resolver=resolver,
+                    parser=parser,
+                )
+
+        assert captured_root_names == [BaseProvider.CACHE_ROOT_NAME]
 
     def test_generate_uses_combination_factory(self) -> None:
         """Test combination_factory returns the provided factory."""
@@ -470,12 +572,13 @@ class TestBaseProvider:
         assert result is True
 
     def test_need_refresh_returns_true_when_last_record_is_outdated(self) -> None:
-        """Test stale cached records are ignored until timeout expires."""
+        """Test refresh is triggered when the latest draw record is missing after draw day."""
 
         cache_name = "refresh-stale-record"
         draw_days = DrawDays([Weekday.MONDAY])
-        last_draw_date = draw_days.get_last_draw_date(closest=False)
-        previous_draw_date = last_draw_date - datetime.timedelta(days=7)
+        frozen_today = datetime.date(2024, 6, 11)
+        frozen_now = datetime.datetime(2024, 6, 11, 9, 0)
+        previous_draw_date = datetime.date(2024, 6, 3)
         provider = PublicProvider(
             resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
             parser=SampleParser(),
@@ -483,6 +586,7 @@ class TestBaseProvider:
             combination_factory=build_combination,
             draw_day_refresh_time=0,
             cache_name=cache_name,
+            refresh_timeout=0,
         )
         payload = build_source_csv(
             [
@@ -504,16 +608,19 @@ class TestBaseProvider:
             provider.refresh(force=True)
         set_future_mtime(data_path(cache_name))
 
-        result = provider.need_refresh()
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
 
-        assert result is False
+        assert result is True
 
     def test_need_refresh_returns_false_when_cache_and_records_are_current(self) -> None:
         """Test fresh cache with up-to-date records does not trigger refresh."""
 
         cache_name = "refresh-current-cache"
         draw_days = DrawDays([Weekday.MONDAY])
-        last_draw_date = draw_days.get_last_draw_date(closest=False)
+        frozen_today = datetime.date(2024, 6, 11)
+        frozen_now = datetime.datetime(2024, 6, 11, 9, 0)
+        last_draw_date = datetime.date(2024, 6, 10)
         provider = PublicProvider(
             resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
             parser=SampleParser(),
@@ -521,6 +628,7 @@ class TestBaseProvider:
             combination_factory=build_combination,
             draw_day_refresh_time=0,
             cache_name=cache_name,
+            refresh_timeout=0,
         )
         payload = build_source_csv(
             [
@@ -542,16 +650,19 @@ class TestBaseProvider:
             provider.refresh(force=True)
         set_future_mtime(data_path(cache_name))
 
-        result = provider.need_refresh()
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
 
         assert result is False
 
-    def test_need_refresh_returns_true_when_cache_is_before_refresh_time(self) -> None:
-        """Test refresh is skipped before draw time while timeout is active."""
+    def test_need_refresh_returns_false_before_draw_refresh_time_when_timeout_active(self) -> None:
+        """Test refresh stays disabled while timeout is active, including on draw day."""
 
         cache_name = "refresh-before-draw-time-margin"
         draw_days = DrawDays([Weekday.MONDAY])
-        last_draw_date = draw_days.get_last_draw_date(closest=False)
+        frozen_today = datetime.date(2024, 6, 10)
+        frozen_now = datetime.datetime(2024, 6, 10, 19, 50)
+        last_draw_date = datetime.date(2024, 6, 3)
         provider = PublicProvider(
             resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
             parser=SampleParser(),
@@ -559,6 +670,7 @@ class TestBaseProvider:
             combination_factory=build_combination,
             draw_day_refresh_time="20:00",
             cache_name=cache_name,
+            refresh_timeout=300,
         )
         payload = build_source_csv(
             [
@@ -579,15 +691,63 @@ class TestBaseProvider:
         ):
             provider.refresh(force=True)
         before_refresh_time = datetime.datetime.combine(
-            last_draw_date,
+            frozen_today,
             datetime.time(19, 50),
         ).timestamp()
         path = data_path(cache_name)
         os.utime(path, (before_refresh_time, before_refresh_time))
 
-        result = provider.need_refresh()
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
 
         assert result is False
+
+    def test_need_refresh_returns_true_after_draw_refresh_time_on_draw_day(self) -> None:
+        """Test draw-day refresh happens after the configured refresh threshold."""
+
+        cache_name = "refresh-after-draw-threshold"
+        draw_days = DrawDays([Weekday.MONDAY])
+        frozen_today = datetime.date(2024, 6, 10)
+        frozen_now = datetime.datetime(2024, 6, 10, 20, 10)
+        last_draw_date = datetime.date(2024, 6, 3)
+        provider = PublicProvider(
+            resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            draw_day_refresh_time="20:00",
+            cache_name=cache_name,
+            refresh_timeout=0,
+        )
+        payload = build_source_csv(
+            [
+                {
+                    "draw_date": last_draw_date.isoformat(),
+                    "deadline_date": (last_draw_date + datetime.timedelta(days=7)).isoformat(),
+                    "main_1": "5",
+                    "main_2": "12",
+                    "rank_1_winners": "1",
+                    "rank_1_gain": "100.0",
+                }
+            ]
+        )
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: payload.encode("utf-8"),
+        ):
+            provider.refresh(force=True)
+        before_refresh_time = datetime.datetime.combine(
+            frozen_today,
+            datetime.time(19, 50),
+        ).timestamp()
+        path = data_path(cache_name)
+        os.utime(path, (before_refresh_time, before_refresh_time))
+
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
+
+        assert result is True
 
     def test_load_skips_refresh_until_timeout_expires(self) -> None:
         """Test load skips refresh checks while timeout has not expired."""

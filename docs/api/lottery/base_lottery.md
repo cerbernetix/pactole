@@ -25,6 +25,10 @@
 
 A base class for lottery implementations.
 
+Environment Variables:
+    PACTOLE_CACHE_ROOT (str): The root directory for cache files.
+        Defaults to "pactole".
+
 #### Arguments
 
 - `provider` *BaseProvider* - The data provider to use for fetching lottery results.
@@ -68,7 +72,7 @@ class BaseLottery:
 
 ### BaseLottery()._find_records_by_combination
 
-[Show source in base_lottery.py:384](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L384)
+[Show source in base_lottery.py:387](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L387)
 
 Find lottery results based on a combination.
 
@@ -82,7 +86,7 @@ def _find_records_by_combination(
 
 ### BaseLottery()._find_records_by_winning_rank
 
-[Show source in base_lottery.py:396](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L396)
+[Show source in base_lottery.py:399](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L399)
 
 Find lottery results based on a combination and an optional target rank.
 
@@ -100,7 +104,7 @@ def _find_records_by_winning_rank(
 
 ### BaseLottery().combination_factory
 
-[Show source in base_lottery.py:76](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L76)
+[Show source in base_lottery.py:79](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L79)
 
 Return the combination factory associated with this lottery.
 
@@ -133,7 +137,7 @@ def combination_factory(self) -> CombinationFactory: ...
 
 ### BaseLottery().count
 
-[Show source in base_lottery.py:217](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L217)
+[Show source in base_lottery.py:220](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L220)
 
 Return the total number of lottery records available in the cache.
 
@@ -163,7 +167,7 @@ def count(self) -> int: ...
 
 ### BaseLottery().draw_days
 
-[Show source in base_lottery.py:57](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L57)
+[Show source in base_lottery.py:60](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L60)
 
 Return the DrawDays instance associated with this lottery.
 
@@ -193,7 +197,7 @@ def draw_days(self) -> DrawDays: ...
 
 ### BaseLottery().dump
 
-[Show source in base_lottery.py:236](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L236)
+[Show source in base_lottery.py:239](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L239)
 
 Dump the cached data as a list of dictionaries.
 
@@ -255,7 +259,7 @@ def dump(self, force: bool = False) -> list[dict]: ...
 
 ### BaseLottery().find_records
 
-[Show source in base_lottery.py:319](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L319)
+[Show source in base_lottery.py:322](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L322)
 
 Find lottery results based on a query.
 
@@ -322,7 +326,7 @@ def find_records(
 
 ### BaseLottery().generate
 
-[Show source in base_lottery.py:168](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L168)
+[Show source in base_lottery.py:171](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L171)
 
 Generate a list of random lottery combinations.
 
@@ -359,7 +363,7 @@ def generate(self, n: int = 1, partitions: int = 1) -> list[LotteryCombination]:
 
 ### BaseLottery().get_combination
 
-[Show source in base_lottery.py:193](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L193)
+[Show source in base_lottery.py:196](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L196)
 
 Create a lottery combination from the provided components.
 
@@ -397,7 +401,7 @@ def get_combination(
 
 ### BaseLottery().get_last_draw_date
 
-[Show source in base_lottery.py:98](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L98)
+[Show source in base_lottery.py:101](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L101)
 
 Return the date of the last lottery draw.
 
@@ -443,7 +447,7 @@ def get_last_draw_date(
 
 ### BaseLottery().get_next_draw_date
 
-[Show source in base_lottery.py:133](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L133)
+[Show source in base_lottery.py:136](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L136)
 
 Return the date of the next lottery draw.
 
@@ -489,7 +493,7 @@ def get_next_draw_date(
 
 ### BaseLottery().get_records
 
-[Show source in base_lottery.py:286](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L286)
+[Show source in base_lottery.py:289](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L289)
 
 Get the cached data as an iterator of DrawRecord instances.
 

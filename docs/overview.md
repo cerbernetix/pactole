@@ -87,6 +87,7 @@ records = list(lottery.get_records())
 
 Defaults can be overridden for built-in lotteries:
 
+- `PACTOLE_CACHE_ROOT`
 - `EUROMILLIONS_PROVIDER_CLASS`
 - `EUROMILLIONS_DRAW_DAYS`
 - `EUROMILLIONS_DRAW_DAY_REFRESH_TIME`

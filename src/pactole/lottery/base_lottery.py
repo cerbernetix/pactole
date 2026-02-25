@@ -17,6 +17,9 @@ from ..utils import Day, DrawDays, Weekday
 class BaseLottery:
     """A base class for lottery implementations.
 
+    Environment Variables:
+        PACTOLE_CACHE_ROOT (str): The root directory for cache files.
+            Defaults to "pactole".
 
     Args:
         provider (BaseProvider): The data provider to use for fetching lottery results.

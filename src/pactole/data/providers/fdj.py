@@ -25,8 +25,8 @@ class FDJResolver(BaseResolver):
 
     Environment Variables:
         FDJ_ARCHIVES_PAGE_URL (str): The URL template for the archives page, which must include the
-            placeholder '{name}' for the lottery name. Defaults to
-            "https://www.fdj.fr/jeux-de-tirage/{name}/historique".
+            placeholder '{name}' for the lottery name.
+            Defaults to "https://www.fdj.fr/jeux-de-tirage/{name}/historique".
 
     Args:
         archives_page_url (str): The URL of the archives page. This can be a full URL or a lottery
@@ -243,6 +243,13 @@ class FDJParser(BaseParser):
 
 class FDJProvider(BaseProvider):
     """Data provider for FDJ archives.
+
+    Environment Variables:
+        FDJ_ARCHIVES_PAGE_URL (str): The URL template for the archives page, which must include the
+            placeholder '{name}' for the lottery name.
+            Defaults to "https://www.fdj.fr/jeux-de-tirage/{name}/historique".
+        PACTOLE_CACHE_ROOT (str): The root directory for cache files.
+            Defaults to "pactole".
 
     Args:
         resolver (BaseResolver | str): An instance of BaseResolver or the URL of the archives page.

@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import os
 import zipfile
 from io import BytesIO
 from pathlib import Path
@@ -30,6 +31,10 @@ logger = logging.getLogger(__name__)
 class BaseProvider:
     """A base class for data providers.
 
+    Environment Variables:
+        PACTOLE_CACHE_ROOT (str): The root directory for cache files.
+            Defaults to "pactole".
+
     Args:
         resolver (BaseResolver): An instance of a resolver to fetch archive information.
         parser (BaseParser): An instance of a parser to process the archive content.
@@ -44,6 +49,9 @@ class BaseProvider:
             or class to create a combination instance. If None, a default LotteryCombination
             instance will be used. Default is None.
         cache_name (str, optional): The name of the cache. Defaults to "default".
+        cache_root_name (str | None, optional): The name of the root cache directory. If not
+            provided, it will be taken from the PACTOLE_CACHE_ROOT environment variable or
+            default to "pactole". Defaults to None.
         refresh_timeout (int, optional): The timeout in seconds for refreshing the cache. Defaults
             to 300 seconds (5 minutes).
 
@@ -96,6 +104,7 @@ class BaseProvider:
         draw_day_refresh_time: str | int | datetime.time | None = None,
         combination_factory: CombinationFactory | LotteryCombination | Any = None,
         cache_name: str = DEFAULT_CACHE_NAME,
+        cache_root_name: str | None = None,
         refresh_timeout: int = DEFAULT_REFRESH_TIMEOUT,
     ) -> None:
         if isinstance(draw_day_refresh_time, int):
@@ -108,10 +117,13 @@ class BaseProvider:
         elif not isinstance(draw_day_refresh_time, datetime.time):
             draw_day_refresh_time = self.DEFAULT_DRAW_DAY_REFRESH_TIME
 
+        if not cache_root_name:
+            cache_root_name = os.getenv("PACTOLE_CACHE_ROOT", self.CACHE_ROOT_NAME)
+
         self._resolver = resolver
         self._parser = parser
         self._cache_name = cache_name
-        self._cache_path = get_cache_path(self.CACHE_ROOT_NAME) / cache_name
+        self._cache_path = get_cache_path(cache_root_name) / cache_name
         self._manifest = FileCache(self._cache_path / self.MANIFEST_FILE_NAME)
         self._cache = FileCache(
             self._cache_path / self.DATA_FILE_NAME,
@@ -317,7 +329,8 @@ class BaseProvider:
         if self._refresh_timeout.started and not self._refresh_timeout.expired:
             return False
 
-        last_draw_date = self._draw_days.get_last_draw_date(closest=False)
+        # Is the current time is before the refresh threshold on a draw day?
+        last_draw_date = self._draw_days.get_last_draw_date(closest=True)
         last_draw_datetime = datetime.datetime.combine(last_draw_date, self._draw_day_refresh_time)
         if self._cache.date() < last_draw_datetime:
             return True
@@ -325,7 +338,9 @@ class BaseProvider:
         records = self._cache.load()
         if not records:
             return True
-        return records[-1].draw_date < last_draw_date
+
+        # Is the last record's draw date before the last draw date according to the draw days?
+        return records[-1].draw_date < self._draw_days.get_last_draw_date(closest=False)
 
     def _load_manifest(self, force: bool) -> Manifest:
         """Load the manifest of archives."""

@@ -6,6 +6,7 @@ on:
             - Release
         types:
             - completed
+
     workflow_dispatch:
 
 permissions:
@@ -19,7 +20,7 @@ concurrency:
 
 jobs:
     build:
-        if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.status == 'completed' && github.event.workflow_run.conclusion == 'success') }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -36,7 +37,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
 
             - name: Install documentation dependencies
-              run: uv sync --no-dev --group=doc
+              run: uv sync --only-group=doc
 
             - name: Build MkDocs site
               run: uv run mkdocs build --strict
@@ -50,7 +51,6 @@ jobs:
                   path: static
 
     deploy:
-        if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}

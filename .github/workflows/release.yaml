@@ -3,7 +3,7 @@ name: Release
 on:
     pull_request:
         branches: [main]
-        types: [opened, reopened, synchronize, labeled]
+        types: [opened, reopened, labeled]
 
 permissions:
     contents: write
@@ -11,10 +11,12 @@ permissions:
     checks: read
     id-token: write
 
+concurrency:
+    group: 'release'
+
 jobs:
     generate_documentation:
         if: &release_pr_guard >-
-            github.actor != 'github-actions[bot]' &&
             contains(github.event.pull_request.labels.*.name, 'release') &&
             github.event.pull_request.head.repo.full_name == github.repository
         runs-on: ubuntu-latest
@@ -40,7 +42,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
 
             - name: Install dependencies for API documentation
-              run: uv sync --no-dev --group=doc
+              run: uv sync --only-group=doc
 
             - name: Generate API documentation
               run: |
