@@ -42,7 +42,7 @@ jobs:
               uses: astral-sh/setup-uv@v7
 
             - name: Install dependencies for API documentation
-              run: uv sync --no-dev --group=doc
+              run: uv sync --only-group=doc
 
             - name: Generate API documentation
               run: |
