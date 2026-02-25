@@ -3,7 +3,7 @@ name: Release
 on:
     pull_request:
         branches: [main]
-        types: [opened, reopened, synchronize, labeled]
+        types: [opened, reopened, labeled]
 
 permissions:
     contents: write
@@ -11,10 +11,12 @@ permissions:
     checks: read
     id-token: write
 
+concurrency:
+    group: 'release'
+
 jobs:
     generate_documentation:
         if: &release_pr_guard >-
-            github.actor != 'github-actions[bot]' &&
             contains(github.event.pull_request.labels.*.name, 'release') &&
             github.event.pull_request.head.repo.full_name == github.repository
         runs-on: ubuntu-latest
