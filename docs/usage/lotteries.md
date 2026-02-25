@@ -226,15 +226,20 @@ class CustomProvider(BaseProvider):
 
 `EuroMillions` and `EuroDreams` can be customized without subclassing.
 
+- `PACTOLE_CACHE_ROOT`, `FDJ_ARCHIVES_PAGE_URL`
 - `EUROMILLIONS_PROVIDER_CLASS`, `EURODREAMS_PROVIDER_CLASS`
 - `EUROMILLIONS_DRAW_DAYS`, `EURODREAMS_DRAW_DAYS`
 - `EUROMILLIONS_DRAW_DAY_REFRESH_TIME`, `EURODREAMS_DRAW_DAY_REFRESH_TIME`
 - `EUROMILLIONS_CACHE_NAME`, `EURODREAMS_CACHE_NAME`
 - `EUROMILLIONS_ARCHIVES_PAGE`, `EURODREAMS_ARCHIVES_PAGE`
 
+For defaults and precedence rules, see
+[Environment variables](../environment.md).
+
 Example:
 
 ```bash
+export PACTOLE_CACHE_ROOT="pactole_local"
 export EUROMILLIONS_DRAW_DAYS="MONDAY,THURSDAY"
 export EUROMILLIONS_CACHE_NAME="euromillions_local"
 ```

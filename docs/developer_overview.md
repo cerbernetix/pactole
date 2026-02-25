@@ -361,15 +361,19 @@ uv run pytest --cov=src/pactole
 
 **EuroDreams:**
 
-- `EURODREAMS_PROVIDER_CLASS`
-- `EURODREAMS_DRAW_DAYS`
-- `EURODREAMS_DRAW_DAY_REFRESH_TIME`
-- `EURODREAMS_CACHE_NAME`
-- `EURODREAMS_ARCHIVES_PAGE`
+- `EURODREAMS_PROVIDER_CLASS`: Fully qualified class name
+- `EURODREAMS_DRAW_DAYS`: Comma-separated days (e.g., "MONDAY,THURSDAY")
+- `EURODREAMS_DRAW_DAY_REFRESH_TIME`: Refresh threshold in "HH:MM" format
+- `EURODREAMS_CACHE_NAME`: Cache directory name
+- `EURODREAMS_ARCHIVES_PAGE`: Archive page name
 
 **FDJ Provider:**
 
 - `FDJ_ARCHIVES_PAGE_URL`: URL template with `{name}` placeholder
+
+**Global provider cache**
+
+- `PACTOLE_CACHE_ROOT`: Global provider cache root (default: `pactole`)
 
 ## Extension Points
 
