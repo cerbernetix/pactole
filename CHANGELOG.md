@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated documentation for environment-variable based configuration of providers and cache.
 
+### Fixed
+
+- Fixed refresh condition logic in `BaseProvider` so cache refresh checks draw days correctly.
+
 ## v0.3.0 [2026-02-22]
 
 ### Added
