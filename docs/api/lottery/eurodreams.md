@@ -30,6 +30,11 @@ Environment Variables:
         Defaults to "eurodreams".
     EURODREAMS_ARCHIVES_PAGE (str): The name of the archives page to use.
         Defaults to "eurodreams".
+    FDJ_ARCHIVES_PAGE_URL (str): The URL template for the archives page, which must include the
+        placeholder '{name}' for the lottery name.
+        Defaults to "https://www.fdj.fr/jeux-de-tirage/{name}/historique".
+    PACTOLE_CACHE_ROOT (str): The root directory for cache files.
+        Defaults to "pactole".
 
 #### Arguments
 
