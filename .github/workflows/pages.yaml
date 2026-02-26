@@ -38,6 +38,11 @@ jobs:
             - name: Install documentation dependencies
               run: uv sync --only-group=doc
 
+            - name: Generate API documentation
+              run: |
+                  rm -rf docs/api
+                  uv run handsdown --external `git config --get remote.origin.url` -o docs/api -i src/pactole --source-code-path src/pactole
+
             - name: Build MkDocs site
               run: uv run mkdocs build --strict
 
