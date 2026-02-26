@@ -25,7 +25,9 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v6
               with:
-                  ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+                  ref: main
+                  fetch-depth: 0
+                  fetch-tags: true
 
             - name: Setup Python
               uses: actions/setup-python@v6
