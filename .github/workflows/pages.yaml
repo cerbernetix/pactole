@@ -29,6 +29,14 @@ jobs:
                   fetch-depth: 0
                   fetch-tags: true
 
+            - name: Checkout latest tag
+              run: |
+                  git fetch --tags --prune
+                  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+                  if [ -n "$LATEST_TAG" ]; then
+                      git checkout "$LATEST_TAG"
+                  fi
+
             - name: Setup Python
               uses: actions/setup-python@v6
               with:
