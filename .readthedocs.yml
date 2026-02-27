@@ -2,17 +2,19 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
-# Required
 version: 2
 
-# Build documentation with MkDocs
-mkdocs:
-  configuration: "mkdocs.yml"
-  fail_on_warning: false
+build:
+    os: 'ubuntu-22.04'
+    tools:
+        python: '3.10'
 
-# Build all formats
+mkdocs:
+    configuration: 'mkdocs.yml'
+    fail_on_warning: false
+
 formats: all
 
 python:
-   install:
-   - requirements: requirements.mkdocs.txt
+    install:
+        - requirements: requirements.mkdocs.txt
