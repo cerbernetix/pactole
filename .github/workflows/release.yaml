@@ -2,8 +2,11 @@ name: Release
 
 on:
     pull_request:
-        branches: [main]
-        types: [opened, reopened, labeled]
+        branches:
+            - main
+        types:
+            - opened
+            - labeled
 
 permissions:
     contents: write
