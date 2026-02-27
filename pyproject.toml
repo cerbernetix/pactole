@@ -7,6 +7,8 @@ name = "pactole"
 version = "0.3.1"
 description = "A library for managing lottery results."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "beautifulsoup4>=4.14.3",
@@ -19,8 +21,11 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/cerbernetix/pactole"
-"Bug Tracker" = "https://github.com/cerbernetix/pactole/issues"
+Homepage = "https://github.com/cerbernetix/pactole"
+Documentation = "https://pactole.readthedocs.io/en/latest/"
+Repository = "https://github.com/cerbernetix/pactole.git"
+Issues = "https://github.com/cerbernetix/pactole/issues"
+Changelog = "https://github.com/cerbernetix/pactole/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
