@@ -32,4 +32,4 @@ tomli==2.4.0
 tomlkit==0.14.0
 typing-extensions==4.15.0
 urllib3==2.6.3
-virtualenv==21.0.0
+virtualenv==21.1.0
