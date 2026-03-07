@@ -216,6 +216,24 @@ class Combination:
             self._rank = get_combination_rank(self._values, offset=self._start)
         return self._rank
 
+    @property
+    def stored_rank(self) -> CombinationRank | None:
+        """Get the stored lexicographic rank of the combination without calculating it.
+
+        Returns:
+            CombinationRank | None: The stored lexicographic rank of the combination, or None if
+                it has not been calculated yet.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2])
+            >>> combination.stored_rank
+            None
+            >>> _ = combination.rank  # Calculate the rank
+            >>> combination.stored_rank
+            0
+        """
+        return self._rank
+
     @cached_property
     def length(self) -> int:
         """Get the length of the combination.

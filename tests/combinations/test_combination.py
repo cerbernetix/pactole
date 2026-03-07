@@ -76,7 +76,9 @@ class TestCombination:
         combination = Combination()
         assert not combination
         assert combination.values == []
+        assert combination.stored_rank is None
         assert combination.rank == 0
+        assert combination.stored_rank == 0
         assert combination.length == 0
         assert combination.start == 1
 
@@ -86,7 +88,9 @@ class TestCombination:
         combination = Combination([3, 2, 1])
         assert combination == [1, 2, 3]
         assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
         assert combination.length == 3
         assert combination.start == 1
 
@@ -96,7 +100,9 @@ class TestCombination:
         combination = Combination([3, 2, 1], start=0)
         assert combination == [1, 2, 3]
         assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([1, 2, 3], offset=0)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=0)
         assert combination.length == 3
         assert combination.start == 0
 
@@ -107,12 +113,13 @@ class TestCombination:
         combination = Combination(original)
         assert combination.values == original.values
         assert combination.rank == original.rank
-        assert combination.length == original.length
+        assert combination.stored_rank == original.stored_rank
         assert combination.start == original.start
 
         combination = Combination(original, start=1)
         assert combination.values == original.values
         assert combination.rank == original.rank
+        assert combination.stored_rank == original.stored_rank
         assert combination.length == original.length
         assert combination.start == original.start
 
@@ -123,6 +130,7 @@ class TestCombination:
         combination = Combination(original)
         assert combination.values == original.values
         assert combination.rank == original.rank
+        assert combination.stored_rank == original.stored_rank
         assert combination.length == original.length
         assert combination.start == original.start
 
@@ -132,7 +140,9 @@ class TestCombination:
         original = Combination([4, 5, 6], start=1)
         combination = Combination(original, start=2)
         assert combination.values == [5, 6, 7]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([5, 6, 7], offset=2)
+        assert combination.stored_rank == get_combination_rank([5, 6, 7], offset=2)
         assert combination.length == original.length
         assert combination.start == 2
 
@@ -141,6 +151,7 @@ class TestCombination:
 
         combination = Combination([4, 5, 6], rank=123)
         assert combination.values == [4, 5, 6]
+        assert combination.stored_rank == 123
         assert combination.rank == 123
         assert combination.rank != get_combination_rank([4, 5, 6], offset=1)
         assert combination.length == combination.length
@@ -151,6 +162,7 @@ class TestCombination:
 
         combination = Combination(CombinationInputWithRank(values=[4, 5, 6], rank=123))
         assert combination.values == [4, 5, 6]
+        assert combination.stored_rank == 123
         assert combination.rank == 123
         assert combination.rank != get_combination_rank([4, 5, 6], offset=1)
         assert combination.length == 3
