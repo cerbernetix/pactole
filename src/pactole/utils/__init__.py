@@ -1,6 +1,7 @@
 """Utilities package."""
 
 __all__ = [
+    "assert_non_negative_integer",
     "Day",
     "DrawDays",
     "EnhancedJSONEncoder",
@@ -39,4 +40,4 @@ from .file import (
 )
 from .system import import_namespace
 from .timeout import Timeout
-from .types import get_float, get_int
+from .types import assert_non_negative_integer, get_float, get_int

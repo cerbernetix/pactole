@@ -8,6 +8,8 @@ from math import ceil
 from math import comb as math_comb
 from typing import Iterable, Iterator, TypedDict
 
+from ..utils import assert_non_negative_integer
+
 DEFAULT_START = 1
 DEFAULT_END = 50
 DEFAULT_COUNT = 5
@@ -42,6 +44,9 @@ Examples:
 def get_combination_rank(combination: Iterable[int], offset: int = 0) -> int:
     """Get the lexicographic rank of a given combination.
 
+    Values are sorted before computing rank, and `offset` is subtracted from each value during
+    ranking.
+
     Args:
         combination (Iterable[int]): The combination to get the lexicographic rank for.
         offset (int, optional): An offset to apply to each value in the combination. Defaults to 0.
@@ -72,6 +77,8 @@ def get_combination_rank(combination: Iterable[int], offset: int = 0) -> int:
 def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> list[int]:
     """Get the combination corresponding to a given lexicographic rank.
 
+    Values are returned sorted, and `offset` is added to each value in the resulting combination.
+
     Args:
         rank (int): The lexicographic rank of the combination.
         length (int, optional): The length of the combination. Defaults to 2.
@@ -91,11 +98,8 @@ def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> li
         >>> get_combination_from_rank(0, 3, offset=1)
         [1, 2, 3]
     """
-    if rank < 0:
-        raise ValueError("The rank must not be negative")
-
-    if length < 0:
-        raise ValueError("The length must not be negative")
+    assert_non_negative_integer(rank, "rank")
+    assert_non_negative_integer(length, "length")
 
     if length == 0:
         return []
