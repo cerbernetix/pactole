@@ -8,6 +8,8 @@ from math import ceil
 from math import comb as math_comb
 from typing import Iterable, Iterator, TypedDict
 
+from ..utils import assert_non_negative_integer
+
 DEFAULT_START = 1
 DEFAULT_END = 50
 DEFAULT_COUNT = 5
@@ -42,6 +44,9 @@ Examples:
 def get_combination_rank(combination: Iterable[int], offset: int = 0) -> int:
     """Get the lexicographic rank of a given combination.
 
+    Values are sorted before computing rank, and `offset` is subtracted from each value during
+    ranking.
+
     Args:
         combination (Iterable[int]): The combination to get the lexicographic rank for.
         offset (int, optional): An offset to apply to each value in the combination. Defaults to 0.
@@ -72,6 +77,8 @@ def get_combination_rank(combination: Iterable[int], offset: int = 0) -> int:
 def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> list[int]:
     """Get the combination corresponding to a given lexicographic rank.
 
+    Values are returned sorted, and `offset` is added to each value in the resulting combination.
+
     Args:
         rank (int): The lexicographic rank of the combination.
         length (int, optional): The length of the combination. Defaults to 2.
@@ -91,11 +98,8 @@ def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> li
         >>> get_combination_from_rank(0, 3, offset=1)
         [1, 2, 3]
     """
-    if rank < 0:
-        raise ValueError("The rank must not be negative")
-
-    if length < 0:
-        raise ValueError("The length must not be negative")
+    assert_non_negative_integer(rank, "rank")
+    assert_non_negative_integer(length, "length")
 
     if length == 0:
         return []
@@ -126,6 +130,35 @@ def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> li
     combination[0] = rank - binomial + offset
 
     return combination
+
+
+def generate(combinations: int, n: int = 1, partitions: int = 1) -> Iterator[int]:
+    """Generate a list of random combination ranks within a given range.
+
+    Args:
+        combinations (int): The total number of possible combinations.
+        n (int): The number of combinations to generate. Defaults to 1.
+        partitions (int): The number of partitions to divide the range into for generation.
+            Defaults to 1.
+
+    Yields:
+        int: A randomly generated combination rank.
+
+    Examples:
+        >>> list(generate(10, n=3))
+        [2, 5, 7]
+        >>> list(generate(100, n=5, partitions=2))
+        [10, 20, 30, 40, 50]
+    """
+    n = max(1, n)
+    partitions = max(1, partitions)
+    partition = ceil(combinations / partitions)
+
+    for i in range(n):
+        yield random.randint(
+            partition * (i % partitions),
+            min(partition * (i % partitions + 1) - 1, combinations - 1),
+        )
 
 
 class Combination:
@@ -212,6 +245,24 @@ class Combination:
             self._rank = get_combination_rank(self._values, offset=self._start)
         return self._rank
 
+    @property
+    def stored_rank(self) -> CombinationRank | None:
+        """Get the stored lexicographic rank of the combination without calculating it.
+
+        Returns:
+            CombinationRank | None: The stored lexicographic rank of the combination, or None if
+                it has not been calculated yet.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2])
+            >>> combination.stored_rank
+            None
+            >>> _ = combination.rank  # Calculate the rank
+            >>> combination.stored_rank
+            0
+        """
+        return self._rank
+
     @cached_property
     def length(self) -> int:
         """Get the length of the combination.
@@ -282,6 +333,9 @@ class Combination:
         if values is None:
             values = self.get_values(start)
             rank = self._rank if self._rank is not None else rank
+        if isinstance(values, int):
+            rank = rank if rank is not None else values
+            values = get_combination_from_rank(values, length=self.length, offset=start)
         return Combination(values=values, rank=rank, start=start)
 
     def get_values(self, start: int | None = None) -> CombinationValues:
@@ -660,19 +714,9 @@ class BoundCombination(Combination):
             >>> random_combs[0].values
             [3, 15, 22, 34, 45]
         """
-        n = max(1, n)
-        partitions = max(1, partitions)
-        combinations = self.combinations
-        partition = ceil(combinations / partitions)
-
         return [
-            self.copy(
-                values=random.randint(
-                    partition * (i % partitions),
-                    min(partition * (i % partitions + 1) - 1, combinations - 1),
-                )
-            )
-            for i in range(n)
+            self.copy(values=rank)
+            for rank in generate(self.combinations, n=n, partitions=partitions)
         ]
 
     def copy(

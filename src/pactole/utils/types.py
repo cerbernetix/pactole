@@ -49,3 +49,24 @@ def get_float(value, default: float = 0.0) -> float:
         return float(value)
     except (ValueError, TypeError):
         return default
+
+
+def assert_non_negative_integer(value: int, name: str = "value") -> None:
+    """Assert that a value is a non-negative integer.
+
+    Args:
+        value: The value to check.
+        name: The name of the value for error messages. Defaults to "value".
+
+    Raises:
+        ValueError: If the value is not a non-negative integer.
+
+    Example:
+        >>> assert_non_negative_integer(5)
+        >>> assert_non_negative_integer(-1)
+        Traceback (most recent call last):
+            ...
+        ValueError: value must be a non-negative integer, got -1
+    """
+    if not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be a non-negative integer, got {value}")

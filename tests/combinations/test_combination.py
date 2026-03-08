@@ -1,10 +1,14 @@
 """Unit tests for Combination class."""
 
+import random
+from math import ceil
+
 import pytest
 
 from pactole.combinations import (
     Combination,
     CombinationInputWithRank,
+    generate,
     get_combination_from_rank,
     get_combination_rank,
 )
@@ -67,6 +71,71 @@ class TestGetCombinationFromRank:
             get_combination_from_rank(2, -3)
 
 
+class TestGenerate:
+    """Test suite for generate function."""
+
+    def test_generate(self):
+        """Test generate function."""
+
+        combinations = 3838380
+        partition1 = combinations
+        partition2 = ceil(combinations / 2)
+        partition3 = ceil(combinations / 3)
+        combinations_set = set()
+
+        random.seed(42)
+        ranks = (
+            # generated1
+            random.randint(0, partition1 - 1),
+            # generated2
+            random.randint(0, partition1 - 1),
+            random.randint(0, partition1 - 1),
+            # generated3
+            random.randint(partition3 * 0, partition3 * 1 - 1),
+            random.randint(partition3 * 1, partition3 * 2 - 1),
+            random.randint(partition3 * 2, partition3 * 3 - 1),
+            # generated4
+            random.randint(partition2 * 0, partition2 * 1 - 1),
+            random.randint(partition2 * 1, partition2 * 2 - 1),
+            random.randint(partition2 * 0, partition2 * 1 - 1),
+            random.randint(partition2 * 1, partition2 * 2 - 1),
+        )
+        random.seed(42)
+
+        generated1 = list(generate(combinations))
+        combinations_set.update(generated1)
+
+        assert len(generated1) == 1
+        assert generated1[0] == ranks[0]
+
+        generated2 = list(generate(combinations, n=2))
+        combinations_set.update(generated2)
+
+        assert len(generated2) == 2
+        assert generated2[0] == ranks[1]
+        assert generated2[1] == ranks[2]
+
+        generated3 = list(generate(combinations, n=3, partitions=3))
+        combinations_set.update(generated3)
+
+        assert len(generated3) == 3
+        assert generated3[0] == ranks[3]
+        assert generated3[1] == ranks[4]
+        assert generated3[2] == ranks[5]
+
+        generated4 = list(generate(combinations, n=4, partitions=2))
+        combinations_set.update(generated4)
+
+        assert len(generated4) == 4
+        assert generated4[0] == ranks[6]
+        assert generated4[1] == ranks[7]
+        assert generated4[2] == ranks[8]
+        assert generated4[3] == ranks[9]
+
+        combinations_set.update(generate(combinations, n=5))
+        assert len(combinations_set) == 15
+
+
 class TestCombination:
     """Test suite for Combination class."""
 
@@ -76,7 +145,9 @@ class TestCombination:
         combination = Combination()
         assert not combination
         assert combination.values == []
+        assert combination.stored_rank is None
         assert combination.rank == 0
+        assert combination.stored_rank == 0
         assert combination.length == 0
         assert combination.start == 1
 
@@ -86,7 +157,9 @@ class TestCombination:
         combination = Combination([3, 2, 1])
         assert combination == [1, 2, 3]
         assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
         assert combination.length == 3
         assert combination.start == 1
 
@@ -96,7 +169,9 @@ class TestCombination:
         combination = Combination([3, 2, 1], start=0)
         assert combination == [1, 2, 3]
         assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([1, 2, 3], offset=0)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=0)
         assert combination.length == 3
         assert combination.start == 0
 
@@ -107,12 +182,13 @@ class TestCombination:
         combination = Combination(original)
         assert combination.values == original.values
         assert combination.rank == original.rank
-        assert combination.length == original.length
+        assert combination.stored_rank == original.stored_rank
         assert combination.start == original.start
 
         combination = Combination(original, start=1)
         assert combination.values == original.values
         assert combination.rank == original.rank
+        assert combination.stored_rank == original.stored_rank
         assert combination.length == original.length
         assert combination.start == original.start
 
@@ -123,6 +199,7 @@ class TestCombination:
         combination = Combination(original)
         assert combination.values == original.values
         assert combination.rank == original.rank
+        assert combination.stored_rank == original.stored_rank
         assert combination.length == original.length
         assert combination.start == original.start
 
@@ -132,7 +209,9 @@ class TestCombination:
         original = Combination([4, 5, 6], start=1)
         combination = Combination(original, start=2)
         assert combination.values == [5, 6, 7]
+        assert combination.stored_rank is None
         assert combination.rank == get_combination_rank([5, 6, 7], offset=2)
+        assert combination.stored_rank == get_combination_rank([5, 6, 7], offset=2)
         assert combination.length == original.length
         assert combination.start == 2
 
@@ -141,6 +220,7 @@ class TestCombination:
 
         combination = Combination([4, 5, 6], rank=123)
         assert combination.values == [4, 5, 6]
+        assert combination.stored_rank == 123
         assert combination.rank == 123
         assert combination.rank != get_combination_rank([4, 5, 6], offset=1)
         assert combination.length == combination.length
@@ -151,6 +231,7 @@ class TestCombination:
 
         combination = Combination(CombinationInputWithRank(values=[4, 5, 6], rank=123))
         assert combination.values == [4, 5, 6]
+        assert combination.stored_rank == 123
         assert combination.rank == 123
         assert combination.rank != get_combination_rank([4, 5, 6], offset=1)
         assert combination.length == 3
@@ -185,6 +266,14 @@ class TestCombination:
         assert new_comb.start == 1
         assert new_comb.length == 3
         assert new_comb.rank == get_combination_rank([8, 10, 12], offset=1)
+
+        new_comb = combination.copy(combination.rank)
+        assert isinstance(new_comb, Combination)
+        assert new_comb is not combination
+        assert new_comb.values == [3, 5, 7]
+        assert new_comb.start == 1
+        assert new_comb.length == 3
+        assert new_comb.rank == combination.rank
 
         combination = Combination([2, 4, 6], rank=123, start=1)
 

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import random
 from functools import cached_property
-from math import ceil, prod
+from math import prod
 from typing import Any, Iterator, Protocol
 
 from .combination import (
@@ -15,6 +14,7 @@ from .combination import (
     CombinationNumber,
     CombinationRank,
     CombinationValues,
+    generate,
 )
 
 CombinationWinningPattern = tuple[int, ...]
@@ -361,19 +361,9 @@ class LotteryCombination:
             >>> random_combs[0].values
             [3, 15, 22, 34, 45, 7]
         """
-        n = max(1, n)
-        partitions = max(1, partitions)
-        combinations = self.combinations
-        partition = ceil(combinations / partitions)
-
         return [
-            self.get_combination(
-                random.randint(
-                    partition * (i % partitions),
-                    min(partition * (i % partitions + 1) - 1, combinations - 1),
-                )
-            )
-            for i in range(n)
+            self.get_combination(rank)
+            for rank in generate(self.combinations, n=n, partitions=partitions)
         ]
 
     def copy(
