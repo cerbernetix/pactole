@@ -132,6 +132,35 @@ def get_combination_from_rank(rank: int, length: int = 2, offset: int = 0) -> li
     return combination
 
 
+def generate(combinations: int, n: int = 1, partitions: int = 1) -> Iterator[int]:
+    """Generate a list of random combination ranks within a given range.
+
+    Args:
+        combinations (int): The total number of possible combinations.
+        n (int): The number of combinations to generate. Defaults to 1.
+        partitions (int): The number of partitions to divide the range into for generation.
+            Defaults to 1.
+
+    Yields:
+        int: A randomly generated combination rank.
+
+    Examples:
+        >>> list(generate(10, n=3))
+        [2, 5, 7]
+        >>> list(generate(100, n=5, partitions=2))
+        [10, 20, 30, 40, 50]
+    """
+    n = max(1, n)
+    partitions = max(1, partitions)
+    partition = ceil(combinations / partitions)
+
+    for i in range(n):
+        yield random.randint(
+            partition * (i % partitions),
+            min(partition * (i % partitions + 1) - 1, combinations - 1),
+        )
+
+
 class Combination:
     """A class representing a combination of values.
 
@@ -685,19 +714,9 @@ class BoundCombination(Combination):
             >>> random_combs[0].values
             [3, 15, 22, 34, 45]
         """
-        n = max(1, n)
-        partitions = max(1, partitions)
-        combinations = self.combinations
-        partition = ceil(combinations / partitions)
-
         return [
-            self.copy(
-                values=random.randint(
-                    partition * (i % partitions),
-                    min(partition * (i % partitions + 1) - 1, combinations - 1),
-                )
-            )
-            for i in range(n)
+            self.copy(values=rank)
+            for rank in generate(self.combinations, n=n, partitions=partitions)
         ]
 
     def copy(

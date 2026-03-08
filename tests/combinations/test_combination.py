@@ -1,10 +1,14 @@
 """Unit tests for Combination class."""
 
+import random
+from math import ceil
+
 import pytest
 
 from pactole.combinations import (
     Combination,
     CombinationInputWithRank,
+    generate,
     get_combination_from_rank,
     get_combination_rank,
 )
@@ -65,6 +69,71 @@ class TestGetCombinationFromRank:
 
         with pytest.raises(ValueError):
             get_combination_from_rank(2, -3)
+
+
+class TestGenerate:
+    """Test suite for generate function."""
+
+    def test_generate(self):
+        """Test generate function."""
+
+        combinations = 3838380
+        partition1 = combinations
+        partition2 = ceil(combinations / 2)
+        partition3 = ceil(combinations / 3)
+        combinations_set = set()
+
+        random.seed(42)
+        ranks = (
+            # generated1
+            random.randint(0, partition1 - 1),
+            # generated2
+            random.randint(0, partition1 - 1),
+            random.randint(0, partition1 - 1),
+            # generated3
+            random.randint(partition3 * 0, partition3 * 1 - 1),
+            random.randint(partition3 * 1, partition3 * 2 - 1),
+            random.randint(partition3 * 2, partition3 * 3 - 1),
+            # generated4
+            random.randint(partition2 * 0, partition2 * 1 - 1),
+            random.randint(partition2 * 1, partition2 * 2 - 1),
+            random.randint(partition2 * 0, partition2 * 1 - 1),
+            random.randint(partition2 * 1, partition2 * 2 - 1),
+        )
+        random.seed(42)
+
+        generated1 = list(generate(combinations))
+        combinations_set.update(generated1)
+
+        assert len(generated1) == 1
+        assert generated1[0] == ranks[0]
+
+        generated2 = list(generate(combinations, n=2))
+        combinations_set.update(generated2)
+
+        assert len(generated2) == 2
+        assert generated2[0] == ranks[1]
+        assert generated2[1] == ranks[2]
+
+        generated3 = list(generate(combinations, n=3, partitions=3))
+        combinations_set.update(generated3)
+
+        assert len(generated3) == 3
+        assert generated3[0] == ranks[3]
+        assert generated3[1] == ranks[4]
+        assert generated3[2] == ranks[5]
+
+        generated4 = list(generate(combinations, n=4, partitions=2))
+        combinations_set.update(generated4)
+
+        assert len(generated4) == 4
+        assert generated4[0] == ranks[6]
+        assert generated4[1] == ranks[7]
+        assert generated4[2] == ranks[8]
+        assert generated4[3] == ranks[9]
+
+        combinations_set.update(generate(combinations, n=5))
+        assert len(combinations_set) == 15
 
 
 class TestCombination:
