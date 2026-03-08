@@ -2,7 +2,7 @@
 
 import pytest
 
-from pactole.utils import get_float, get_int
+from pactole.utils import assert_non_negative_integer, get_float, get_int
 
 
 @pytest.mark.parametrize(
@@ -62,3 +62,35 @@ def test_get_float_returns_default(value, default):
     """Test get_float returns default on conversion errors."""
 
     assert get_float(value, default=default) == default
+
+
+@pytest.mark.parametrize(
+    ("value", "name"),
+    [
+        (-1, "value"),
+        (-5, "length"),
+        (3.14, "value"),
+        ("abc", "length"),
+    ],
+)
+def test_assert_non_negative_integer_raises(value, name):
+    """Test assert_non_negative_integer raises ValueError for negative integers."""
+
+    with pytest.raises(ValueError, match=f"{name} must be a non-negative integer, got {value}"):
+        assert_non_negative_integer(value, name=name)
+
+
+@pytest.mark.parametrize(
+    ("value", "name"),
+    [
+        (0, "value"),
+        (5, "length"),
+    ],
+)
+def test_assert_non_negative_integer_passes(value, name):
+    """Test assert_non_negative_integer does not raise for non-negative integers."""
+
+    try:
+        assert_non_negative_integer(value, name=name)
+    except ValueError:
+        pytest.fail(f"assert_non_negative_integer raised ValueError for {name}={value}")
