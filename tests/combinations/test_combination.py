@@ -198,6 +198,14 @@ class TestCombination:
         assert new_comb.length == 3
         assert new_comb.rank == get_combination_rank([8, 10, 12], offset=1)
 
+        new_comb = combination.copy(combination.rank)
+        assert isinstance(new_comb, Combination)
+        assert new_comb is not combination
+        assert new_comb.values == [3, 5, 7]
+        assert new_comb.start == 1
+        assert new_comb.length == 3
+        assert new_comb.rank == combination.rank
+
         combination = Combination([2, 4, 6], rank=123, start=1)
 
         new_comb = combination.copy()

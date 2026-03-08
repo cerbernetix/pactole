@@ -304,6 +304,9 @@ class Combination:
         if values is None:
             values = self.get_values(start)
             rank = self._rank if self._rank is not None else rank
+        if isinstance(values, int):
+            rank = rank if rank is not None else values
+            values = get_combination_from_rank(values, length=self.length, offset=start)
         return Combination(values=values, rank=rank, start=start)
 
     def get_values(self, start: int | None = None) -> CombinationValues:
