@@ -131,7 +131,7 @@ class LotteryCombination:
 
 ### LotteryCombination()._create_combination
 
-[Show source in lottery_combination.py:467](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L467)
+[Show source in lottery_combination.py:457](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L457)
 
 Create a correct class instance from the given components and winning ranks.
 
@@ -177,7 +177,7 @@ def combinations(self) -> int: ...
 
 ### LotteryCombination().compares
 
-[Show source in lottery_combination.py:817](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L817)
+[Show source in lottery_combination.py:807](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L807)
 
 Compare the combination with another combination.
 
@@ -261,7 +261,7 @@ def components(self) -> CombinationComponents: ...
 
 ### LotteryCombination().copy
 
-[Show source in lottery_combination.py:379](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L379)
+[Show source in lottery_combination.py:369](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L369)
 
 Create a copy of the LotteryCombination with optional modifications.
 
@@ -318,7 +318,7 @@ def count(self) -> int: ...
 
 ### LotteryCombination().equals
 
-[Show source in lottery_combination.py:615](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L615)
+[Show source in lottery_combination.py:605](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L605)
 
 Check if the combination is equal to another combination.
 
@@ -405,7 +405,7 @@ def generate(self, n: int = 1, partitions: int = 1) -> list[LotteryCombination]:
 
 ### LotteryCombination().get_combination
 
-[Show source in lottery_combination.py:405](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L405)
+[Show source in lottery_combination.py:395](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L395)
 
 Get a LotteryCombination based on provided components.
 
@@ -509,7 +509,7 @@ def get_combination_factory(
 
 ### LotteryCombination().get_component
 
-[Show source in lottery_combination.py:511](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L511)
+[Show source in lottery_combination.py:501](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L501)
 
 Get the parameters for a specific component of the combination.
 
@@ -547,7 +547,7 @@ def get_component(self, name: str) -> BoundCombination | None: ...
 
 ### LotteryCombination().get_component_values
 
-[Show source in lottery_combination.py:537](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L537)
+[Show source in lottery_combination.py:527](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L527)
 
 Get the values for a specific component of the combination.
 
@@ -584,7 +584,7 @@ def get_component_values(self, name: str) -> CombinationValues: ...
 
 ### LotteryCombination().get_components
 
-[Show source in lottery_combination.py:475](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L475)
+[Show source in lottery_combination.py:465](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L465)
 
 Get the parameters for multiple components of the combination.
 
@@ -634,7 +634,7 @@ def get_components(
 
 ### LotteryCombination().get_winning_rank
 
-[Show source in lottery_combination.py:566](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L566)
+[Show source in lottery_combination.py:556](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L556)
 
 Get the winning rank of the combination against a winning combination.
 
@@ -693,7 +693,7 @@ def get_winning_rank(
 
 ### LotteryCombination().includes
 
-[Show source in lottery_combination.py:665](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L665)
+[Show source in lottery_combination.py:655](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L655)
 
 Check if the combination includes another combination.
 
@@ -750,7 +750,7 @@ def includes(
 
 ### LotteryCombination().intersection
 
-[Show source in lottery_combination.py:770](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L770)
+[Show source in lottery_combination.py:760](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L760)
 
 Get the intersection with another combination.
 
@@ -803,7 +803,7 @@ def intersection(
 
 ### LotteryCombination().intersects
 
-[Show source in lottery_combination.py:717](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L717)
+[Show source in lottery_combination.py:707](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L707)
 
 Check if the combination intersects with another combination.
 
@@ -1004,7 +1004,7 @@ def rank(self) -> CombinationRank: ...
 
 ### LotteryCombination().similarity
 
-[Show source in lottery_combination.py:868](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L868)
+[Show source in lottery_combination.py:858](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/lottery_combination.py#L858)
 
 Calculate the similarity with another combination.
 
