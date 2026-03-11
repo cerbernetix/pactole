@@ -2,6 +2,8 @@
 
 A Python library for managing lottery results.
 
+> This is the Python version. A TypeScript version is also available: [pactole-js](https://github.com/cerbernetix/pactole-js).
+
 ## Installation
 
 Add `pactole` to your project:
@@ -136,6 +138,10 @@ Built-in lotteries and providers can be configured with environment variables.
 
 See the full reference with defaults and behavior:
 [Environment variables](https://cerbernetix.github.io/pactole/environment/).
+
+## Changes
+
+For the changelog, see [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
