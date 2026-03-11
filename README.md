@@ -20,7 +20,7 @@ uv add -U pactole
 
 ## Documentation
 
-See the complete documentation index: [Documentation](https://cerbernetix.github.io/pactole/).
+See the complete documentation index: [Documentation](https://cerbernetix.github.io/pactole/). It's also published on ReadTheDocs: [pactole.readthedocs.io](https://pactole.readthedocs.io/en/latest/).
 
 ## Requirements
 
@@ -141,8 +141,8 @@ See the full reference with defaults and behavior:
 
 ## Changes
 
-For the changelog, see [CHANGELOG.md](CHANGELOG.md).
+For the changelog, see [CHANGELOG.md](https://github.com/cerbernetix/pactole/blob/main/CHANGELOG.md).
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License - See [LICENSE](https://github.com/cerbernetix/pactole/blob/main/LICENSE) file for details.
