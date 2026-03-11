@@ -4,6 +4,8 @@
 
 Pactole is a Python library for managing lottery results.
 
+> This is the Python version. A TypeScript version is also available: [pactole-js](https://github.com/cerbernetix/pactole-js).
+
 ## Pages
 
 - [Overview](./overview.md): Core concepts and quick usage examples.
