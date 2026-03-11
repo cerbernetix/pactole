@@ -1101,6 +1101,43 @@ class TestBaseProvider:
 
         assert len(records) == 1
 
+    def test_refresh_calls_internal_methods_when_files_are_empty(self) -> None:
+        """An empty source or archive leads to execution of the corresponding loader."""
+
+        cache_name = "refresh-file-empty"
+        draw_days = DrawDays([Weekday.TUESDAY])
+        resolver = SampleResolver({"archive-1": "https://local.test/archive-1.csv"})
+        parser = SampleParser()
+        provider = BaseProvider(
+            resolver=resolver,
+            parser=parser,
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            cache_name=cache_name,
+        )
+
+        # prepare empty source and archive files on disk
+        src = source_path(cache_name, "archive-1")
+        arch = archive_path(cache_name, "archive-1")
+        src.parent.mkdir(parents=True, exist_ok=True)
+        arch.parent.mkdir(parents=True, exist_ok=True)
+        src.write_text("", encoding="utf-8")
+        arch.write_text("", encoding="utf-8")
+
+        with (
+            patch.object(provider, "_load_source") as loaded,
+            patch.object(provider, "_parse_source") as parsed,
+            patch.object(
+                base_provider_module,
+                "fetch_content",
+                lambda **_kwargs: b"dummy",
+            ),
+        ):
+            provider.refresh()
+
+        assert loaded.called, "_load_source should be invoked for empty source"
+        assert parsed.called, "_parse_source should be invoked for empty archive"
+
     def test_refresh_loads_zip_and_plain_sources(self) -> None:
         """Test refresh writes zip and plain sources correctly."""
 

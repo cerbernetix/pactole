@@ -356,13 +356,13 @@ class BaseProvider:
     def _refresh_archive(self, name: str, url: str, force: bool = False) -> ArchiveInfo:
         """Refresh a specific archive."""
         source_path = self._get_source_path(name)
-        if force or not source_path.exists():
+        if force or not source_path.exists() or not source_path.stat().st_size:
             ensure_directory(source_path)
             self._load_source(url, source_path)
             force = True  # Force parsing if the source was reloaded
 
         archive_path = self._get_archive_path(name)
-        if force or not archive_path.exists():
+        if force or not archive_path.exists() or not archive_path.stat().st_size:
             ensure_directory(archive_path)
             self._parse_source(source_path, archive_path)
 
