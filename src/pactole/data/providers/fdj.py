@@ -111,8 +111,11 @@ class FDJParser(BaseParser):
         >>> data = {
         ...     "date_de_tirage": "01/02/2022",
         ...     "date_de_forclusion": "15/02/2022",
+        ...     # european totals are included, french-specific values must be ignored
+        ...     "nombre_de_gagnant_au_rang1_en_france": "1",
         ...     "nombre_de_gagnant_au_rang1_en_europe": "2",
-        ...     "rapport_du_rang1": "1000000,00",
+        ...     "rapport_du_rang1_en_france": "2000000,00",
+        ...     "rapport_du_rang1_en_europe": "1000000,00",
         ...     "boule_1": "1",
         ...     "boule_2": "2",
         ...     "boule_3": "3",
@@ -149,6 +152,7 @@ class FDJParser(BaseParser):
     RE_NUMBER = re.compile(r"^(?P<component>\w+)_(?P<index>\d+)$")
     RE_WINNERS = re.compile(r"^nombre_de_gagnant_au_rang(?P<rank>\d+)\w*$")
     RE_GAIN = re.compile(r"^rapport_du_rang(?P<rank>\d+)\w*$")
+    RE_DISCARD = re.compile(r"^.*_en_france$")
 
     def __call__(self, data: dict) -> DrawRecord:
         draw_date = self._format_date(data.get(self.SOURCE_DRAW_DATE, "1970-01-01"))
@@ -175,13 +179,13 @@ class FDJParser(BaseParser):
                 numbers.setdefault(component_name, []).append(get_int(value))
                 continue
 
-            if match := self.RE_WINNERS.match(key):
+            if (match := self.RE_WINNERS.match(key)) and not self.RE_DISCARD.match(key):
                 rank_number = get_int(match.group("rank"))
                 if rank_number not in winners:
                     winners[rank_number] = get_int(value)
                 continue
 
-            if match := self.RE_GAIN.match(key):
+            if (match := self.RE_GAIN.match(key)) and not self.RE_DISCARD.match(key):
                 rank_number = get_int(match.group("rank"))
                 if rank_number not in gains:
                     gains[rank_number] = get_float(value)

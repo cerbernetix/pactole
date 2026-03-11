@@ -30,8 +30,11 @@ combination_factory (CombinationFactory | None): A factory function or class to 
 >>> data = {
 ...     "date_de_tirage": "01/02/2022",
 ...     "date_de_forclusion": "15/02/2022",
+...     # european totals are included, french-specific values must be ignored
+...     "nombre_de_gagnant_au_rang1_en_france": "1",
 ...     "nombre_de_gagnant_au_rang1_en_europe": "2",
-...     "rapport_du_rang1": "1000000,00",
+...     "rapport_du_rang1_en_france": "2000000,00",
+...     "rapport_du_rang1_en_europe": "1000000,00",
 ...     "boule_1": "1",
 ...     "boule_2": "2",
 ...     "boule_3": "3",
@@ -65,7 +68,7 @@ class FDJParser(BaseParser): ...
 
 ### FDJParser()._format_date
 
-[Show source in fdj.py:213](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/providers/fdj.py#L213)
+[Show source in fdj.py:217](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/providers/fdj.py#L217)
 
 Format a date string into ISO format (YYYY-MM-DD).
 
@@ -85,7 +88,7 @@ def _format_date(self, value: str) -> str: ...
 
 ## FDJProvider
 
-[Show source in fdj.py:244](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/providers/fdj.py#L244)
+[Show source in fdj.py:248](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/providers/fdj.py#L248)
 
 Data provider for FDJ archives.
 
