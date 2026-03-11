@@ -464,6 +464,15 @@ class TestReadCsvFile:
         result = read_csv_file(file, dialect="excel")
         assert len(result) == 0
 
+    def test_read_csv_file_empty_iterator(self):
+        """Ensure iterator mode returns an empty iterator for an empty CSV."""
+
+        file = io.StringIO("")
+        result = read_csv_file(file, dialect="excel", iterator=True)
+
+        assert hasattr(result, "__iter__")
+        assert not list(result)
+
     def test_read_csv_file_tab_separated(self):
         """Test reading tab-separated CSV file with auto-detection."""
 
