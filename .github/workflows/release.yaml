@@ -3,7 +3,7 @@ name: Release
 on:
     pull_request:
         branches: [main]
-        types: [opened, labeled]
+        types: [labeled]
 
     workflow_dispatch:
 
