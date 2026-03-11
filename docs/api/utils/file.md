@@ -38,7 +38,7 @@
 
 ## EnhancedJSONEncoder
 
-[Show source in file.py:297](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L297)
+[Show source in file.py:299](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L299)
 
 JSON encoder that handles additional types like Path objects.
 
@@ -57,7 +57,7 @@ class EnhancedJSONEncoder(json.JSONEncoder): ...
 
 ### EnhancedJSONEncoder().default
 
-[Show source in file.py:305](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L305)
+[Show source in file.py:307](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L307)
 
 Convert unhandled objects for JSON serialization.
 
@@ -79,7 +79,7 @@ def default(self, o: Any) -> Any: ...
 
 ## File
 
-[Show source in file.py:395](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L395)
+[Show source in file.py:397](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L397)
 
 A class representing a file with its path, type, and encoding.
 
@@ -116,7 +116,7 @@ class File:
 
 ### File().date
 
-[Show source in file.py:486](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L486)
+[Show source in file.py:488](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L488)
 
 Return the last modification time of the file as a timestamp.
 
@@ -144,7 +144,7 @@ def date(self) -> datetime.datetime: ...
 
 ### File().delete
 
-[Show source in file.py:655](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L655)
+[Show source in file.py:657](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L657)
 
 Delete the file.
 
@@ -172,7 +172,7 @@ def delete(self, throw: bool = True) -> None: ...
 
 ### File().encoding
 
-[Show source in file.py:456](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L456)
+[Show source in file.py:458](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L458)
 
 Return the file encoding.
 
@@ -197,7 +197,7 @@ def encoding(self) -> str: ...
 
 ### File().exists
 
-[Show source in file.py:470](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L470)
+[Show source in file.py:472](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L472)
 
 Check if the file exists.
 
@@ -224,7 +224,7 @@ def exists(self) -> bool: ...
 
 ### File().open
 
-[Show source in file.py:676](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L676)
+[Show source in file.py:678](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L678)
 
 Open the file with the appropriate mode and encoding.
 
@@ -260,7 +260,7 @@ def open(self, mode: str = "r") -> IO[Any]: ...
 
 ### File().path
 
-[Show source in file.py:428](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L428)
+[Show source in file.py:430](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L430)
 
 Return the file path.
 
@@ -285,7 +285,7 @@ def path(self) -> Path: ...
 
 ### File().read
 
-[Show source in file.py:518](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L518)
+[Show source in file.py:520](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L520)
 
 Read the file content.
 
@@ -332,7 +332,7 @@ def read(self, throw: bool = True) -> Any | None: ...
 
 ### File().readlines
 
-[Show source in file.py:576](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L576)
+[Show source in file.py:578](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L578)
 
 Read the file content as lines.
 
@@ -367,7 +367,7 @@ def readlines(self, throw: bool = True) -> Iterator: ...
 
 ### File().size
 
-[Show source in file.py:503](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L503)
+[Show source in file.py:505](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L505)
 
 Return the size of the file in bytes.
 
@@ -391,7 +391,7 @@ def size(self) -> int: ...
 
 ### File().type
 
-[Show source in file.py:442](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L442)
+[Show source in file.py:444](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L444)
 
 Return the file type.
 
@@ -420,7 +420,7 @@ def type(self) -> FileType: ...
 
 ### File().write
 
-[Show source in file.py:614](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L614)
+[Show source in file.py:616](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L616)
 
 Write content to the file.
 
@@ -457,7 +457,7 @@ def write(self, content: Any, throw: bool = True) -> None: ...
 
 ## FileType
 
-[Show source in file.py:353](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L353)
+[Show source in file.py:355](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L355)
 
 Enumeration of file types.
 
@@ -469,7 +469,7 @@ class FileType(Enum): ...
 
 ### FileType.get
 
-[Show source in file.py:360](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L360)
+[Show source in file.py:362](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L362)
 
 Get the FileType from a file extension or type string.
 
@@ -740,7 +740,7 @@ def read_zip_file(
 
 ## write_csv_file
 
-[Show source in file.py:247](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L247)
+[Show source in file.py:249](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L249)
 
 Write data to a CSV file.
 
@@ -785,7 +785,7 @@ def write_csv_file(
 
 ## write_json_file
 
-[Show source in file.py:319](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L319)
+[Show source in file.py:321](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L321)
 
 Write data to a JSON file.
 
