@@ -127,6 +127,10 @@ class TestFDJParser:
             "etoile_2": "10",
             "numero_dream": "7",
             "ignored_field": "noop",
+            # france-specific columns must be discarded
+            "nombre_de_gagnant_au_rang1_en_france": "123",
+            "rapport_du_rang1_en_france": "999999.0",
+            # european totals should be kept
             "nombre_de_gagnant_au_rang1_en_europe": "2",
             "rapport_du_rang1": "1000000.0",
             "nombre_de_gagnant_au_rang2": "4",
@@ -143,6 +147,7 @@ class TestFDJParser:
             "dream": [7],
         }
         assert record.numbers == captured
+        # the france-specific columns should be ignored, so values come from europe or base
         assert [(rank.rank, rank.winners, rank.gain) for rank in record.winning_ranks] == [
             (1, 2, 1000000.0),
             (2, 4, 50000.0),
@@ -162,9 +167,13 @@ class TestFDJParser:
             "date_de_tirage": "2024-02-01",
             "date_de_forclusion": "2024-02-15",
             "bonus_1": "8",
+            # ensure european value still wins over france (which is discarded)
+            "nombre_de_gagnant_au_rang1_en_france": "5",
             "nombre_de_gagnant_au_rang1_en_europe": "2",
             "nombre_de_gagnant_au_rang1": "99",
+            # gain values with extra fields
             "rapport_du_rang1": "100.0",
+            "rapport_du_rang1_en_france": "50.0",
             "rapport_du_rang1_en_europe": "999.0",
         }
 
@@ -172,9 +181,34 @@ class TestFDJParser:
 
         assert record.numbers == {"bonus": [8]}
         assert captured == {"bonus": [8]}
+        # france-specific entries must be dropped, european wins first
         assert [(rank.rank, rank.winners, rank.gain) for rank in record.winning_ranks] == [
             (1, 2, 100.0),
             (2, 0, 0.0),
+        ]
+
+    def test_call_discard_france_columns(self) -> None:
+        """Columns ending in ``_en_france`` should be ignored completely."""
+
+        def combination_factory(**_: list[int]) -> LotteryCombination:
+            return LotteryCombination(winning_ranks={(5, 0): 1})
+
+        parser = FDJParser(combination_factory=combination_factory)
+        data = {
+            "date_de_tirage": "2024-03-01",
+            "date_de_forclusion": "2024-03-15",
+            "boule_1": "5",
+            "nombre_de_gagnant_au_rang1_en_france": "42",
+            "rapport_du_rang1_en_france": "123456.0",
+            "nombre_de_gagnant_au_rang1": "3",
+            "rapport_du_rang1": "700.0",
+        }
+
+        record = parser(data)
+
+        # france-specific values must not appear in the result
+        assert [(rank.rank, rank.winners, rank.gain) for rank in record.winning_ranks] == [
+            (1, 3, 700.0),
         ]
 
     def test_call_handles_combinations_without_winning_ranks(self) -> None:

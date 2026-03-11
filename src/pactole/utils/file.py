@@ -227,6 +227,8 @@ def read_csv_file(
     if dialect == "auto":
         for i in range(max_tries):
             data = file.read(sample_size * (i + 1))
+            if not data:
+                return [] if not iterator else iter([])
             file.seek(0)
             try:
                 dialect = csv.Sniffer().sniff(data)
