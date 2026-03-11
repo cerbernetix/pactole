@@ -299,6 +299,10 @@ class BaseProvider:
             >>> provider.refresh()
         """
         manifest = self._manifest.load()
+
+        if manifest and any(not entry.get("count") for entry in manifest):
+            manifest = None
+
         if force or not manifest:
             manifest = self._load_manifest(force=force)
             refreshed = True
