@@ -671,6 +671,8 @@ class DrawDays:
 
                 Defaults to None.
 
+            closest (bool): If True, get the closest date (past or future). Defaults to True.
+
         Returns:
             date: The date of the last lottery draw.
 
@@ -703,6 +705,8 @@ class DrawDays:
                 'YYYY-MM-DD'. Finally, a date object can be provided directly.
 
                 Defaults to None.
+
+            closest (bool): If True, get the closest date (past or future). Defaults to True.
 
         Returns:
             date: The date of the next lottery draw.
