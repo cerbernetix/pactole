@@ -84,6 +84,9 @@ class Weekday(Enum):
 
         return super()._missing_(value)
 
+    def __str__(self) -> str:
+        return self.name
+
     def next(self, days: Day | Weekday | Iterable[Day | Weekday] | None = None) -> Weekday:
         """Get a Weekday representing the next day of the week.
 
