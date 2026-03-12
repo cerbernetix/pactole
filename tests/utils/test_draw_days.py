@@ -2,6 +2,8 @@
 
 from datetime import date
 
+import pytest
+
 from pactole.utils import DrawDays, Weekday
 
 DATE_1_MONDAY = date(2024, 6, 3)
@@ -57,6 +59,9 @@ class TestDrawDays:
         assert days.get_last_draw_date(from_date=DATE_2_SATURDAY, closest=True) == DATE_2_FRIDAY
         assert days.get_last_draw_date(from_date=DATE_2_SUNDAY, closest=True) == DATE_2_FRIDAY
 
+        with pytest.raises(TypeError):
+            days.get_last_draw_date(from_date=Weekday.SUNDAY, closest=False)
+
     def test_draw_days_get_next_draw_date(self):
         """Test the get_next_draw_date method."""
         days = DrawDays([Weekday.TUESDAY, Weekday.FRIDAY])
@@ -76,3 +81,6 @@ class TestDrawDays:
         assert days.get_next_draw_date(from_date=DATE_2_FRIDAY, closest=True) == DATE_2_FRIDAY
         assert days.get_next_draw_date(from_date=DATE_2_SATURDAY, closest=True) == DATE_3_TUESDAY
         assert days.get_next_draw_date(from_date=DATE_2_SUNDAY, closest=True) == DATE_3_TUESDAY
+
+        with pytest.raises(TypeError):
+            days.get_next_draw_date(from_date=Weekday.SUNDAY, closest=False)
