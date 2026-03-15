@@ -11,8 +11,8 @@ from pactole.data import DrawRecord, WinningRank
 class TestDrawRecord:
     """Tests for data model helpers."""
 
-    def test_draw_record_to_dict_exports_fields(self) -> None:
-        """Test to_dict returns all expected fields."""
+    def test_draw_record_to_csv_exports_fields(self) -> None:
+        """Test to_csv returns all expected fields."""
 
         draw_date = datetime.date(2024, 1, 15)
         deadline_date = datetime.date(2024, 2, 15)
@@ -31,7 +31,7 @@ class TestDrawRecord:
             ],
         )
 
-        result = record.to_dict()
+        result = record.to_csv()
 
         assert result == {
             "period": "202401",
@@ -50,8 +50,8 @@ class TestDrawRecord:
             "rank_2_gain": 50_000.0,
         }
 
-    def test_draw_record_from_dict_builds_components_and_ranks(self) -> None:
-        """Test from_dict builds numbers and winning ranks with a factory."""
+    def test_draw_record_from_csv_builds_components_and_ranks(self) -> None:
+        """Test from_csv builds numbers and winning ranks with a factory."""
 
         def factory(
             main: CombinationInputWithRank,
@@ -93,7 +93,7 @@ class TestDrawRecord:
             "dummy_field": "ignored",
         }
 
-        record = DrawRecord.from_dict(data, factory)
+        record = DrawRecord.from_csv(data, factory)
 
         assert record.period == "202402"
         assert record.draw_date == datetime.date(2024, 2, 10)
@@ -106,8 +106,8 @@ class TestDrawRecord:
             WinningRank(rank=2, winners=4, gain=0.0),
         ]
 
-    def test_draw_record_from_dict_defaults_combination(self) -> None:
-        """Test from_dict falls back to an empty LotteryCombination."""
+    def test_draw_record_from_csv_defaults_combination(self) -> None:
+        """Test from_csv falls back to an empty LotteryCombination."""
 
         data = {
             "period": "202403",
@@ -119,7 +119,7 @@ class TestDrawRecord:
             "rank_1_gain": 100.0,
         }
 
-        record = DrawRecord.from_dict(data, object())
+        record = DrawRecord.from_csv(data, object())
 
         assert isinstance(record.combination, LotteryCombination)
         assert not record.combination.components

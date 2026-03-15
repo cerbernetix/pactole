@@ -68,7 +68,7 @@ class DrawRecord:
     """Deadline date for gain collection."""
 
     combination: LotteryCombination
-    """The winning combination of the draw."""
+    """The combination of the draw."""
 
     numbers: dict[str, list[int]]
     """A dictionary of number components and their corresponding lists of values in the draw."""
@@ -76,8 +76,8 @@ class DrawRecord:
     winning_ranks: list[WinningRank]
     """A list of winning ranks for the draw, ordered by rank."""
 
-    def to_dict(self) -> dict:
-        """Convert the DrawRecord instance to a dictionary.
+    def to_csv(self) -> dict:
+        """Convert the DrawRecord instance to a dictionary suitable for CSV export.
 
         Returns:
             dict: A dictionary representation of the DrawRecord instance.
@@ -94,7 +94,7 @@ class DrawRecord:
             ...         WinningRank(rank=2, winners=10, gain=50000.0)],
             ...     ]
             ... )
-            >>> record.to_dict()
+            >>> record.to_csv()
             {'period': '202201',
              'draw_date': '2022-01-15',
              'deadline_date': '2022-02-15',
@@ -131,8 +131,8 @@ class DrawRecord:
         return data
 
     @staticmethod
-    def from_dict(data: dict, combination_factory: CombinationFactory | None = None) -> DrawRecord:
-        """Create a DrawRecord instance from a dictionary.
+    def from_csv(data: dict, combination_factory: CombinationFactory | None = None) -> DrawRecord:
+        """Create a DrawRecord instance from a CSV dictionary.
 
         Args:
             data (dict): A dictionary containing the draw record data.
@@ -160,7 +160,7 @@ class DrawRecord:
             ...     "rank_2_winners": 10,
             ...     "rank_2_gain": 50000.0,
             ... }
-            >>> record = DrawRecord.from_dict(data)
+            >>> record = DrawRecord.from_csv(data)
             >>> print(record)
             DrawRecord(
                 period='202201',
