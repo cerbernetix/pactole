@@ -679,6 +679,17 @@ class TestEnhancedJsonEncoder:
         assert decoded["date"] == "2024-01-01"
         assert decoded["datetime"] == "2024-01-01T12:00:00"
 
+    def test_enhanced_json_encoder_serializes_to_dict_method(self):
+        """Test that objects with a to_dict method are serialized using it."""
+
+        class _SampleWithDict:
+            def to_dict(self):
+                """Return a dictionary representation of the object."""
+                return {"key": "value"}
+
+        encoded = json.dumps({"obj": _SampleWithDict()}, cls=EnhancedJSONEncoder)
+        assert json.loads(encoded) == {"obj": {"key": "value"}}
+
     def test_enhanced_json_encoder_serializes_dataclass(self):
         """Test that dataclass instances are serialized as dictionaries."""
 

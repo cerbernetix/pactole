@@ -325,6 +325,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, (PurePath, Serializable)):
             return str(o)
+        if hasattr(o, "to_dict") and callable(getattr(o, "to_dict")):
+            return o.to_dict()
         if is_dataclass(o):
             return asdict(o)
         return super().default(o)
