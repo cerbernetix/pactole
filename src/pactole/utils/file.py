@@ -320,6 +320,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         Returns:
             Any: The serialized object.
         """
+        if isinstance(o, (datetime.datetime, datetime.date)):
+            return o.isoformat()
         if isinstance(o, (PurePath, Serializable)):
             return str(o)
         return super().default(o)
