@@ -247,6 +247,45 @@ def read_csv_file(
     return list(reader)
 
 
+def to_csv_row(data: Any) -> dict | list:
+    """Convert data to a format suitable for CSV writing.
+
+    Args:
+        data (Any): The data to convert.
+
+    Returns:
+        dict | list: The converted row, as a dictionary or list.
+
+    Raises:
+        TypeError: If the row cannot be converted to a dict or list.
+
+    Examples:
+        >>> to_csv_row({'key': 'value'})
+        {'key': 'value'}
+        >>> class Custom:
+        ...     def to_csv(self):
+        ...         return {'custom': 'value'}
+        >>> to_csv_row(Custom())
+        {'custom': 'value'}
+        >>> class AnotherCustom:
+        ...     def to_dict(self):
+        ...         return {'another': 'value'}
+        >>> to_csv_row(AnotherCustom())
+        {'another': 'value'}
+        >>> to_csv_row('invalid')
+        Traceback (most recent call last):
+            ...
+        TypeError: Data items must be dicts, lists, or have a to_csv or to_dict method.
+    """
+    if isinstance(data, (dict, list)):
+        return data
+    if hasattr(data, "to_csv") and callable(getattr(data, "to_csv")):
+        return data.to_csv()
+    if hasattr(data, "to_dict") and callable(getattr(data, "to_dict")):
+        return data.to_dict()
+    raise TypeError("Data items must be dicts, lists, or have a to_csv or to_dict method.")
+
+
 def write_csv_file(
     file: IO[str],
     data: Iterable[dict | list],
@@ -269,6 +308,7 @@ def write_csv_file(
 
     Raises:
         csv.Error: If there is an error writing to the CSV file.
+        TypeError: If the data items cannot be converted to dicts or lists.
 
     Examples:
         >>> with open('output.csv', 'w', encoding='utf-8', newline='') as f:
@@ -276,9 +316,7 @@ def write_csv_file(
         >>> with open('output.csv', 'w', encoding='utf-8', newline='') as f:
         ...     write_csv_file(f, [['col1', 'col2'], ['1', '2'], ['3', '4']])
     """
-    [discover, walk] = tee(
-        (line.to_dict() if line and hasattr(line, "to_dict") else line) for line in data
-    )
+    [discover, walk] = tee((to_csv_row(line) for line in data))
 
     writer = None
     for line in discover:
@@ -325,6 +363,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, (PurePath, Serializable)):
             return str(o)
+        if hasattr(o, "to_json") and callable(getattr(o, "to_json")):
+            return o.to_json()
         if hasattr(o, "to_dict") and callable(getattr(o, "to_dict")):
             return o.to_dict()
         if is_dataclass(o):
