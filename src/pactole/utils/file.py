@@ -7,6 +7,7 @@ import datetime
 import json
 import logging
 import zipfile
+from dataclasses import asdict, is_dataclass
 from enum import Enum
 from itertools import tee
 from pathlib import Path, PurePath
@@ -324,6 +325,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, (PurePath, Serializable)):
             return str(o)
+        if is_dataclass(o):
+            return asdict(o)
         return super().default(o)
 
 
