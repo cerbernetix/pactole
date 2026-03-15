@@ -8,7 +8,7 @@ from math import ceil
 from math import comb as math_comb
 from typing import Iterable, Iterator, TypedDict
 
-from ..utils import assert_non_negative_integer
+from ..utils import Serializable, assert_non_negative_integer
 
 DEFAULT_START = 1
 DEFAULT_END = 50
@@ -161,7 +161,7 @@ def generate(combinations: int, n: int = 1, partitions: int = 1) -> Iterator[int
         )
 
 
-class Combination:
+class Combination(Serializable):
     """A class representing a combination of values.
 
     Args:

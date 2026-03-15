@@ -12,6 +12,7 @@ import requests
 
 from pactole.utils import (
     EnhancedJSONEncoder,
+    Serializable,
     ensure_directory,
     fetch_content,
     get_cache_path,
@@ -652,6 +653,16 @@ class TestEnhancedJsonEncoder:
         encoded = json.dumps({"path": Path("/tmp/data.json")}, cls=EnhancedJSONEncoder)
 
         assert json.loads(encoded) == {"path": "/tmp/data.json"}
+
+    def test_enhanced_json_encoder_serializes_serializable_object(self):
+        """Test serializing objects that implement Serializable."""
+
+        class _Sample(Serializable):
+            def __str__(self):
+                return "Sample object"
+
+        encoded = json.dumps({"obj": _Sample()}, cls=EnhancedJSONEncoder)
+        assert json.loads(encoded) == {"obj": "Sample object"}
 
     def test_enhanced_json_encoder_raises_for_unknown_types(self):
         """Test that unknown types still raise a TypeError."""

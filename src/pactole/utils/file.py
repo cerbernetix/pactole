@@ -296,6 +296,13 @@ def write_csv_file(
         writer.writerows(walk)
 
 
+class Serializable:
+    """Marker class for serializable objects.
+
+    Such objects can implement custom serialization logic via __str__ method.
+    """
+
+
 class EnhancedJSONEncoder(json.JSONEncoder):
     """JSON encoder that handles additional types like Path objects.
 
@@ -313,7 +320,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         Returns:
             Any: The serialized object.
         """
-        if isinstance(o, PurePath):
+        if isinstance(o, (PurePath, Serializable)):
             return str(o)
         return super().default(o)
 
