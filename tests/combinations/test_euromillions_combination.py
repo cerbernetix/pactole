@@ -575,7 +575,7 @@ class TestEuroMillionsCombination:
         """Test EuroMillionsCombination string representation."""
 
         combination = EuroMillionsCombination([3, 6, 12, 33, 42], [4, 12])
-        assert str(combination) == "numbers: [ 3,  6, 12, 33, 42] stars: [ 4, 12]"
+        assert str(combination) == "numbers: [ 3,  6, 12, 33, 42]  stars: [ 4, 12]"
 
     def test_combination_repr(self):
         """Test EuroMillionsCombination repr representation."""
@@ -593,3 +593,140 @@ class TestEuroMillionsCombination:
         assert hash(combination1) == hash(combination2)
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
+
+    def test_combination_to_string(self):
+        """Test to_string returns a human-readable string representation."""
+
+        combination = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+        assert combination.to_string() == "numbers: [ 3, 15, 22, 28, 44]  stars: [ 2,  9]"
+
+    def test_combination_to_csv(self):
+        """Test to_csv returns a CSV-compatible dictionary."""
+
+        combination = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+        assert combination.to_csv() == {
+            "numbers_1": 3,
+            "numbers_2": 15,
+            "numbers_3": 22,
+            "numbers_4": 28,
+            "numbers_5": 44,
+            "stars_1": 2,
+            "stars_2": 9,
+        }
+
+    def test_combination_to_json_equals_to_dict(self):
+        """Test to_json returns the same result as to_dict."""
+
+        combination = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+        assert combination.to_json() == combination.to_dict()
+
+    def test_combination_to_dict(self):
+        """Test to_dict returns numbers and stars as sorted lists."""
+
+        assert EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9]).to_dict() == {
+            "numbers": [3, 15, 22, 28, 44],
+            "stars": [2, 9],
+        }
+
+    def test_combination_to_dict_with_unsorted_input(self):
+        """Test to_dict returns values in sorted order regardless of input order."""
+
+        assert EuroMillionsCombination(numbers=[44, 3, 22, 28, 15], stars=[9, 2]).to_dict() == {
+            "numbers": [3, 15, 22, 28, 44],
+            "stars": [2, 9],
+        }
+
+    def test_combination_to_dict_empty(self):
+        """Test to_dict with empty combination returns empty lists."""
+
+        assert EuroMillionsCombination().to_dict() == {"numbers": [], "stars": []}
+
+    def test_combination_from_string(self):
+        """Test from_string creates an EuroMillionsCombination from a string."""
+
+        combination = EuroMillionsCombination.from_string(
+            "numbers: [ 3, 15, 22, 28, 44]  stars: [ 2,  9]"
+        )
+
+        assert isinstance(combination, EuroMillionsCombination)
+        assert combination.numbers.values == [3, 15, 22, 28, 44]
+        assert combination.stars.values == [2, 9]
+
+    def test_combination_from_string_without_brackets(self):
+        """Test from_string creates an EuroMillionsCombination from a string without brackets."""
+
+        combination = EuroMillionsCombination.from_string(
+            "numbers:  3, 15, 22, 28, 44  stars: 2, 9"
+        )
+
+        assert isinstance(combination, EuroMillionsCombination)
+        assert combination.numbers.values == [3, 15, 22, 28, 44]
+        assert combination.stars.values == [2, 9]
+
+    def test_combination_from_csv(self):
+        """Test from_csv creates an EuroMillionsCombination from a CSV dict."""
+
+        combination = EuroMillionsCombination.from_csv(
+            {
+                "draw_date": "2024-06-01",
+                "numbers_1": 3,
+                "numbers_2": 15,
+                "numbers_3": 22,
+                "numbers_4": 28,
+                "numbers_5": 44,
+                "stars_1": 2,
+                "stars_2": 9,
+            }
+        )
+
+        assert isinstance(combination, EuroMillionsCombination)
+        assert combination.numbers.values == [3, 15, 22, 28, 44]
+        assert combination.stars.values == [2, 9]
+
+    def test_combination_from_json(self):
+        """Test from_json creates an EuroMillionsCombination from a dict."""
+
+        combination = EuroMillionsCombination.from_json(
+            {"numbers": [3, 15, 22, 28, 44], "stars": [2, 9]}
+        )
+
+        assert isinstance(combination, EuroMillionsCombination)
+        assert combination.numbers.values == [3, 15, 22, 28, 44]
+        assert combination.stars.values == [2, 9]
+
+    def test_combination_from_dict(self):
+        """Test from_dict creates an EuroMillionsCombination from a dict."""
+
+        combination = EuroMillionsCombination.from_dict(
+            {"numbers": [3, 15, 22, 28, 44], "stars": [2, 9]}
+        )
+
+        assert isinstance(combination, EuroMillionsCombination)
+        assert combination.numbers.values == [3, 15, 22, 28, 44]
+        assert combination.stars.values == [2, 9]
+
+    def test_combination_from_json_equals_from_dict(self):
+        """Test from_json and from_dict produce equivalent combinations."""
+
+        data = {"numbers": [1, 5, 10, 25, 50], "stars": [3, 11]}
+
+        assert (
+            EuroMillionsCombination.from_json(data).values
+            == EuroMillionsCombination.from_dict(data).values
+        )
+
+    def test_combination_serialization_roundtrip(self):
+        """Test to_dict / from_dict roundtrip produces an equivalent combination."""
+
+        original = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+        restored = EuroMillionsCombination.from_dict(original.to_dict())
+
+        assert isinstance(restored, EuroMillionsCombination)
+        assert restored.numbers.values == original.numbers.values
+        assert restored.stars.values == original.stars.values
+        assert restored.rank == original.rank
+        assert restored.winning_ranks == original.winning_ranks

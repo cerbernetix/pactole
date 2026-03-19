@@ -533,3 +533,141 @@ class TestCombination:
         assert hash(combination1) == hash(combination2)
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
+
+    def test_combination_to_string(self):
+        """Test to_string returns a string representation of the combination."""
+
+        combination = Combination([3, 1, 2], rank=123)
+        assert combination.to_string() == "values: [1, 2, 3]  rank: 123"
+
+        combination = Combination([3, 1, 2])
+        assert combination.to_string() == "values: [1, 2, 3]  rank: 0"
+
+    def test_combination_to_csv(self):
+        """Test to_csv returns a sorted list of values."""
+
+        assert Combination([3, 1, 2]).to_csv() == [1, 2, 3]
+        assert Combination([]).to_csv() == []
+
+    def test_combination_to_json_returns_sorted_values(self):
+        """Test to_json returns a sorted list of values."""
+
+        assert Combination([3, 1, 2]).to_json() == [1, 2, 3]
+
+    def test_combination_to_json_empty_combination(self):
+        """Test to_json on empty combination returns empty list."""
+
+        assert Combination().to_json() == []
+
+    def test_combination_to_dict_without_precomputed_rank(self):
+        """Test to_dict includes None for rank when it has not been computed yet."""
+
+        combination = Combination([3, 1, 2], start=0)
+
+        assert combination.to_dict() == {"values": [1, 2, 3], "rank": None, "start": 0}
+
+    def test_combination_to_dict_with_precomputed_rank(self):
+        """Test to_dict includes the stored rank after it has been computed."""
+
+        combination = Combination([3, 1, 2])
+        rank = combination.rank
+
+        assert combination.to_dict() == {"values": [1, 2, 3], "rank": rank, "start": 1}
+
+    def test_combination_to_dict_with_explicit_rank(self):
+        """Test to_dict preserves an explicitly provided rank."""
+
+        combination = Combination([1, 2, 3], rank=42, start=1)
+
+        assert combination.to_dict() == {"values": [1, 2, 3], "rank": 42, "start": 1}
+
+    def test_combination_from_string_full(self):
+        """Test from_string creates a Combination from a string representation."""
+
+        combination = Combination.from_string("values: [1, 2, 3]  rank: 123")
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 123
+        assert combination.start == 1
+
+    def test_combination_from_string_without_brackets(self):
+        """Test from_string creates a Combination from a string representation without brackets."""
+
+        combination = Combination.from_string("values: 1, 2, 3  rank: 123")
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 123
+        assert combination.start == 1
+
+    def test_combination_from_string_without_rank(self):
+        """Test from_string creates a Combination from a string representation without rank."""
+
+        combination = Combination.from_string("values: [1, 2, 3]  rank: None")
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.start == 1
+
+    def test_combination_from_string_with_rank_only(self):
+        """Test from_string creates a Combination from a string representation with rank only."""
+
+        combination = Combination.from_string("rank: 123")
+
+        assert combination.values == []
+        assert combination.stored_rank is None
+        assert combination.start == 1
+
+    def test_combination_from_csv(self):
+        """Test from_csv creates a Combination from a list of values."""
+
+        combination = Combination.from_csv([3, 1, 2])
+
+        assert combination.values == [1, 2, 3]
+        assert combination.start == 1
+
+    def test_combination_from_json_from_list(self):
+        """Test from_json with a list creates a Combination from those values."""
+
+        combination = Combination.from_json([3, 1, 2])
+
+        assert combination.values == [1, 2, 3]
+        assert combination.start == 1
+
+    def test_combination_from_json_from_dict(self):
+        """Test from_json with a dict delegates to from_dict."""
+
+        combination = Combination.from_json({"values": [1, 2, 3], "rank": 5, "start": 0})
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 5
+        assert combination.start == 0
+
+    def test_combination_from_dict_with_all_fields(self):
+        """Test from_dict creates a Combination preserving rank and start."""
+
+        combination = Combination.from_dict({"values": [2, 1, 3], "rank": 7, "start": 1})
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 7
+        assert combination.start == 1
+
+    def test_combination_from_dict_with_defaults(self):
+        """Test from_dict applies defaults when rank and start are absent."""
+
+        combination = Combination.from_dict({"values": [1, 2, 3]})
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.start == 1
+
+    def test_combination_serialization_roundtrip(self):
+        """Test to_dict / from_dict roundtrip produces an equivalent combination."""
+
+        original = Combination([5, 3, 1, 4, 2], start=1)
+        _ = original.rank
+
+        restored = Combination.from_dict(original.to_dict())
+
+        assert restored.values == original.values
+        assert restored.stored_rank == original.stored_rank
+        assert restored.start == original.start
