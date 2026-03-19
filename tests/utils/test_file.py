@@ -18,6 +18,7 @@ from pactole.utils import (
     get_cache_path,
     read_csv_file,
     read_zip_file,
+    to_csv_row,
     write_csv_file,
     write_json_file,
 )
@@ -554,6 +555,54 @@ class TestReadCsvFile:
         assert sniff.call_count == 3
 
 
+class TestToCsvRow:
+    """Tests for to_csv_row function."""
+
+    def test_to_csv_row_with_dict(self):
+        """Test converting a dictionary to a CSV row."""
+
+        data = {"col1": "value1", "col2": "value2"}
+        result = to_csv_row(data)
+        assert result == {"col1": "value1", "col2": "value2"}
+
+    def test_to_csv_row_with_list(self):
+        """Test converting a list to a CSV row."""
+
+        data = ["value1", "value2"]
+        result = to_csv_row(data)
+        assert result == ["value1", "value2"]
+
+    def test_to_csv_row_with_object_exposing_to_csv(self):
+        """Test converting an object that exposes to_csv method."""
+
+        class _Sample:
+            def to_csv(self) -> dict[str, str]:
+                """Return the row as a dictionary."""
+                return {"col1": "value1", "col2": "value2"}
+
+        obj = _Sample()
+        result = to_csv_row(obj)
+        assert result == {"col1": "value1", "col2": "value2"}
+
+    def test_to_csv_row_with_object_exposing_to_dict(self):
+        """Test converting an object that exposes to_dict method."""
+
+        class _Sample:
+            def to_dict(self) -> dict[str, str]:
+                """Return the row as a dictionary."""
+                return {"col1": "value1", "col2": "value2"}
+
+        obj = _Sample()
+        result = to_csv_row(obj)
+        assert result == {"col1": "value1", "col2": "value2"}
+
+    def test_to_csv_row_with_non_serializable_object(self):
+        """Test that non-serializable objects raise an error."""
+
+        with pytest.raises(TypeError):
+            to_csv_row(None)
+
+
 class TestWriteCsvFile:
     """Tests for write_csv_file function."""
 
@@ -599,12 +648,31 @@ class TestWriteCsvFile:
         file.seek(0)
         assert file.read() == "1,2\r\n3,4\r\n"
 
+    def test_write_csv_file_objects_with_to_csv(self):
+        """Test writing objects that expose to_csv instead of being dicts."""
+
+        class _SampleRow:
+            def __init__(self, col1: str, col2: str) -> None:
+                self.col1 = col1
+                self.col2 = col2
+
+            def to_csv(self) -> dict[str, str]:
+                """Return the row as a dictionary."""
+
+                return {"col1": self.col1, "col2": self.col2}
+
+        file = io.StringIO()
+        data = [_SampleRow("1", "2"), _SampleRow("3", "4")]
+
+        write_csv_file(file, data)
+
+        file.seek(0)
+        assert file.read() == "col1,col2\r\n1,2\r\n3,4\r\n"
+
     def test_write_csv_file_objects_with_to_dict(self):
         """Test writing objects that expose to_dict instead of being dicts."""
 
-        class SampleRow:
-            """Simple row object with a to_dict implementation."""
-
+        class _SampleRow:
             def __init__(self, col1: str, col2: str) -> None:
                 self.col1 = col1
                 self.col2 = col2
@@ -615,7 +683,7 @@ class TestWriteCsvFile:
                 return {"col1": self.col1, "col2": self.col2}
 
         file = io.StringIO()
-        data = [SampleRow("1", "2"), SampleRow("3", "4")]
+        data = [_SampleRow("1", "2"), _SampleRow("3", "4")]
 
         write_csv_file(file, data)
 
@@ -643,6 +711,14 @@ class TestWriteCsvFile:
         file.seek(0)
         assert file.read() == ""
 
+    def test_write_csv_file_non_serializable_object(self):
+        """Test that writing non-serializable objects raises an error."""
+
+        file = io.StringIO()
+
+        with pytest.raises(TypeError):
+            write_csv_file(file, [None])
+
 
 class TestEnhancedJsonEncoder:
     """Tests for EnhancedJSONEncoder."""
@@ -666,6 +742,17 @@ class TestEnhancedJsonEncoder:
 
         assert decoded["date"] == "2024-01-01"
         assert decoded["datetime"] == "2024-01-01T12:00:00"
+
+    def test_enhanced_json_encoder_serializes_to_json_method(self):
+        """Test that objects with a to_json method are serialized using it."""
+
+        class _SampleWithJson:
+            def to_json(self):
+                """Return a JSON-serializable representation of the object."""
+                return {"json_key": "json_value"}
+
+        encoded = json.dumps({"obj": _SampleWithJson()}, cls=EnhancedJSONEncoder)
+        assert json.loads(encoded) == {"obj": {"json_key": "json_value"}}
 
     def test_enhanced_json_encoder_serializes_to_dict_method(self):
         """Test that objects with a to_dict method are serialized using it."""
