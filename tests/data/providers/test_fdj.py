@@ -263,7 +263,7 @@ class TestFDJProvider:
             """Parser for provider tests."""
 
             def __call__(self, data: dict) -> DrawRecord:
-                return DrawRecord.from_dict({})
+                return DrawRecord.from_csv({})
 
         provider = FDJProvider(SampleResolver(), parser=SampleParser())
 

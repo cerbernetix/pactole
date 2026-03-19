@@ -968,7 +968,14 @@ class TestBaseProvider:
             provider.refresh(force=True)
             mtime_before = data_path(cache_name).stat().st_mtime
 
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
             mtime_after = data_path(cache_name).stat().st_mtime
 
@@ -1239,7 +1246,14 @@ class TestBaseProvider:
             "fetch_content",
             lambda **_kwargs: (_ for _ in ()).throw(AssertionError("refresh not expected")),
         ):
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
         assert len(read_manifest(cache_name)) == 1
         assert len(provider.load()) == 1
@@ -1538,7 +1552,14 @@ class TestBaseProvider:
             "fetch_content",
             lambda **_kwargs: (_ for _ in ()).throw(AssertionError("refresh not expected")),
         ):
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
         manifest = read_manifest(cache_name)
         records = provider.load()
@@ -1625,7 +1646,14 @@ class TestBaseProvider:
 
         with patch.object(base_provider_module, "fetch_content", fake_fetch_content):
             provider.refresh(force=True)
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
         records = provider.load()
 
@@ -1687,7 +1715,14 @@ class TestBaseProvider:
         ):
             provider.refresh(force=True)
             mtime_before = data_path(cache_name).stat().st_mtime
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
             mtime_after = data_path(cache_name).stat().st_mtime
 
@@ -1781,7 +1816,14 @@ class TestBaseProvider:
             provider.refresh(force=True)
             mtime_before = data_path(cache_name).stat().st_mtime
 
-            provider.refresh()
+            with freeze_provider_clock(
+                today=last_draw_date + datetime.timedelta(days=1),
+                now=datetime.datetime.combine(
+                    last_draw_date + datetime.timedelta(days=1),
+                    datetime.time(hour=20),
+                ),
+            ):
+                provider.refresh()
 
             mtime_after = data_path(cache_name).stat().st_mtime
 

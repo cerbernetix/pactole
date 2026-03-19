@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added string conversion of Weekday instances
+- Added serialization methods to Combination classes and data models (to/from_string/csv/json/dict)
+- Added support for custom serialization to CSV and JSON (date, dataclasses, serialization helpers)
+
+### Changed
+
+- CSV writer now uses to_csv for serializing objects
+- JSON writer now uses to_json for serializing objects
+- DrawRecord now has custom methods for CSV and JSON import/export instead of generic to/from_dict
 
 ## v0.3.3 [2026-03-11]
 

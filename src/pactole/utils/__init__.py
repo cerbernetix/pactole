@@ -19,6 +19,7 @@ __all__ = [
     "read_zip_file",
     "Timeout",
     "TimeoutCache",
+    "to_csv_row",
     "Weekday",
     "write_csv_file",
     "write_json_file",
@@ -35,6 +36,7 @@ from .file import (
     get_cache_path,
     read_csv_file,
     read_zip_file,
+    to_csv_row,
     write_csv_file,
     write_json_file,
 )

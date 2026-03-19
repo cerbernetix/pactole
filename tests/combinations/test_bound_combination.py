@@ -492,3 +492,173 @@ class TestBoundCombination:
         assert hash(combination1) == hash(combination2)
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
+
+    def test_combination_to_string(self):
+        """Test to_string returns a string representation of the combination."""
+
+        combination = BoundCombination([3, 6, 12, 33, 42], start=1, end=50, count=5, rank=123)
+        assert combination.to_string() == "values: [ 3,  6, 12, 33, 42]  rank:     123"
+
+        combination = BoundCombination([3, 6, 12], start=1, end=50, count=5)
+        assert combination.to_string() == "values: [         3,  6, 12]  rank:     177"
+
+    def test_combination_to_csv(self):
+        """Test to_csv (inherited) returns a CSV string of the values."""
+
+        assert BoundCombination(values=[5, 3, 1], start=1, end=50, count=5).to_csv() == [1, 3, 5]
+        assert BoundCombination().to_csv() == []
+
+    def test_combination_to_json_returns_sorted_values(self):
+        """Test to_json (inherited) returns a sorted list of values."""
+
+        assert BoundCombination(values=[5, 3, 1], start=1, end=50, count=5).to_json() == [1, 3, 5]
+
+    def test_combination_to_json_empty_combination(self):
+        """Test to_json on empty combination returns empty list."""
+
+        assert BoundCombination().to_json() == []
+
+    def test_combination_to_dict_without_precomputed_rank(self):
+        """Test to_dict returns all fields with None for uncomputed rank."""
+
+        combination = BoundCombination(
+            values=[1, 2, 3], start=1, end=50, count=5, combinations=2118760
+        )
+
+        assert combination.to_dict() == {
+            "values": [1, 2, 3],
+            "rank": None,
+            "start": 1,
+            "end": 50,
+            "count": 5,
+            "combinations": 2118760,
+        }
+
+    def test_combination_to_dict_with_precomputed_rank(self):
+        """Test to_dict includes the stored rank after it has been computed."""
+
+        combination = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+        rank = combination.rank
+
+        result = combination.to_dict()
+
+        assert result["rank"] == rank
+        assert result["values"] == [1, 2, 3]
+        assert result["end"] == 50
+        assert result["combinations"] == 2118760
+
+    def test_combination_to_dict_with_explicit_rank(self):
+        """Test to_dict preserves an explicitly provided rank."""
+
+        assert (
+            BoundCombination(values=[1, 2, 3], rank=99, start=1, end=50, count=5).to_dict()["rank"]
+            == 99
+        )
+
+    def test_combination_from_string(self):
+        """Test from_string creates a BoundCombination from a string representation."""
+
+        combination = BoundCombination.from_string("values: [         3,  6, 12]  rank:     177")
+
+        assert isinstance(combination, BoundCombination)
+        assert combination.values == [3, 6, 12]
+        assert combination.stored_rank == 177
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+        assert combination.combinations == 2118760
+
+    def test_combination_from_string_without_brackets(self):
+        """Test from_string can parse values without brackets."""
+
+        combination = BoundCombination.from_string("values:          3,  6, 12  rank:     177")
+
+        assert isinstance(combination, BoundCombination)
+        assert combination.values == [3, 6, 12]
+        assert combination.stored_rank == 177
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+        assert combination.combinations == 2118760
+
+    def test_combination_from_csv(self):
+        """Test from_csv (inherited) creates a BoundCombination from a list of values."""
+
+        combination = BoundCombination.from_csv([3, 1, 2])
+
+        assert isinstance(combination, BoundCombination)
+        assert combination.values == [1, 2, 3]
+
+    def test_combination_from_json_from_list(self):
+        """Test from_json (inherited) with a list creates a BoundCombination."""
+
+        combination = BoundCombination.from_json([3, 1, 2])
+
+        assert isinstance(combination, BoundCombination)
+        assert combination.values == [1, 2, 3]
+
+    def test_combination_from_json_from_dict(self):
+        """Test from_json (inherited) with a dict delegates to from_dict."""
+
+        data = {
+            "values": [1, 2, 3],
+            "rank": 0,
+            "start": 1,
+            "end": 50,
+            "count": 5,
+            "combinations": 2118760,
+        }
+
+        combination = BoundCombination.from_json(data)
+
+        assert isinstance(combination, BoundCombination)
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 0
+        assert combination.end == 50
+
+    def test_combination_from_dict_with_all_fields(self):
+        """Test from_dict creates a BoundCombination with all provided fields."""
+
+        data = {
+            "values": [1, 2, 3],
+            "rank": 0,
+            "start": 1,
+            "end": 50,
+            "count": 5,
+            "combinations": 2118760,
+        }
+
+        combination = BoundCombination.from_dict(data)
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank == 0
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+        assert combination.combinations == 2118760
+
+    def test_combination_from_dict_with_defaults(self):
+        """Test from_dict uses default values for missing fields."""
+
+        combination = BoundCombination.from_dict({"values": [1, 2, 3]})
+
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+
+    def test_combination_serialization_roundtrip(self):
+        """Test to_dict / from_dict roundtrip produces an equivalent combination."""
+
+        original = BoundCombination(values=[3, 15, 27], start=1, end=50, count=5)
+        _ = original.rank
+
+        restored = BoundCombination.from_dict(original.to_dict())
+
+        assert restored.values == original.values
+        assert restored.stored_rank == original.stored_rank
+        assert restored.start == original.start
+        assert restored.end == original.end
+        assert restored.count == original.count
+        assert restored.combinations == original.combinations

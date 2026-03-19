@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from functools import cached_property
 from math import prod
 from typing import Any, Iterator, Protocol
@@ -16,6 +17,9 @@ from .combination import (
     CombinationValues,
     generate,
 )
+
+RE_NUMBER = re.compile(r"^(?P<component>\w+)_(?P<index>\d+)$")
+RE_COMPONENT = re.compile(r"(?P<name>\w+):\s*\[?(?P<values>[\d,\s]*)\]?")
 
 CombinationWinningPattern = tuple[int, ...]
 CombinationWinningRanks = dict[CombinationWinningPattern, CombinationRank]
@@ -916,6 +920,214 @@ class LotteryCombination:
             / self.length
         )
 
+    def to_string(self) -> str:
+        """Convert the LotteryCombination to a string representation.
+
+        Returns:
+            str: A string representation of the LotteryCombination.
+
+        Examples:
+            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
+            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
+            >>> lottery_comb = LotteryCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number
+            ... )
+            >>> lottery_comb.to_string()
+            'main: [ 1,  2,  3,  4,  5]  bonus: [ 6]'
+        """
+        return str(self)
+
+    def to_csv(self) -> dict:
+        """Convert the LotteryCombination to a CSV-serializable dictionary.
+
+        Returns:
+            dict: A CSV-serializable dictionary representation of the LotteryCombination.
+
+        Examples:
+            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
+            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
+            >>> lottery_comb = LotteryCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number
+            ... )
+            >>> lottery_comb.to_csv()
+            {
+                'main_1': 1, 'main_2': 2, 'main_3': 3, 'main_4': 4, 'main_5': 5, 'bonus_1': 6
+            }
+        """
+        data = {}
+
+        for name, component in self._components.items():
+            for i, value in enumerate(component.values, start=1):
+                data[f"{name}_{i}"] = value
+
+        return data
+
+    def to_json(self) -> dict:
+        """Convert the LotteryCombination to a JSON-serializable dictionary.
+
+        Returns:
+            dict: A JSON-serializable dictionary representation of the LotteryCombination.
+
+        Examples:
+            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
+            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
+            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            >>> lottery_comb = LotteryCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number,
+            ...     winning_ranks=winning_ranks
+            ... )
+            >>> lottery_comb.to_json()
+            {
+                'components': {
+                    'main': {'values': [1, 2, 3, 4, 5], 'start': 1, 'end': 50, 'count': 5},
+                    'bonus': {'values': [6], 'start': 1, 'end': 10, 'count': 1}
+                },
+                'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            }
+        """
+        return self.to_dict()
+
+    def to_dict(self) -> dict:
+        """Convert the LotteryCombination to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the LotteryCombination.
+
+        Examples:
+            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
+            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
+            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            >>> lottery_comb = LotteryCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number,
+            ...     winning_ranks=winning_ranks
+            ... )
+            >>> lottery_comb.to_dict()
+            {
+                'components': {
+                    'main': {'values': [1, 2, 3, 4, 5], 'start': 1, 'end': 50, 'count': 5},
+                    'bonus': {'values': [6], 'start': 1, 'end': 10, 'count': 1}
+                },
+                'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            }
+        """
+        return {
+            "components": {
+                name: component.to_dict() for name, component in self._components.items()
+            },
+            "winning_ranks": self._winning_ranks.copy(),
+        }
+
+    @staticmethod
+    def from_string(data: str) -> dict:
+        """Create a LotteryCombination from a string representation.
+
+        Args:
+            data (str): A string representation of a LotteryCombination.
+
+        Returns:
+            dict: The values for the components of the LotteryCombination.
+
+        Examples:
+            >>> data = 'main: [1, 2, 3, 4, 5]  bonus: [6]'
+            >>> LotteryCombination.from_string(data)
+            {'main': [1, 2, 3, 4, 5], 'bonus': [6]}
+        """
+        return {
+            name: [int(value.strip()) for value in values.split(",") if value.strip()]
+            for name, values in RE_COMPONENT.findall(data)
+        }
+
+    @staticmethod
+    def from_csv(data: dict) -> dict:
+        """Create a LotteryCombination from a CSV-serializable dictionary.
+
+        Args:
+            data (dict): A CSV-serializable dictionary representation of a LotteryCombination.
+
+        Returns:
+            dict: The values for the components of the LotteryCombination.
+
+        Examples:
+            >>> data = {
+            ...     'main_1': 1, 'main_2': 2, 'main_3': 3, 'main_4': 4, 'main_5': 5, 'bonus_1': 6
+            ... }
+            >>> LotteryCombination.from_csv(data)
+            {'main': [1, 2, 3, 4, 5], 'bonus': [6]}
+        """
+        components = {}
+        for key, value in data.items():
+            match = RE_NUMBER.match(key)
+            if not match:
+                continue
+            name = match.group("component")
+            if name not in components:
+                components[name] = []
+            components[name].append(value)
+
+        return components
+
+    @classmethod
+    def from_json(cls, data: dict) -> LotteryCombination:
+        """Create a LotteryCombination from a JSON-serializable dictionary.
+
+        Args:
+            data (dict): A JSON-serializable dictionary representation of a LotteryCombination.
+
+        Returns:
+            LotteryCombination: The created LotteryCombination instance.
+
+        Examples:
+            >>> data = {
+            ...     'components': {
+            ...         'main': {'values': [1, 2, 3, 4, 5], 'start': 1, 'end': 50, 'count': 5},
+            ...         'bonus': {'values': [6], 'start': 1, 'end': 10, 'count': 1}
+            ...     },
+            ...     'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            ... }
+            >>> lottery_comb = LotteryCombination.from_json(data)
+            >>> lottery_comb.components
+            {'main': BoundCombination(...), 'bonus': BoundCombination(...)}
+            >>> lottery_comb.winning_ranks
+            {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+        """
+        return cls.from_dict(data)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> LotteryCombination:
+        """Create a LotteryCombination from a dictionary.
+
+        Args:
+            data (dict): A dictionary representation of a LotteryCombination.
+
+        Returns:
+            LotteryCombination: The created LotteryCombination instance.
+
+        Examples:
+            >>> data = {
+            ...     'components': {
+            ...         'main': {'values': [1, 2, 3, 4, 5], 'start': 1, 'end': 50, 'count': 5},
+            ...         'bonus': {'values': [6], 'start': 1, 'end': 10, 'count': 1}
+            ...     },
+            ...     'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            ... }
+            >>> lottery_comb = LotteryCombination.from_dict(data)
+            >>> lottery_comb.components
+            {'main': BoundCombination(...), 'bonus': BoundCombination(...)}
+            >>> lottery_comb.winning_ranks
+            {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+        """
+        return cls(
+            **{
+                name: BoundCombination.from_dict(component_data)
+                for name, component_data in data.get("components", {}).items()
+            },
+            winning_ranks=data.get("winning_ranks", {}),
+        )
+
     def __eq__(self, combination: object) -> bool:
         return self.equals(combination)
 
@@ -958,11 +1170,11 @@ class LotteryCombination:
         return self.length
 
     def __str__(self) -> str:
-        return " ".join([f"{name}: {component}" for name, component in self._components.items()])
+        return "  ".join(f"{name}: {component}" for name, component in self._components.items())
 
     def __repr__(self) -> str:
         params = ", ".join(
-            [f"{name}={repr(component)}" for name, component in self._components.items()]
+            f"{name}={repr(component)}" for name, component in self._components.items()
         )
         if params:
             params = params + ", "

@@ -23,7 +23,7 @@ class DummyProvider:
         self.draw_days = draw_days
         self.combination_factory = combination_factory
         self._records = list(records)
-        self._raw_records = [record.to_dict() for record in self._records]
+        self._raw_records = [record.to_csv() for record in self._records]
         self.load_calls: list[bool] = []
         self.load_raw_calls: list[bool] = []
 
@@ -161,7 +161,7 @@ class TestBaseLottery:
 
         result = lottery.dump(force=True)
 
-        assert result == [record.to_dict()]
+        assert result == [record.to_csv()]
         assert provider.load_raw_calls == [True]
         assert not provider.load_calls
 

@@ -540,7 +540,7 @@ class TestEuroDreamsCombination:
         """Test EuroDreamsCombination string representation."""
 
         combination = EuroDreamsCombination([2, 6, 12, 25, 33, 40], [3])
-        assert str(combination) == "numbers: [ 2,  6, 12, 25, 33, 40] dream: [3]"
+        assert str(combination) == "numbers: [ 2,  6, 12, 25, 33, 40]  dream: [3]"
 
     def test_combination_repr(self):
         """Test EuroDreamsCombination repr representation."""
@@ -558,3 +558,138 @@ class TestEuroDreamsCombination:
         assert hash(combination1) == hash(combination2)
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
+
+    def test_combination_to_string(self):
+        """Test to_string returns a human-readable string representation."""
+
+        combination = EuroDreamsCombination(numbers=[2, 6, 12, 25, 33, 40], dream=[3])
+
+        assert combination.to_string() == "numbers: [ 2,  6, 12, 25, 33, 40]  dream: [3]"
+
+    def test_combination_to_csv(self):
+        """Test to_csv returns a CSV-compatible dictionary."""
+
+        combination = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+
+        assert combination.to_csv() == {
+            "numbers_1": 2,
+            "numbers_2": 3,
+            "numbers_3": 5,
+            "numbers_4": 7,
+            "numbers_5": 9,
+            "numbers_6": 38,
+            "dream_1": 3,
+        }
+
+    def test_combination_to_json_equals_to_dict(self):
+        """Test to_json returns the same result as to_dict."""
+
+        combination = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+
+        assert combination.to_json() == combination.to_dict()
+
+    def test_combination_to_dict(self):
+        """Test to_dict returns numbers and dream as sorted lists."""
+
+        assert EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3]).to_dict() == {
+            "numbers": [2, 3, 5, 7, 9, 38],
+            "dream": [3],
+        }
+
+    def test_combination_to_dict_with_unsorted_input(self):
+        """Test to_dict returns values in sorted order regardless of input order."""
+
+        assert EuroDreamsCombination(numbers=[38, 2, 9, 3, 7, 5], dream=[3]).to_dict() == {
+            "numbers": [2, 3, 5, 7, 9, 38],
+            "dream": [3],
+        }
+
+    def test_combination_to_dict_empty(self):
+        """Test to_dict with empty combination returns empty lists."""
+
+        assert EuroDreamsCombination().to_dict() == {"numbers": [], "dream": []}
+
+    def test_combination_from_string(self):
+        """Test from_string creates an EuroDreamsCombination from a string."""
+
+        combination = EuroDreamsCombination.from_string(
+            "numbers: [ 2,  3,  5,  7,  9, 38]  dream: [3]"
+        )
+
+        assert isinstance(combination, EuroDreamsCombination)
+        assert combination.numbers.values == [2, 3, 5, 7, 9, 38]
+        assert combination.dream.values == [3]
+
+    def test_combination_from_string_without_brackets(self):
+        """Test from_string creates an EuroDreamsCombination from a string without brackets."""
+
+        combination = EuroDreamsCombination.from_string("numbers:  2,  3,  5,  7,  9, 38  dream: 3")
+
+        assert isinstance(combination, EuroDreamsCombination)
+        assert combination.numbers.values == [2, 3, 5, 7, 9, 38]
+        assert combination.dream.values == [3]
+
+    def test_combination_from_csv(self):
+        """Test from_csv creates an EuroDreamsCombination from a CSV dictionary."""
+
+        combination = EuroDreamsCombination.from_csv(
+            {
+                "draw_date": "2024-01-01",
+                "numbers_1": 2,
+                "numbers_2": 3,
+                "numbers_3": 5,
+                "numbers_4": 7,
+                "numbers_5": 9,
+                "numbers_6": 38,
+                "dream_1": 3,
+            }
+        )
+
+        assert isinstance(combination, EuroDreamsCombination)
+        assert combination.numbers.values == [2, 3, 5, 7, 9, 38]
+        assert combination.dream.values == [3]
+
+    def test_combination_from_json(self):
+        """Test from_json creates an EuroDreamsCombination from a dict."""
+
+        combination = EuroDreamsCombination.from_json(
+            {"numbers": [2, 3, 5, 7, 9, 38], "dream": [3]}
+        )
+
+        assert isinstance(combination, EuroDreamsCombination)
+        assert combination.numbers.values == [2, 3, 5, 7, 9, 38]
+        assert combination.dream.values == [3]
+
+    def test_combination_from_dict(self):
+        """Test from_dict creates an EuroDreamsCombination from a dict."""
+
+        combination = EuroDreamsCombination.from_dict(
+            {"numbers": [2, 3, 5, 7, 9, 38], "dream": [3]}
+        )
+
+        assert isinstance(combination, EuroDreamsCombination)
+        assert combination.numbers.values == [2, 3, 5, 7, 9, 38]
+        assert combination.dream.values == [3]
+
+    def test_combination_from_json_equals_from_dict(self):
+        """Test from_json and from_dict produce equivalent combinations."""
+
+        data = {"numbers": [1, 5, 10, 25, 30, 38], "dream": [2]}
+
+        assert (
+            EuroDreamsCombination.from_json(data).values
+            == EuroDreamsCombination.from_dict(data).values
+        )
+
+    def test_combination_serialization_roundtrip(self):
+        """Test to_dict / from_dict roundtrip produces an equivalent combination."""
+
+        original = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+
+        restored = EuroDreamsCombination.from_dict(original.to_dict())
+
+        assert isinstance(restored, EuroDreamsCombination)
+        assert restored.numbers.values == original.numbers.values
+        assert restored.dream.values == original.dream.values
+        assert restored.rank == original.rank
+        assert restored.winning_ranks == original.winning_ranks
