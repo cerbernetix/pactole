@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import zipfile
+from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -652,6 +653,19 @@ class TestEnhancedJsonEncoder:
         encoded = json.dumps({"path": Path("/tmp/data.json")}, cls=EnhancedJSONEncoder)
 
         assert json.loads(encoded) == {"path": "/tmp/data.json"}
+
+    def test_enhanced_json_encoder_serializes_dates(self):
+        """Test that date and datetime objects are serialized as ISO strings."""
+
+        data = {
+            "date": date(2024, 1, 1),
+            "datetime": datetime(2024, 1, 1, 12, 0, 0),
+        }
+        encoded = json.dumps(data, cls=EnhancedJSONEncoder)
+        decoded = json.loads(encoded)
+
+        assert decoded["date"] == "2024-01-01"
+        assert decoded["datetime"] == "2024-01-01T12:00:00"
 
     def test_enhanced_json_encoder_raises_for_unknown_types(self):
         """Test that unknown types still raise a TypeError."""
