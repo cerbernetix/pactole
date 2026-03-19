@@ -7,6 +7,7 @@ import datetime
 import json
 import logging
 import zipfile
+from dataclasses import asdict, is_dataclass
 from enum import Enum
 from itertools import tee
 from pathlib import Path, PurePath
@@ -250,7 +251,8 @@ def to_csv_row(data: Any) -> dict | list:
     """Convert data to a format suitable for CSV writing.
 
     It supports dicts and lists directly, and also checks for to_csv or to_dict methods on the
-    data object. If the data cannot be converted, a TypeError is raised.
+    data object. If the data object is a dataclass, it will be converted to a dict using asdict.
+    If the data cannot be converted, a TypeError is raised.
 
     Args:
         data (Any): The data to convert.
@@ -285,6 +287,8 @@ def to_csv_row(data: Any) -> dict | list:
         return data.to_csv()
     if hasattr(data, "to_dict") and callable(getattr(data, "to_dict")):
         return data.to_dict()
+    if is_dataclass(data):
+        return asdict(data)
     raise TypeError("Data items must be dicts, lists, or have a to_csv or to_dict method.")
 
 
@@ -341,6 +345,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
     """JSON encoder that handles additional types like Path objects.
 
     It also checks for to_json or to_dict methods on objects for custom serialization.
+    If the data object is a dataclass, it will be converted to a dict using asdict.
 
     Examples:
         >>> json.dumps({'path': Path('/home/user/file.txt')}, cls=EnhancedJSONEncoder)
@@ -364,6 +369,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return o.to_json()
         if hasattr(o, "to_dict") and callable(getattr(o, "to_dict")):
             return o.to_dict()
+        if is_dataclass(o):
+            return asdict(o)
         return super().default(o)
 
 

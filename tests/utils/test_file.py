@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import zipfile
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -596,6 +597,18 @@ class TestToCsvRow:
         result = to_csv_row(obj)
         assert result == {"col1": "value1", "col2": "value2"}
 
+    def test_to_csv_row_with_dataclass(self):
+        """Test converting a dataclass instance to a CSV row."""
+
+        @dataclass
+        class _Sample:
+            col1: str
+            col2: str
+
+        obj = _Sample(col1="value1", col2="value2")
+        result = to_csv_row(obj)
+        assert result == {"col1": "value1", "col2": "value2"}
+
     def test_to_csv_row_with_non_serializable_object(self):
         """Test that non-serializable objects raise an error."""
 
@@ -764,6 +777,20 @@ class TestEnhancedJsonEncoder:
 
         encoded = json.dumps({"obj": _SampleWithDict()}, cls=EnhancedJSONEncoder)
         assert json.loads(encoded) == {"obj": {"key": "value"}}
+
+    def test_enhanced_json_encoder_serializes_dataclass(self):
+        """Test that dataclass instances are serialized as dictionaries."""
+
+        @dataclass
+        class _SampleDataClass:
+            name: str
+            value: int
+
+        instance = _SampleDataClass(name="Test", value=42)
+        encoded = json.dumps({"data": instance}, cls=EnhancedJSONEncoder)
+        decoded = json.loads(encoded)
+
+        assert decoded["data"] == {"name": "Test", "value": 42}
 
     def test_enhanced_json_encoder_raises_for_unknown_types(self):
         """Test that unknown types still raise a TypeError."""
