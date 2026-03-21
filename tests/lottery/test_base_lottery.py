@@ -54,7 +54,7 @@ def build_record(period: str, draw_date: date, combination: LotteryCombination) 
         draw_date=draw_date,
         deadline_date=draw_date,
         combination=combination,
-        numbers={"main": combination.get_component_values("main")},
+        numbers={"main": combination.get_values("main")},
         winning_ranks=[WinningRank(rank=1, winners=1, gain=1.0)],
     )
 

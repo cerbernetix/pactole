@@ -257,19 +257,19 @@ class TestEuroDreamsCombination:
         combination2 = combination.get_combination([2, 3, 4, 5, 6, 7, 1])
         assert isinstance(combination2, EuroDreamsCombination)
         assert combination2.values == [2, 3, 4, 5, 6, 7, 1]
-        assert combination2.get_component_values("numbers") == [2, 3, 4, 5, 6, 7]
-        assert combination2.get_component_values("dream") == [1]
+        assert combination2.get_values("numbers") == [2, 3, 4, 5, 6, 7]
+        assert combination2.get_values("dream") == [1]
 
         new_combination = combination.get_combination([2, 3, 4, 5, 6, 7, 1], dream=[2])
         assert isinstance(new_combination, EuroDreamsCombination)
         assert new_combination.values == [2, 3, 4, 5, 6, 7, 2]
-        assert new_combination.get_component_values("numbers") == [2, 3, 4, 5, 6, 7]
-        assert new_combination.get_component_values("dream") == [2]
+        assert new_combination.get_values("numbers") == [2, 3, 4, 5, 6, 7]
+        assert new_combination.get_values("dream") == [2]
 
         new_combination = combination.get_combination(dream=[5])
         assert isinstance(new_combination, EuroDreamsCombination)
         assert new_combination.values == [5]
-        assert new_combination.get_component_values("dream") == [5]
+        assert new_combination.get_values("dream") == [5]
 
         new_combination = combination.get_combination(combination2)
         assert isinstance(new_combination, EuroDreamsCombination)
@@ -513,8 +513,8 @@ class TestEuroDreamsCombination:
         combination = EuroDreamsCombination([5, 3, 1, 4, 6, 2], [3])
         assert list(combination) == [1, 2, 3, 4, 5, 6, 3]
 
-    def test_combination_access(self):
-        """Test EuroDreamsCombination item access."""
+    def test_combination_array_access(self):
+        """Test EuroDreamsCombination array-like access."""
 
         combination = EuroDreamsCombination([5, 3, 1, 4, 6, 2], [3])
 
@@ -528,6 +528,17 @@ class TestEuroDreamsCombination:
 
         with pytest.raises(IndexError):
             _ = combination[7]
+
+    def test_combination_dict_access(self):
+        """Test EuroDreamsCombination dictionary-like access."""
+
+        combination = EuroDreamsCombination([5, 3, 1, 4, 6, 2], [3])
+
+        assert combination["numbers"] == [1, 2, 3, 4, 5, 6]
+        assert combination["dream"] == [3]
+
+        with pytest.raises(KeyError):
+            _ = combination["extra"]
 
     def test_combination_length(self):
         """Test EuroDreamsCombination length method."""

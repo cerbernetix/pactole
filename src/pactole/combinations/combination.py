@@ -176,6 +176,9 @@ class Combination:
         start (int, optional): The starting offset for the combination values.
             Defaults to DEFAULT_START.
 
+    Raises:
+        ValueError: If the provided rank is negative or if the values are not valid.
+
     Examples:
         >>> combination = Combination([12, 3, 42, 6, 22])
         >>> combination.values
@@ -215,7 +218,14 @@ class Combination:
         if start is None:
             start = DEFAULT_START
 
-        self._values = set(values)
+        try:
+            self._values = set(int(v) for v in values)
+        except (TypeError, ValueError) as e:
+            raise ValueError("Values must be integers or convertible to integers.") from e
+
+        if rank is not None and rank < 0:
+            raise ValueError("Rank must be a non-negative integer.")
+
         self._rank = rank
         self._start = start
 

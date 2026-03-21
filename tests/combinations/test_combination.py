@@ -226,6 +226,9 @@ class TestCombination:
         assert combination.length == combination.length
         assert combination.start == 1
 
+        with pytest.raises(ValueError):
+            Combination([4, 5, 6], rank=-1)
+
     def test_combination_from_input_with_rank(self):
         """Test Combination construction with CombinationInputWithRank."""
 
@@ -236,6 +239,30 @@ class TestCombination:
         assert combination.rank != get_combination_rank([4, 5, 6], offset=1)
         assert combination.length == 3
         assert combination.start == 1
+
+    def test_combination_from_non_int_values(self):
+        """Test Combination construction with non-integer values."""
+
+        combination = Combination([3.5, 2.5, 1.5])
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.length == 3
+        assert combination.start == 1
+
+        combination = Combination(["3", "2", "1"])
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.length == 3
+        assert combination.start == 1
+
+        with pytest.raises(ValueError):
+            Combination(["a", "b", "c"])
+        with pytest.raises(ValueError):
+            Combination("abc")
 
     def test_combination_copy(self):
         """Test Combination copy method."""
