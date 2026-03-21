@@ -624,8 +624,8 @@ class TestCompoundCombination:
         combination = CompoundCombination(numbers=numbers, extra=extra)
         assert list(combination) == [1, 2, 3, 4, 5, 6, 7, 8]
 
-    def test_combination_access(self):
-        """Test CompoundCombination item access."""
+    def test_combination_array_access(self):
+        """Test CompoundCombination array-like access."""
 
         numbers = Combination([5, 4, 3, 2, 1])
         extra = Combination([8, 7, 6])
@@ -643,6 +643,20 @@ class TestCompoundCombination:
 
         with pytest.raises(IndexError):
             _ = combination[8]
+
+    def test_combination_dict_access(self):
+        """Test CompoundCombination dictionary-like access."""
+
+        numbers = Combination([5, 4, 3, 2, 1])
+        extra = Combination([8, 7, 6])
+
+        combination = CompoundCombination(numbers=numbers, extra=extra)
+
+        assert combination["numbers"] == numbers
+        assert combination["extra"] == extra
+
+        with pytest.raises(KeyError):
+            _ = combination["nonexistent"]
 
     def test_combination_length(self):
         """Test CompoundCombination length method."""

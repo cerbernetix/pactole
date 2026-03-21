@@ -1031,7 +1031,13 @@ class CompoundCombination:
     def __iter__(self) -> Iterator[CombinationNumber]:
         yield from self.values
 
-    def __getitem__(self, index: int) -> CombinationNumber:
+    def __getitem__(self, index: int | str) -> CombinationNumber:
+        if isinstance(index, str):
+            component = self._components.get(index)
+            if component is None:
+                raise KeyError(f"Component '{index}' not found in the combination.")
+            return component
+
         return self.values[index]
 
     def __getattr__(self, name: str) -> Combination:

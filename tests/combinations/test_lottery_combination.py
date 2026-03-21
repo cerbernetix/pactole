@@ -1042,8 +1042,8 @@ class TestLotteryCombination:
         combination = LotteryCombination(numbers=numbers, extra=extra)
         assert list(combination) == [1, 2, 3, 4, 5, 6, 7, 8]
 
-    def test_combination_access(self):
-        """Test LotteryCombination item access."""
+    def test_combination_array_access(self):
+        """Test LotteryCombination array-like access."""
 
         numbers = BoundCombination(
             values=[5, 4, 3, 2, 1],
@@ -1074,6 +1074,20 @@ class TestLotteryCombination:
 
         with pytest.raises(IndexError):
             _ = combination[8]
+
+    def test_combination_dict_access(self):
+        """Test LotteryCombination dictionary-like access."""
+
+        numbers = BoundCombination([5, 4, 3, 2, 1])
+        extra = BoundCombination([8, 7, 6])
+
+        combination = LotteryCombination(numbers=numbers, extra=extra)
+
+        assert combination["numbers"] == numbers
+        assert combination["extra"] == extra
+
+        with pytest.raises(KeyError):
+            _ = combination["nonexistent"]
 
     def test_combination_length(self):
         """Test LotteryCombination length method."""

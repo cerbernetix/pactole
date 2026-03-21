@@ -548,8 +548,8 @@ class TestEuroMillionsCombination:
         combination = EuroMillionsCombination([5, 3, 1, 4, 2], [4, 2])
         assert list(combination) == [1, 2, 3, 4, 5, 2, 4]
 
-    def test_combination_access(self):
-        """Test EuroMillionsCombination item access."""
+    def test_combination_array_access(self):
+        """Test EuroMillionsCombination array-like access."""
 
         combination = EuroMillionsCombination([5, 3, 1, 4, 2], [4, 2])
 
@@ -563,6 +563,17 @@ class TestEuroMillionsCombination:
 
         with pytest.raises(IndexError):
             _ = combination[7]
+
+    def test_combination_dict_access(self):
+        """Test EuroMillionsCombination dict-like access."""
+
+        combination = EuroMillionsCombination([5, 3, 1, 4, 2], [4, 2])
+
+        assert combination["numbers"] == [1, 2, 3, 4, 5]
+        assert combination["stars"] == [2, 4]
+
+        with pytest.raises(KeyError):
+            _ = combination["extra"]
 
     def test_combination_length(self):
         """Test EuroMillionsCombination length method."""
