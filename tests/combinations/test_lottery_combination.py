@@ -7,6 +7,7 @@ import pytest
 
 from pactole.combinations import (
     BoundCombination,
+    CompoundCombination,
     LotteryCombination,
     comb,
     get_combination_from_rank,
@@ -57,25 +58,25 @@ class TestLotteryCombination:
         """Test empty LotteryCombination."""
 
         combination = LotteryCombination()
-        assert combination.components == {}
-        assert combination.winning_ranks == {}
+        assert not combination.components
+        assert not combination.winning_ranks
         assert combination.nb_winning_ranks == 0
         assert combination.min_winning_rank is None
         assert combination.max_winning_rank is None
-        assert combination.values == []
+        assert not combination.values
         assert combination.rank == 0
         assert combination.length == 0
         assert combination.count == 0
         assert combination.combinations == 0
 
         combination = LotteryCombination(winning_ranks=WINNING_RANKS_NUMBERS)
-        assert combination.components == {}
+        assert not combination.components
         assert combination.winning_ranks == WINNING_RANKS_NUMBERS
         assert combination.winning_ranks is not WINNING_RANKS_NUMBERS
         assert combination.nb_winning_ranks == 4
         assert combination.min_winning_rank == 1
         assert combination.max_winning_rank == 4
-        assert combination.values == []
+        assert not combination.values
         assert combination.rank == 0
         assert combination.length == 0
         assert combination.count == 0
@@ -117,7 +118,7 @@ class TestLotteryCombination:
         assert combination.components == {"numbers": numbers, "extra": extra}
         assert combination.numbers == numbers
         assert combination.extra == extra
-        assert combination.winning_ranks == {}
+        assert not combination.winning_ranks
         assert combination.nb_winning_ranks == 0
         assert combination.values == [1, 2, 3, 4, 5, 8, 9, 10]
         assert combination.rank == get_combination_rank(
@@ -132,7 +133,7 @@ class TestLotteryCombination:
         assert combination.components == {"extra": extra, "numbers": numbers}
         assert combination.extra == extra
         assert combination.numbers == numbers
-        assert combination.winning_ranks == {}
+        assert not combination.winning_ranks
         assert combination.nb_winning_ranks == 0
         assert combination.values == [8, 9, 10, 1, 2, 3, 4, 5]
         assert combination.rank == get_combination_rank(
@@ -153,7 +154,7 @@ class TestLotteryCombination:
         combination = LotteryCombination(numbers=numbers_exceeded)
         assert combination.components == {"numbers": numbers}
         assert combination.numbers == numbers
-        assert combination.winning_ranks == {}
+        assert not combination.winning_ranks
         assert combination.values == [1, 2, 3, 4, 5]
         assert combination.rank == get_combination_rank([1, 2, 3, 4, 5], offset=1)
         assert combination.length == 5
@@ -204,7 +205,7 @@ class TestLotteryCombination:
         assert combination.length == 8
 
         original = LotteryCombination(numbers=numbers, extra=extra)
-        assert original.winning_ranks == {}
+        assert not original.winning_ranks
 
         combination = LotteryCombination(original, winning_ranks=WINNING_RANKS_NUMBERS)
         assert combination.components == {"numbers": numbers, "extra": extra}
@@ -258,11 +259,11 @@ class TestLotteryCombination:
         fallback_factory = LotteryCombination.get_combination_factory(None)
         fallback_combination = fallback_factory()
         assert isinstance(fallback_combination, LotteryCombination)
-        assert fallback_combination.components == {}
-        assert fallback_combination.winning_ranks == {}
+        assert not fallback_combination.components
+        assert not fallback_combination.winning_ranks
 
         fallback_factory = LotteryCombination.get_combination_factory(object())
-        assert fallback_factory().components == {}
+        assert not fallback_factory().components
 
     def test_combination_generate(self):
         """Test the generate method of LotteryCombination."""
@@ -510,6 +511,51 @@ class TestLotteryCombination:
         assert new_combination.values == [1, 2, 3, 4, 5, 8, 9, 10]
         assert new_combination.winning_ranks == WINNING_RANKS_EXTRA
 
+    def test_combination_get_combination_with_compound(self):
+        """Test LotteryCombination get_combination method with CompoundCombination input."""
+
+        numbers = BoundCombination(
+            values=[5, 4, 3, 2, 1],
+            count=NUMBER_COUNT,
+            start=NUMBER_START,
+            end=NUMBER_END,
+            combinations=NUMBER_COMBINATIONS,
+        )
+
+        extra = BoundCombination(
+            values=[10, 9, 8],
+            count=EXTRA_COUNT,
+            start=EXTRA_START,
+            end=EXTRA_END,
+            combinations=EXTRA_COMBINATIONS,
+        )
+
+        combination = LotteryCombination(
+            numbers=numbers, extra=extra, winning_ranks=WINNING_RANKS_NUMBERS
+        )
+
+        compound = CompoundCombination(numbers=[1, 2, 3, 4, 5], extra=[8, 9, 10])
+        new_combination = combination.get_combination(compound)
+        assert isinstance(new_combination, LotteryCombination)
+        assert new_combination.values == [1, 2, 3, 4, 5, 8, 9, 10]
+        assert not new_combination.winning_ranks
+
+        new_combination = combination.get_combination(compound, winning_ranks=WINNING_RANKS_EXTRA)
+        assert isinstance(new_combination, LotteryCombination)
+        assert new_combination.values == [1, 2, 3, 4, 5, 8, 9, 10]
+        assert new_combination.winning_ranks == WINNING_RANKS_EXTRA
+
+        new_combination = combination.get_combination(compound, extra=[15, 16, 17])
+        assert isinstance(new_combination, LotteryCombination)
+        assert new_combination.values == [1, 2, 3, 4, 5, 15, 16, 17]
+
+        # Component in CompoundCombination not present in the template is silently ignored
+        unknown_compound = CompoundCombination(numbers=[1, 2, 3, 4, 5], stars=[1, 2])
+        new_combination = combination.get_combination(unknown_compound)
+        assert isinstance(new_combination, LotteryCombination)
+        assert new_combination.get_component_values("numbers") == [1, 2, 3, 4, 5]
+        assert "stars" not in new_combination.components
+
         with pytest.raises(KeyError):
             _ = combination.get_combination(numbers=[6, 7, 8, 9, 10], stars=[3, 4])
 
@@ -535,7 +581,7 @@ class TestLotteryCombination:
         combination = LotteryCombination(numbers=numbers, extra=extra)
 
         components = combination.get_components()
-        assert components == {}
+        assert not components
 
         components = combination.get_components(numbers=[4, 5, 6, 7, 8])
         assert components == {
@@ -1392,7 +1438,7 @@ class TestLotteryCombination:
         combination = LotteryCombination.from_dict({})
 
         assert not combination.components
-        assert combination.winning_ranks == {}
+        assert not combination.winning_ranks
 
     def test_combination_serialization_roundtrip(self):
         """Test to_dict / from_dict roundtrip produces an equivalent combination."""
