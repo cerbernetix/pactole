@@ -405,7 +405,7 @@ class CompoundCombination:
             name: self._components[name].copy(values=values) for name, values in components.items()
         }
 
-    def get_component(self, name: str) -> Combination | None:
+    def get(self, name: str) -> Combination | None:
         """Get the parameters for a specific component of the combination.
 
         Args:
@@ -421,16 +421,16 @@ class CompoundCombination:
             ...     main=main_numbers,
             ...     bonus=bonus_number
             ... )
-            >>> compound_comb.get_component('main')
+            >>> compound_comb.get('main')
             Combination(...)
-            >>> compound_comb.get_component('bonus')
+            >>> compound_comb.get('bonus')
             Combination(...)
-            >>> compound_comb.get_component('extra')
+            >>> compound_comb.get('extra')
             None
         """
         return self._components.get(name)
 
-    def get_component_values(self, name: str) -> CombinationValues:
+    def get_values(self, name: str) -> CombinationValues:
         """Get the values for a specific component of the combination.
 
         Args:
@@ -446,11 +446,11 @@ class CompoundCombination:
             ...     main=main_numbers,
             ...     bonus=bonus_number
             ... )
-            >>> compound_comb.get_component_values('main')
+            >>> compound_comb.get_values('main')
             [1, 2, 3, 4, 5]
-            >>> compound_comb.get_component_values('bonus')
+            >>> compound_comb.get_values('bonus')
             [6]
-            >>> compound_comb.get_component_values('extra')
+            >>> compound_comb.get_values('extra')
             []
         """
         component = self._components.get(name)

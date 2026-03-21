@@ -257,19 +257,19 @@ class TestEuroDreamsCombination:
         combination2 = combination.get_combination([2, 3, 4, 5, 6, 7, 1])
         assert isinstance(combination2, EuroDreamsCombination)
         assert combination2.values == [2, 3, 4, 5, 6, 7, 1]
-        assert combination2.get_component_values("numbers") == [2, 3, 4, 5, 6, 7]
-        assert combination2.get_component_values("dream") == [1]
+        assert combination2.get_values("numbers") == [2, 3, 4, 5, 6, 7]
+        assert combination2.get_values("dream") == [1]
 
         new_combination = combination.get_combination([2, 3, 4, 5, 6, 7, 1], dream=[2])
         assert isinstance(new_combination, EuroDreamsCombination)
         assert new_combination.values == [2, 3, 4, 5, 6, 7, 2]
-        assert new_combination.get_component_values("numbers") == [2, 3, 4, 5, 6, 7]
-        assert new_combination.get_component_values("dream") == [2]
+        assert new_combination.get_values("numbers") == [2, 3, 4, 5, 6, 7]
+        assert new_combination.get_values("dream") == [2]
 
         new_combination = combination.get_combination(dream=[5])
         assert isinstance(new_combination, EuroDreamsCombination)
         assert new_combination.values == [5]
-        assert new_combination.get_component_values("dream") == [5]
+        assert new_combination.get_values("dream") == [5]
 
         new_combination = combination.get_combination(combination2)
         assert isinstance(new_combination, EuroDreamsCombination)

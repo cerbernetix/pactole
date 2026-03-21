@@ -234,20 +234,20 @@ class TestCompoundCombination:
         combination2 = combination.get_combination([2, 3, 4, 5, 6, 7, 8])
         assert isinstance(combination2, CompoundCombination)
         assert combination2.values == [2, 3, 4, 5, 6, 7, 8]
-        assert combination2.get_component_values("numbers") == [2, 3, 4, 5, 6]
-        assert combination2.get_component_values("extra") == [7, 8]
+        assert combination2.get_values("numbers") == [2, 3, 4, 5, 6]
+        assert combination2.get_values("extra") == [7, 8]
         assert combination2.winning_ranks == WINNING_RANKS_SINGLE
 
         new_combination = combination.get_combination([2, 3, 4, 5, 6, 7, 8], extra=[12, 17])
         assert isinstance(new_combination, CompoundCombination)
-        assert new_combination.get_component_values("numbers") == [2, 3, 4, 5, 6]
-        assert new_combination.get_component_values("extra") == [12, 17]
+        assert new_combination.get_values("numbers") == [2, 3, 4, 5, 6]
+        assert new_combination.get_values("extra") == [12, 17]
         assert new_combination.winning_ranks == WINNING_RANKS_SINGLE
 
         new_combination = combination.get_combination(extra=[12, 17])
         assert isinstance(new_combination, CompoundCombination)
         assert new_combination.values == [12, 17]
-        assert new_combination.get_component_values("extra") == [12, 17]
+        assert new_combination.get_values("extra") == [12, 17]
         assert new_combination.winning_ranks == WINNING_RANKS_SINGLE
 
         new_combination = combination.get_combination(combination2)
@@ -257,8 +257,8 @@ class TestCompoundCombination:
 
         new_combination = combination.get_combination(combination2, extra=[12, 17])
         assert isinstance(new_combination, CompoundCombination)
-        assert new_combination.get_component_values("numbers") == [2, 3, 4, 5, 6]
-        assert new_combination.get_component_values("extra") == [12, 17]
+        assert new_combination.get_values("numbers") == [2, 3, 4, 5, 6]
+        assert new_combination.get_values("extra") == [12, 17]
         assert new_combination.winning_ranks == WINNING_RANKS_SINGLE
 
         new_combination = combination.get_combination(
@@ -306,13 +306,13 @@ class TestCompoundCombination:
             "extra": extra.copy(values=[18, 19, 20]),
         }
 
-        retrieved_numbers = combination.get_component("numbers")
+        retrieved_numbers = combination.get("numbers")
         assert retrieved_numbers == numbers
 
-        retrieved_extra = combination.get_component("extra")
+        retrieved_extra = combination.get("extra")
         assert retrieved_extra == extra
 
-        retrieved_none = combination.get_component("nonexistent")
+        retrieved_none = combination.get("nonexistent")
         assert retrieved_none is None
 
     def test_combination_getting_values(self):
@@ -323,9 +323,9 @@ class TestCompoundCombination:
 
         combination = CompoundCombination(numbers=numbers, extra=extra)
 
-        assert combination.get_component_values("numbers") == [1, 2, 3, 4, 5]
-        assert combination.get_component_values("extra") == [8, 9, 10]
-        assert not combination.get_component_values("nonexistent")
+        assert combination.get_values("numbers") == [1, 2, 3, 4, 5]
+        assert combination.get_values("extra") == [8, 9, 10]
+        assert not combination.get_values("nonexistent")
 
     def test_combination_get_winning_rank(self):
         """Test CompoundCombination winning rank calculation."""

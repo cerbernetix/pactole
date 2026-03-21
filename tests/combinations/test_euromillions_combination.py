@@ -262,19 +262,19 @@ class TestEuroMillionsCombination:
         combination2 = combination.get_combination([2, 3, 4, 5, 6, 7, 8])
         assert isinstance(combination2, EuroMillionsCombination)
         assert combination2.values == [2, 3, 4, 5, 6, 7, 8]
-        assert combination2.get_component_values("numbers") == [2, 3, 4, 5, 6]
-        assert combination2.get_component_values("stars") == [7, 8]
+        assert combination2.get_values("numbers") == [2, 3, 4, 5, 6]
+        assert combination2.get_values("stars") == [7, 8]
 
         new_combination = combination.get_combination([2, 3, 4, 5, 6, 7, 8], stars=[2, 3])
         assert isinstance(new_combination, EuroMillionsCombination)
         assert new_combination.values == [2, 3, 4, 5, 6, 2, 3]
-        assert new_combination.get_component_values("numbers") == [2, 3, 4, 5, 6]
-        assert new_combination.get_component_values("stars") == [2, 3]
+        assert new_combination.get_values("numbers") == [2, 3, 4, 5, 6]
+        assert new_combination.get_values("stars") == [2, 3]
 
         new_combination = combination.get_combination(stars=[5, 9])
         assert isinstance(new_combination, EuroMillionsCombination)
         assert new_combination.values == [5, 9]
-        assert new_combination.get_component_values("stars") == [5, 9]
+        assert new_combination.get_values("stars") == [5, 9]
 
         new_combination = combination.get_combination(combination2)
         assert isinstance(new_combination, EuroMillionsCombination)
