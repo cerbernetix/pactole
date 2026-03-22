@@ -809,7 +809,7 @@ class BoundCombination(Combination):
             else:
                 values = []
                 rank = None
-        values = [min(max(value, start), end) for value in list(values)[:count]]
+        values = [min(max(int(value), start), end) for value in list(values)[:count]]
 
         super().__init__(values=values, rank=rank, start=start)
         self._end = end
