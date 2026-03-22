@@ -14,8 +14,6 @@ from .combination import (
     generate,
 )
 from .compound_combination import (
-    RE_COMPONENT,
-    RE_NUMBER,
     CombinationFactory,
     CombinationWinningRanks,
     CompoundCombination,
@@ -281,8 +279,8 @@ class LotteryCombination(CompoundCombination):
         """Create a correct class instance from the given components and winning ranks."""
         return LotteryCombination(**components, winning_ranks=winning_ranks)
 
-    @staticmethod
-    def from_string(data: str) -> dict:
+    @classmethod
+    def from_string(cls, data: str) -> dict:
         """Parse a string representation into lottery component values.
 
         LotteryCombination cannot build BoundCombination components from string data alone,
@@ -300,13 +298,10 @@ class LotteryCombination(CompoundCombination):
             >>> LotteryCombination.from_string(data)
             {'numbers': [1, 2, 3, 4, 5], 'extra': [6, 7, 8]}
         """
-        return {
-            name: [int(value.strip()) for value in values.split(",") if value.strip()]
-            for name, values in RE_COMPONENT.findall(data)
-        }
+        return cls.get_components_from_string(data)
 
-    @staticmethod
-    def from_csv(data: dict) -> dict:
+    @classmethod
+    def from_csv(cls, data: dict) -> dict:
         """Parse a CSV-compatible dictionary into lottery component values.
 
         LotteryCombination cannot build BoundCombination components from CSV data alone,
@@ -324,17 +319,7 @@ class LotteryCombination(CompoundCombination):
             >>> LotteryCombination.from_csv(data)
             {'numbers': [1, 2], 'extra': [6]}
         """
-        components = {}
-        for key, value in data.items():
-            match = RE_NUMBER.match(key)
-            if not match:
-                continue
-            name = match.group("component")
-            if name not in components:
-                components[name] = []
-            components[name].append(value)
-
-        return components
+        return cls.get_components_from_csv(data)
 
     @classmethod
     def from_dict(cls, data: dict) -> LotteryCombination:

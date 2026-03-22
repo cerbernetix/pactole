@@ -932,6 +932,53 @@ class CompoundCombination:
             "winning_ranks": self._winning_ranks.copy(),
         }
 
+    @staticmethod
+    def get_components_from_string(data: str) -> dict:
+        """Parse a string representation into compound component values.
+
+        Args:
+            data (str): A string representation of a CompoundCombination.
+
+        Returns:
+            dict: Parsed component values keyed by component name.
+
+        Examples:
+            >>> data = 'numbers: [1, 2, 3, 4, 5]  extra: [6, 7, 8]'
+            >>> CompoundCombination.get_components_from_string(data)
+            {'numbers': [1, 2, 3, 4, 5], 'extra': [6, 7, 8]}
+        """
+        return {
+            name: [int(value.strip()) for value in values.split(",") if value.strip()]
+            for name, values in RE_COMPONENT.findall(data)
+        }
+
+    @staticmethod
+    def get_components_from_csv(data: dict) -> dict:
+        """Parse a CSV-compatible dictionary into compound component values.
+
+        Args:
+            data (dict): A CSV-compatible dictionary representation of a CompoundCombination.
+
+        Returns:
+            dict: Parsed component values keyed by component name.
+
+        Examples:
+            >>> data = {'numbers_1': 1, 'numbers_2': 2, 'extra_1': 6}
+            >>> CompoundCombination.get_components_from_csv(data)
+            {'numbers': [1, 2], 'extra': [6]}
+        """
+        components = {}
+        for key, value in data.items():
+            match = RE_NUMBER.match(key)
+            if not match:
+                continue
+            name = match.group("component")
+            if name not in components:
+                components[name] = []
+            components[name].append(value)
+
+        return components
+
     @classmethod
     def from_string(cls, data: str) -> CompoundCombination:
         """Create a CompoundCombination from a string representation.
@@ -950,12 +997,7 @@ class CompoundCombination:
             >>> combination.components['bonus'].values
             [6]
         """
-        return cls(
-            **{
-                name: [int(value.strip()) for value in values.split(",") if value.strip()]
-                for name, values in RE_COMPONENT.findall(data)
-            }
-        )
+        return cls(**cls.get_components_from_string(data))
 
     @classmethod
     def from_csv(cls, data: dict) -> CompoundCombination:
@@ -976,17 +1018,7 @@ class CompoundCombination:
             >>> combination.components['bonus'].values
             [6]
         """
-        components = {}
-        for key, value in data.items():
-            match = RE_NUMBER.match(key)
-            if not match:
-                continue
-            name = match.group("component")
-            if name not in components:
-                components[name] = []
-            components[name].append(value)
-
-        return cls(**components)
+        return cls(**cls.get_components_from_csv(data))
 
     @classmethod
     def from_json(cls, data: dict) -> CompoundCombination:

@@ -803,6 +803,69 @@ class TestCompoundCombination:
 
         assert CompoundCombination().to_dict() == {"components": {}, "winning_ranks": {}}
 
+    def test_combination_get_components_from_string(self):
+        """Test get_components_from_string creates components from a string representation."""
+
+        data = "numbers: [ 1,  2,  3,  4,  5]  extra: [ 6,  7,  8]"
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_string_without_brackets(self):
+        """Test get_components_from_string creates components from a string without brackets."""
+
+        data = "numbers: 1, 2, 3, 4, 5  extra: 6, 7, 8"
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_string_empty(self):
+        """Test get_components_from_string with empty string returns empty components."""
+
+        data = ""
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert isinstance(components, dict)
+        assert not components
+
+    def test_combination_get_components_from_csv(self):
+        """Test get_components_from_csv creates components from a CSV-compatible dictionary."""
+
+        data = {
+            "period": "2024-01-01",
+            "numbers_1": 1,
+            "numbers_2": 2,
+            "numbers_3": 3,
+            "numbers_4": 4,
+            "numbers_5": 5,
+            "extra_1": 6,
+            "extra_2": 7,
+            "extra_3": 8,
+        }
+        components = CompoundCombination.get_components_from_csv(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_csv_empty(self):
+        """Test get_components_from_csv with empty dictionary returns empty components."""
+
+        data = {
+            "period": "2024-01-01",
+        }
+        components = CompoundCombination.get_components_from_csv(data)
+
+        assert isinstance(components, dict)
+        assert not components
+
     def test_combination_from_string(self):
         """Test from_string creates a CompoundCombination from a string representation."""
 

@@ -154,7 +154,7 @@ class EuroMillionsCombination(LotteryCombination):
             >>> euro_comb.stars.values
             [2, 9]
         """
-        components = LotteryCombination.from_string(data)
+        components = LotteryCombination.get_components_from_string(data)
         return cls(**components)
 
     @classmethod
@@ -185,5 +185,5 @@ class EuroMillionsCombination(LotteryCombination):
             >>> euro_comb.stars.values
             [2, 9]
         """
-        components = LotteryCombination.from_csv(data)
+        components = LotteryCombination.get_components_from_csv(data)
         return cls(**components)

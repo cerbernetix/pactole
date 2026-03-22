@@ -151,7 +151,7 @@ class EuroDreamsCombination(LotteryCombination):
             >>> euro_comb.dream.values
             [3]
         """
-        components = LotteryCombination.from_string(data)
+        components = LotteryCombination.get_components_from_string(data)
         return cls(**components)
 
     @classmethod
@@ -181,5 +181,5 @@ class EuroDreamsCombination(LotteryCombination):
             >>> euro_comb.dream.values
             [6]
         """
-        components = LotteryCombination.from_csv(data)
+        components = LotteryCombination.get_components_from_csv(data)
         return cls(**components)
