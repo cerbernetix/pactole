@@ -11,6 +11,7 @@ from ..combinations import (
     CombinationFactory,
     CombinationInputWithRank,
     CombinationRank,
+    CompoundCombination,
     LotteryCombination,
 )
 from ..utils import get_float, get_int
@@ -434,6 +435,9 @@ class FoundCombination:
     rank: CombinationRank
     """The rank of the found combination in the draw."""
 
+    match: CompoundCombination
+    """The matching combination that was found in the draw."""
+
     def to_csv(self) -> dict:
         """Convert the FoundCombination instance to a dictionary suitable for CSV export.
 
@@ -443,7 +447,8 @@ class FoundCombination:
         Example:
             >>> found = FoundCombination(
             ...     record=DrawRecord(...),
-            ...     rank=CombinationRank(...)
+            ...     rank=CombinationRank(...),
+            ...     match=CompoundCombination(...)
             ... )
             >>> found.to_csv()
             {'period': '202201',
@@ -460,10 +465,12 @@ class FoundCombination:
              'rank_1_gain': 1000000.0,
              'rank_2_winners': 10,
              'rank_2_gain': 50000.0,
-             'rank': 1}
+             'rank': 1,
+             'match':'main: [5, 12, 23]  bonus: [7]'}
         """
         data = self.record.to_csv()
         data["rank"] = self.rank
+        data["match"] = self.match.to_string()
         return data
 
     def to_json(self) -> dict:
@@ -476,9 +483,10 @@ class FoundCombination:
             >>> found = FoundCombination(
             ...     record=DrawRecord(...),
             ...     rank=CombinationRank(...)
+            ...     match=CompoundCombination(...)
             ... )
             >>> found.to_json()
-            {'record': {...}, 'rank': ...}
+            {'record': {...}, 'rank': ..., 'match': {...}}
         """
         return self.to_dict()
 
@@ -491,14 +499,16 @@ class FoundCombination:
         Example:
             >>> found = FoundCombination(
             ...     record=DrawRecord(...),
-            ...     rank=CombinationRank(...)
+            ...     rank=CombinationRank(...),
+            ...     match=CompoundCombination(...)
             ... )
             >>> found.to_dict()
-            {'record': {...}, 'rank': ...}
+            {'record': {...}, 'rank': ..., 'match': {...}}
         """
         return {
             "record": self.record.to_dict(),
             "rank": self.rank,
+            "match": self.match.dump(),
         }
 
     @staticmethod
@@ -532,17 +542,27 @@ class FoundCombination:
             ...     'rank_1_gain': 1000000.0,
             ...     'rank_2_winners': 10,
             ...     'rank_2_gain': 50000.0,
-            ...     'rank': 1
+            ...     'rank': 1,
+            ...     'match': 'main: [5, 12, 23]  bonus: [7]'
             ... }
             >>> found = FoundCombination.from_csv(data)
             >>> print(found)
             FoundCombination(
                 record=DrawRecord(...),
-                rank=CombinationRank(...)            )
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
+            )
         """
         record = DrawRecord.from_csv(data, combination_factory=combination_factory)
         rank = get_int(data.get("rank", 0))
-        return FoundCombination(record=record, rank=rank)
+
+        if callable(combination_factory):
+            match_data = LotteryCombination.from_string(data.get("match", ""))
+            match = combination_factory(**match_data)
+        else:
+            match = CompoundCombination.from_string(data.get("match", ""))
+
+        return FoundCombination(record=record, rank=rank, match=match)
 
     @classmethod
     def from_json(
@@ -562,13 +582,15 @@ class FoundCombination:
         Example:
             >>> data = {
             ...     'record': {...},
-            ...     'rank': ...
+            ...     'rank': ...,
+            ...     'match': {...},
             ... }
             >>> found = FoundCombination.from_json(data)
             >>> print(found)
             FoundCombination(
                 record=DrawRecord(...),
-                rank=CombinationRank(...)
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
             )
         """
         return cls.from_dict(data, combination_factory=combination_factory)
@@ -591,16 +613,24 @@ class FoundCombination:
         Example:
             >>> data = {
             ...     'record': {...},
-            ...     'rank': ...
+            ...     'rank': ...,
+            ...     'match': {...},
             ... }
             >>> found = FoundCombination.from_dict(data)
             >>> print(found)
             FoundCombination(
                 record=DrawRecord(...),
-                rank=CombinationRank(...)
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
             )
         """
         record = DrawRecord.from_dict(
             data.get("record", {}), combination_factory=combination_factory
         )
-        return FoundCombination(record=record, rank=data.get("rank"))
+
+        if callable(combination_factory):
+            match = combination_factory(**data.get("match", {}))
+        else:
+            match = CompoundCombination(**data.get("match", {}))
+
+        return FoundCombination(record=record, rank=data.get("rank"), match=match)
