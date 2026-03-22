@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Callable, Iterable
 
-from pactole.combinations import BoundCombination, LotteryCombination
+from pactole.combinations import BoundCombination, CompoundCombination, LotteryCombination
 from pactole.data import DrawRecord, FoundCombination, WinningRank
 from pactole.lottery import BaseLottery
 from pactole.utils import DrawDays, Weekday
@@ -23,7 +23,7 @@ class DummyProvider:
         self.draw_days = draw_days
         self.combination_factory = combination_factory
         self._records = list(records)
-        self._raw_records = [record.to_dict() for record in self._records]
+        self._raw_records = [record.to_csv() for record in self._records]
         self.load_calls: list[bool] = []
         self.load_raw_calls: list[bool] = []
 
@@ -54,7 +54,7 @@ def build_record(period: str, draw_date: date, combination: LotteryCombination) 
         draw_date=draw_date,
         deadline_date=draw_date,
         combination=combination,
-        numbers={"main": combination.get_component_values("main")},
+        numbers={"main": combination.get_values("main")},
         winning_ranks=[WinningRank(rank=1, winners=1, gain=1.0)],
     )
 
@@ -161,7 +161,7 @@ class TestBaseLottery:
 
         result = lottery.dump(force=True)
 
-        assert result == [record.to_dict()]
+        assert result == [record.to_csv()]
         assert provider.load_raw_calls == [True]
         assert not provider.load_calls
 
@@ -189,7 +189,11 @@ class TestBaseLottery:
 
         records = list(lottery.find_records(combination=[1], force=True))
 
-        assert records == [FoundCombination(record=record_match, rank=2)]
+        assert records == [
+            FoundCombination(
+                record=record_match, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            )
+        ]
         assert provider.load_calls == [True]
 
     def test_find_records_filters_by_winning_rank(self) -> None:
@@ -203,7 +207,11 @@ class TestBaseLottery:
 
         records = list(lottery.find_records(combination=[1], target_rank=2))
 
-        assert records == [FoundCombination(record=record_match, rank=2)]
+        assert records == [
+            FoundCombination(
+                record=record_match, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            )
+        ]
 
     def test_find_records_defaults_to_min_winning_rank(self) -> None:
         """Use the minimum winning rank when no target rank is provided."""
@@ -222,8 +230,12 @@ class TestBaseLottery:
         records = list(lottery.find_records(combination=[1]))
 
         assert records == [
-            FoundCombination(record=record_rank1, rank=2),
-            FoundCombination(record=record_rank2, rank=2),
+            FoundCombination(
+                record=record_rank1, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            ),
+            FoundCombination(
+                record=record_rank2, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            ),
         ]
 
     def test_find_records_allows_non_strict_pattern(self) -> None:
@@ -238,8 +250,12 @@ class TestBaseLottery:
         records = list(lottery.find_records(combination=[1, 2], target_rank=1, strict=False))
 
         assert records == [
-            FoundCombination(record=record_rank1, rank=1),
-            FoundCombination(record=record_rank2, rank=2),
+            FoundCombination(
+                record=record_rank1, rank=1, match=CompoundCombination(main=[1, 2], bonus=[])
+            ),
+            FoundCombination(
+                record=record_rank2, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            ),
         ]
 
     def test_find_records_strict_pattern_requires_exact_rank(self) -> None:
@@ -253,7 +269,11 @@ class TestBaseLottery:
 
         records = list(lottery.find_records(combination=[1, 2], target_rank=1, strict=True))
 
-        assert records == [FoundCombination(record=record_rank1, rank=1)]
+        assert records == [
+            FoundCombination(
+                record=record_rank1, rank=1, match=CompoundCombination(main=[1, 2], bonus=[])
+            )
+        ]
 
     def test_find_records_strict_without_target_rank_uses_combination_includes(self) -> None:
         """Filter records by combination inclusion when strict without a rank."""
@@ -266,4 +286,8 @@ class TestBaseLottery:
 
         records = list(lottery.find_records(combination=[1], strict=True))
 
-        assert records == [FoundCombination(record=record_match, rank=2)]
+        assert records == [
+            FoundCombination(
+                record=record_match, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            )
+        ]

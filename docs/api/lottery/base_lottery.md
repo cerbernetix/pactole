@@ -72,7 +72,7 @@ class BaseLottery:
 
 ### BaseLottery()._find_records_by_combination
 
-[Show source in base_lottery.py:387](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L387)
+[Show source in base_lottery.py:388](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L388)
 
 Find lottery results based on a combination.
 
@@ -86,7 +86,7 @@ def _find_records_by_combination(
 
 ### BaseLottery()._find_records_by_winning_rank
 
-[Show source in base_lottery.py:399](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L399)
+[Show source in base_lottery.py:404](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L404)
 
 Find lottery results based on a combination and an optional target rank.
 
@@ -307,7 +307,8 @@ target_rank (CombinationRank | None, optional): If provided, only results with t
         numbers={'number': [5, 12, 23, 34, 45], 'star': [2, 9]},
         winning_ranks=[WinningRank(rank=1, winners=1, gain=1000000.0), ...]
     ),
-    rank=1
+    rank=1,
+    match=CompoundCombination(main=[5, 12, 23, 34, 45], stars=[2, 9])
 ), ...]
 ```
 

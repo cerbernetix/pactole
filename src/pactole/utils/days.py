@@ -84,6 +84,9 @@ class Weekday(Enum):
 
         return super()._missing_(value)
 
+    def __str__(self) -> str:
+        return self.name
+
     def next(self, days: Day | Weekday | Iterable[Day | Weekday] | None = None) -> Weekday:
         """Get a Weekday representing the next day of the week.
 
@@ -668,6 +671,8 @@ class DrawDays:
 
                 Defaults to None.
 
+            closest (bool): If True, get the closest date (past or future). Defaults to True.
+
         Returns:
             date: The date of the last lottery draw.
 
@@ -700,6 +705,8 @@ class DrawDays:
                 'YYYY-MM-DD'. Finally, a date object can be provided directly.
 
                 Defaults to None.
+
+            closest (bool): If True, get the closest date (past or future). Defaults to True.
 
         Returns:
             date: The date of the next lottery draw.

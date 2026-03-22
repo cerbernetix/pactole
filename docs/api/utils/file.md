@@ -33,14 +33,18 @@
   - [get_cache_path](#get_cache_path)
   - [read_csv_file](#read_csv_file)
   - [read_zip_file](#read_zip_file)
+  - [to_csv_row](#to_csv_row)
   - [write_csv_file](#write_csv_file)
   - [write_json_file](#write_json_file)
 
 ## EnhancedJSONEncoder
 
-[Show source in file.py:299](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L299)
+[Show source in file.py:344](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L344)
 
 JSON encoder that handles additional types like Path objects.
+
+It also checks for to_json or to_dict methods on objects for custom serialization.
+If the data object is a dataclass, it will be converted to a dict using asdict.
 
 #### Examples
 
@@ -57,7 +61,7 @@ class EnhancedJSONEncoder(json.JSONEncoder): ...
 
 ### EnhancedJSONEncoder().default
 
-[Show source in file.py:307](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L307)
+[Show source in file.py:355](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L355)
 
 Convert unhandled objects for JSON serialization.
 
@@ -79,7 +83,7 @@ def default(self, o: Any) -> Any: ...
 
 ## File
 
-[Show source in file.py:397](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L397)
+[Show source in file.py:453](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L453)
 
 A class representing a file with its path, type, and encoding.
 
@@ -116,7 +120,7 @@ class File:
 
 ### File().date
 
-[Show source in file.py:488](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L488)
+[Show source in file.py:544](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L544)
 
 Return the last modification time of the file as a timestamp.
 
@@ -144,7 +148,7 @@ def date(self) -> datetime.datetime: ...
 
 ### File().delete
 
-[Show source in file.py:657](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L657)
+[Show source in file.py:713](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L713)
 
 Delete the file.
 
@@ -172,7 +176,7 @@ def delete(self, throw: bool = True) -> None: ...
 
 ### File().encoding
 
-[Show source in file.py:458](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L458)
+[Show source in file.py:514](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L514)
 
 Return the file encoding.
 
@@ -197,7 +201,7 @@ def encoding(self) -> str: ...
 
 ### File().exists
 
-[Show source in file.py:472](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L472)
+[Show source in file.py:528](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L528)
 
 Check if the file exists.
 
@@ -224,7 +228,7 @@ def exists(self) -> bool: ...
 
 ### File().open
 
-[Show source in file.py:678](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L678)
+[Show source in file.py:734](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L734)
 
 Open the file with the appropriate mode and encoding.
 
@@ -260,7 +264,7 @@ def open(self, mode: str = "r") -> IO[Any]: ...
 
 ### File().path
 
-[Show source in file.py:430](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L430)
+[Show source in file.py:486](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L486)
 
 Return the file path.
 
@@ -285,7 +289,7 @@ def path(self) -> Path: ...
 
 ### File().read
 
-[Show source in file.py:520](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L520)
+[Show source in file.py:576](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L576)
 
 Read the file content.
 
@@ -332,7 +336,7 @@ def read(self, throw: bool = True) -> Any | None: ...
 
 ### File().readlines
 
-[Show source in file.py:578](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L578)
+[Show source in file.py:634](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L634)
 
 Read the file content as lines.
 
@@ -367,7 +371,7 @@ def readlines(self, throw: bool = True) -> Iterator: ...
 
 ### File().size
 
-[Show source in file.py:505](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L505)
+[Show source in file.py:561](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L561)
 
 Return the size of the file in bytes.
 
@@ -391,7 +395,7 @@ def size(self) -> int: ...
 
 ### File().type
 
-[Show source in file.py:444](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L444)
+[Show source in file.py:500](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L500)
 
 Return the file type.
 
@@ -420,7 +424,7 @@ def type(self) -> FileType: ...
 
 ### File().write
 
-[Show source in file.py:616](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L616)
+[Show source in file.py:672](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L672)
 
 Write content to the file.
 
@@ -457,7 +461,7 @@ def write(self, content: Any, throw: bool = True) -> None: ...
 
 ## FileType
 
-[Show source in file.py:355](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L355)
+[Show source in file.py:411](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L411)
 
 Enumeration of file types.
 
@@ -469,7 +473,7 @@ class FileType(Enum): ...
 
 ### FileType.get
 
-[Show source in file.py:362](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L362)
+[Show source in file.py:418](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L418)
 
 Get the FileType from a file extension or type string.
 
@@ -511,7 +515,7 @@ def get(cls, file_type: FileType | str) -> FileType: ...
 
 ## ensure_directory
 
-[Show source in file.py:27](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L27)
+[Show source in file.py:28](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L28)
 
 Ensure that the directory for the given path exists.
 
@@ -537,7 +541,7 @@ def ensure_directory(path: Path | str) -> None: ...
 
 ## fetch_content
 
-[Show source in file.py:74](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L74)
+[Show source in file.py:75](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L75)
 
 Fetch content from a URL.
 
@@ -579,7 +583,7 @@ def fetch_content(
 
 ## get_cache_path
 
-[Show source in file.py:43](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L43)
+[Show source in file.py:44](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L44)
 
 Return the cache path, optionally creating it.
 
@@ -617,7 +621,7 @@ def get_cache_path(folder: Path | str = None, create: bool = False) -> Path: ...
 
 ## read_csv_file
 
-[Show source in file.py:172](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L172)
+[Show source in file.py:173](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L173)
 
 Read a CSV file and return its content.
 
@@ -688,7 +692,7 @@ def read_csv_file(
 
 ## read_zip_file
 
-[Show source in file.py:107](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L107)
+[Show source in file.py:108](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L108)
 
 Read a specific file from a ZIP archive in memory.
 
@@ -738,9 +742,60 @@ def read_zip_file(
 
 
 
+## to_csv_row
+
+[Show source in file.py:250](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L250)
+
+Convert data to a format suitable for CSV writing.
+
+It supports dicts and lists directly, and also checks for to_csv or to_dict methods on the
+data object. If the data object is a dataclass, it will be converted to a dict using asdict.
+If the data cannot be converted, a TypeError is raised.
+
+#### Arguments
+
+- [Data](../data/index.md#data) *Any* - The data to convert.
+
+#### Returns
+
+dict | list: The converted row, as a dictionary or list.
+
+#### Raises
+
+- `TypeError` - If the row cannot be converted to a dict or list.
+
+#### Examples
+
+```python
+>>> to_csv_row({'key': 'value'})
+{'key': 'value'}
+>>> class Custom:
+...     def to_csv(self):
+...         return {'custom': 'value'}
+>>> to_csv_row(Custom())
+{'custom': 'value'}
+>>> class AnotherCustom:
+...     def to_dict(self):
+...         return {'another': 'value'}
+>>> to_csv_row(AnotherCustom())
+{'another': 'value'}
+>>> to_csv_row('invalid')
+Traceback (most recent call last):
+    ...
+TypeError: Data items must be dicts, lists, or have a to_csv or to_dict method.
+```
+
+#### Signature
+
+```python
+def to_csv_row(data: Any) -> dict | list: ...
+```
+
+
+
 ## write_csv_file
 
-[Show source in file.py:249](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L249)
+[Show source in file.py:295](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L295)
 
 Write data to a CSV file.
 
@@ -758,6 +813,7 @@ fieldnames (list[str] | None, optional): The field names to use if data is an it
 #### Raises
 
 - `csv.Error` - If there is an error writing to the CSV file.
+- `TypeError` - If the data items cannot be converted to dicts or lists.
 
 #### Examples
 
@@ -785,7 +841,7 @@ def write_csv_file(
 
 ## write_json_file
 
-[Show source in file.py:321](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L321)
+[Show source in file.py:377](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/file.py#L377)
 
 Write data to a JSON file.
 

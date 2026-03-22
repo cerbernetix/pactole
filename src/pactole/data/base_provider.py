@@ -449,7 +449,7 @@ class BaseProvider:
 
     def _load_record(self, data: dict) -> DrawRecord:
         """Load a DrawRecord instance from a dictionary of data."""
-        return DrawRecord.from_dict(data, combination_factory=self._combination_factory)
+        return DrawRecord.from_csv(data, combination_factory=self._combination_factory)
 
     def _load_record_list(self, data: list[dict] | None) -> list[DrawRecord]:
         """Load a list of DrawRecord instances from a list of dictionaries."""
@@ -478,7 +478,7 @@ class BaseProvider:
 
     def _parse_source(self, source: Path, archive: Path) -> None:
         """Parse the source file and store the results in the archive path."""
-        File(archive).write(self._parser(line).to_dict() for line in File(source).readlines())
+        File(archive).write(self._parser(line) for line in File(source).readlines())
 
     def _parse_archive(self, archive: Path) -> ArchiveContentInfo:
         """Parse the archive file and extract relevant information."""

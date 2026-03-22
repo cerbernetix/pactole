@@ -96,3 +96,90 @@ class EuroDreamsCombination(LotteryCombination):
 
     def __repr__(self) -> str:
         return f"EuroDreamsCombination(numbers={self.numbers.values}, dream={self.dream.values})"
+
+    def to_dict(self) -> dict:
+        """Convert the EuroDreamsCombination to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the EuroDreamsCombination.
+
+        Examples:
+            >>> euro_comb = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+            >>> euro_comb.to_dict()
+            {'numbers': [2, 3, 5, 7, 9, 38], 'dream': [3]}
+        """
+        return self.dump()
+
+    @classmethod
+    def from_dict(cls, data: dict) -> EuroDreamsCombination:
+        """Create a EuroDreamsCombination instance from a dictionary.
+
+        Args:
+            data (dict): A dictionary containing the combination data.
+
+        Returns:
+            EuroDreamsCombination: A new EuroDreamsCombination instance created from
+                the dictionary data.
+
+        Examples:
+            >>> data = {'numbers': [2, 3, 5, 7, 9, 38], 'dream': [3]}
+            >>> euro_comb = EuroDreamsCombination.from_dict(data)
+            >>> euro_comb.numbers.values
+            [2, 3, 5, 7, 9, 38]
+            >>> euro_comb.dream.values
+            [3]
+        """
+        return cls(**data)
+
+    @classmethod
+    def from_string(cls, data: str) -> EuroDreamsCombination:
+        """Create a EuroDreamsCombination instance from a string representation.
+
+        Args:
+            data (str): A string representation of the combination in the format
+                "numbers: [n1, n2, n3, n4, n5, n6]  dream: [d1]".
+
+        Returns:
+            EuroDreamsCombination: A new EuroDreamsCombination instance created from
+                the string data.
+
+        Examples:
+            >>> data = "numbers: [2, 3, 5, 7, 9, 38]  dream: [3]"
+            >>> euro_comb = EuroDreamsCombination.from_string(data)
+            >>> euro_comb.numbers.values
+            [2, 3, 5, 7, 9, 38]
+            >>> euro_comb.dream.values
+            [3]
+        """
+        components = LotteryCombination.get_components_from_string(data)
+        return cls(**components)
+
+    @classmethod
+    def from_csv(cls, data: dict) -> EuroDreamsCombination:
+        """Create a EuroDreamsCombination instance from a CSV string representation.
+
+        Args:
+            data (dict): A dictionary representation of the combination in the format
+                {"numbers_1": n1, "numbers_2": n2, ..., "dream_1": d1}.
+
+        Returns:
+            EuroDreamsCombination: A new EuroDreamsCombination instance created from
+                the CSV string data.
+
+        Examples:
+            >>> data = {
+            ...    'numbers_1': 1,
+            ...    'numbers_2': 2,
+            ...    'numbers_3': 3,
+            ...    'numbers_4': 4,
+            ...    'numbers_5': 5,
+            ...    'dream_1': 6
+            ... }
+            >>> euro_comb = EuroDreamsCombination.from_csv(data)
+            >>> euro_comb.numbers.values
+            [1, 2, 3, 4, 5]
+            >>> euro_comb.dream.values
+            [6]
+        """
+        components = LotteryCombination.get_components_from_csv(data)
+        return cls(**components)

@@ -10,6 +10,7 @@
 ## Modules
 
 - [Combination](./combination.md)
+- [CompoundCombination](./compound_combination.md)
 - [EuroDreamsCombination](./eurodreams_combination.md)
 - [EuroMillionsCombination](./euromillions_combination.md)
 - [LotteryCombination](./lottery_combination.md)

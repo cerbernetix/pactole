@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v0.4.0 [2026-03-22]
+
+### Added
+
+- Added string conversion of Weekday instances
+- Added serialization methods to Combination classes and data models (to/from_string/csv/json/dict)
+- Added support for custom serialization to CSV and JSON (date, dataclasses, serialization helpers)
+- Added `CompoundCombination` superclass to `LotteryCombination`
+- Added error handling for invalid values and negative rank in Combination class
+- Added dictionary-like access to combination components in `CompoundCombination` and derived classes
+- Added `dump` method to combinations for dict representation
+- Added `match` attribute to `FoundCombination` for storing matching combinations
+- Added static methods to parse components from string and CSV representations in `CompoundCombination`
+
+### Changed
+
+- CSV writer now uses to_csv for serializing objects
+- JSON writer now uses to_json for serializing objects
+- DrawRecord now has custom methods for CSV and JSON import/export instead of generic to/from_dict
+- Renamed `CompoundCombination.get_component` to `CompoundCombination.get`
+- Renamed `CompoundCombination.get_component_values` to `CompoundCombination.get_values`
+
+### Fixed
+
+- Ensure values are converted to int in `Combination` and `BoundCombination`
+- Return `CompoundCombination` constructor as factory instead of `get_combination` from an empty instance
+
 ## v0.3.3 [2026-03-11]
 
 ### Fixed

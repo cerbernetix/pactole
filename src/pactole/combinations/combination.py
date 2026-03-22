@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import random
+import re
 from functools import cache, cached_property
 from math import ceil
 from math import comb as math_comb
 from typing import Iterable, Iterator, TypedDict
 
 from ..utils import assert_non_negative_integer
+
+RE_NUMBERS = re.compile(r"values:\s*\[?(?P<values>[\d,\s]*)\]?")
+RE_RANK = re.compile(r"rank:\s*(?P<rank>\d+)")
 
 DEFAULT_START = 1
 DEFAULT_END = 50
@@ -172,6 +176,9 @@ class Combination:
         start (int, optional): The starting offset for the combination values.
             Defaults to DEFAULT_START.
 
+    Raises:
+        ValueError: If the provided rank is negative or if the values are not valid.
+
     Examples:
         >>> combination = Combination([12, 3, 42, 6, 22])
         >>> combination.values
@@ -211,7 +218,14 @@ class Combination:
         if start is None:
             start = DEFAULT_START
 
-        self._values = set(values)
+        try:
+            self._values = set(int(v) for v in values)
+        except (TypeError, ValueError) as e:
+            raise ValueError("Values must be integers or convertible to integers.") from e
+
+        if rank is not None and rank < 0:
+            raise ValueError("Rank must be a non-negative integer.")
+
         self._rank = rank
         self._start = start
 
@@ -530,6 +544,155 @@ class Combination:
 
         return self.intersection(combination).length / self.length
 
+    def to_string(self) -> str:
+        """Convert the Combination instance to a string representation.
+
+        Returns:
+            str: A string representation of the combination values.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2], rank=123)
+            >>> combination.to_string()
+            'values: [1,2,3]  rank: 123'
+        """
+        return f"values: {self}  rank: {self.rank}"
+
+    def to_csv(self) -> CombinationValues:
+        """Convert the Combination instance to a format suitable for CSV export.
+
+        Returns:
+            CombinationValues: A list of combination values suitable for CSV export.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2])
+            >>> combination.to_csv()
+            [1, 2, 3]
+        """
+        return self.values
+
+    def to_json(self) -> CombinationValues:
+        """Convert the Combination instance to a JSON-serializable format.
+
+        Returns:
+            CombinationValues: A list of combination values suitable for JSON serialization.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2])
+            >>> combination.to_json()
+            [1, 2, 3]
+        """
+        return self.values
+
+    def to_dict(self) -> dict:
+        """Convert the Combination instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the Combination instance.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2], start=0)
+            >>> combination.to_dict()
+            {'values': [1, 2, 3], 'rank': 0, 'start': 0}
+        """
+        return {"values": self.values, "rank": self._rank, "start": self._start}
+
+    @classmethod
+    def from_string(cls, data: str) -> Combination:
+        """Create a Combination instance from a string representation.
+
+        Args:
+            data (str): A string representation of the combination, expected in the
+                format 'values: [1,2,3]  rank: 123'.
+
+        Returns:
+            Combination: A new Combination instance created from the string data.
+
+        Examples:
+            >>> data = 'values: [1,2,3]  rank: 123'
+            >>> combination = Combination.from_string(data)
+            >>> combination.values
+            [1, 2, 3]
+            >>> combination.rank
+            123
+        """
+        values = None
+        rank = None
+
+        if match := RE_NUMBERS.search(data):
+            values = [
+                CombinationNumber(value.strip())
+                for value in match.group("values").split(",")
+                if value.strip()
+            ]
+
+        if match := RE_RANK.search(data):
+            rank = CombinationRank(match.group("rank"))
+
+        return cls(values=values, rank=rank)
+
+    @classmethod
+    def from_csv(cls, data: CombinationValues) -> Combination:
+        """Create a Combination instance from CSV data.
+
+        Args:
+            data (CombinationValues): A list of combination values from CSV.
+
+        Returns:
+            Combination: A new Combination instance created from the CSV data.
+
+        Examples:
+            >>> data = [1, 2, 3]
+            >>> combination = Combination.from_csv(data)
+            >>> combination.values
+            [1, 2, 3]
+        """
+        return cls(values=data)
+
+    @classmethod
+    def from_json(cls, data: CombinationValues | dict) -> Combination:
+        """Create a Combination instance from JSON data.
+
+        Args:
+            data (CombinationValues | dict): A list of combination values or a dictionary from JSON.
+
+        Returns:
+            Combination: A new Combination instance created from the JSON data.
+
+        Examples:
+            >>> data = [1, 2, 3]
+            >>> combination = Combination.from_json(data)
+            >>> combination.values
+            [1, 2, 3]
+        """
+        if isinstance(data, dict):
+            return cls.from_dict(data)
+        return cls(values=data)
+
+    @staticmethod
+    def from_dict(data: dict) -> Combination:
+        """Create a Combination instance from a dictionary.
+
+        Args:
+            data (dict): A dictionary containing the keys 'values', 'rank', and 'start'.
+
+        Returns:
+            Combination: A new Combination instance created from the dictionary data.
+
+        Examples:
+            >>> data = {'values': [1, 2, 3], 'rank': 0, 'start': 0}
+            >>> combination = Combination.from_dict(data)
+            >>> combination.values
+            [1, 2, 3]
+            >>> combination.rank
+            0
+            >>> combination.start
+            0
+        """
+        values = data.get("values", [])
+        rank = data.get("rank")
+        start = data.get("start", DEFAULT_START)
+        return Combination(values=values, rank=rank, start=start)
+
     def __eq__(self, combination: object) -> bool:
         return self.equals(combination)
 
@@ -646,7 +809,7 @@ class BoundCombination(Combination):
             else:
                 values = []
                 rank = None
-        values = [min(max(value, start), end) for value in list(values)[:count]]
+        values = [min(max(int(value), start), end) for value in list(values)[:count]]
 
         super().__init__(values=values, rank=rank, start=start)
         self._end = end
@@ -780,10 +943,100 @@ class BoundCombination(Combination):
             combinations=combinations,
         )
 
+    def to_string(self) -> str:
+        """Convert the Combination instance to a string representation.
+
+        Returns:
+            str: A string representation of the combination values.
+
+        Examples:
+            >>> combination = Combination([3, 1, 2], rank=123)
+            >>> combination.to_string()
+            'values: [1,2,3]  rank: 123'
+        """
+        return f"values: {self}  rank: {self.rank:>{len(str(self._combinations))}}"
+
+    def to_dict(self) -> dict:
+        """Convert the BoundCombination instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the BoundCombination instance.
+
+        Examples:
+            >>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+            >>> bound_comb.to_dict()
+            {
+                'values': [1, 2, 3],
+                'rank': 0,
+                'start': 1,
+                'end': 50,
+                'count': 5,
+                'combinations': 2118760
+            }
+        """
+        return {
+            "values": self.values,
+            "rank": self._rank,
+            "start": self._start,
+            "end": self._end,
+            "count": self._count,
+            "combinations": self._combinations,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> BoundCombination:
+        """Create a BoundCombination instance from a dictionary.
+
+        Args:
+            data (dict): A dictionary containing the keys 'values', 'rank', 'start', 'end', 'count',
+                and 'combinations'.
+
+        Returns:
+            BoundCombination: A new BoundCombination instance created from the dictionary data.
+
+        Examples:
+            >>> data = {
+            ...     'values': [1, 2, 3],
+            ...     'rank': 0,
+            ...     'start': 1,
+            ...     'end': 50,
+            ...     'count': 5,
+            ...     'combinations': 2118760
+            ... }
+            >>> bound_comb = BoundCombination.from_dict(data)
+            >>> bound_comb.values
+            [1, 2, 3]
+            >>> bound_comb.rank
+            0
+            >>> bound_comb.start
+            1
+            >>> bound_comb.end
+            50
+            >>> bound_comb.count
+            5
+            >>> bound_comb.combinations
+            2118760
+        """
+        values = data.get("values", [])
+        rank = data.get("rank")
+        start = data.get("start", DEFAULT_START)
+        end = data.get("end", DEFAULT_END)
+        count = data.get("count", DEFAULT_COUNT)
+        combinations = data.get("combinations")
+        return BoundCombination(
+            values=values,
+            rank=rank,
+            start=start,
+            end=end,
+            count=count,
+            combinations=combinations,
+        )
+
     def __str__(self) -> str:
-        n = len(str(self._end))
         sep = ", "
-        width = n * self.count + (self.count - 1) * len(sep)
+        n = len(str(self._end))
+        ns = len(sep)
+        width = (n + ns) * self.count - ns
         return f"[{sep.join(f'{value:>{n}}' for value in self.values).rjust(width)}]"
 
     def __repr__(self) -> str:

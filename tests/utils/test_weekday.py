@@ -118,6 +118,17 @@ class TestWeekday:
         with pytest.raises(ValueError):
             Weekday("notaday")
 
+    def test_weekday_to_string(self):
+        """Test the string representation of Weekday."""
+
+        assert str(Weekday.MONDAY) == "MONDAY"
+        assert str(Weekday.TUESDAY) == "TUESDAY"
+        assert str(Weekday.WEDNESDAY) == "WEDNESDAY"
+        assert str(Weekday.THURSDAY) == "THURSDAY"
+        assert str(Weekday.FRIDAY) == "FRIDAY"
+        assert str(Weekday.SATURDAY) == "SATURDAY"
+        assert str(Weekday.SUNDAY) == "SUNDAY"
+
     def test_next_weekday_from_current(self):
         """Test the next weekday method."""
 

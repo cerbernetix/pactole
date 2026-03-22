@@ -6,6 +6,7 @@ A full list of [Pactole](https://github.com/cerbernetix/pactole) project modules
 
 - [Combinations](combinations/index.md#combinations)
     - [Combination](combinations/combination.md#combination)
+    - [CompoundCombination](combinations/compound_combination.md#compoundcombination)
     - [EuroDreamsCombination](combinations/eurodreams_combination.md#eurodreamscombination)
     - [EuroMillionsCombination](combinations/euromillions_combination.md#euromillionscombination)
     - [LotteryCombination](combinations/lottery_combination.md#lotterycombination)

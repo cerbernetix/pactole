@@ -17,6 +17,10 @@ Pactole is a Python library for managing lottery results.
 - [Developer overview](./developer_overview.md): Architecture and implementation notes.
 - [API reference](./api/README.md): Generated API documentation by module.
 
+## Changes
+
+For the changelog, see [CHANGELOG.md](https://github.com/cerbernetix/pactole/blob/main/CHANGELOG.md).
+
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License - See [LICENSE](https://github.com/cerbernetix/pactole/blob/main/LICENSE) file for details.

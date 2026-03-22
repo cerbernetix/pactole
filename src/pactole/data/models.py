@@ -11,6 +11,7 @@ from ..combinations import (
     CombinationFactory,
     CombinationInputWithRank,
     CombinationRank,
+    CompoundCombination,
     LotteryCombination,
 )
 from ..utils import get_float, get_int
@@ -68,7 +69,7 @@ class DrawRecord:
     """Deadline date for gain collection."""
 
     combination: LotteryCombination
-    """The winning combination of the draw."""
+    """The combination of the draw."""
 
     numbers: dict[str, list[int]]
     """A dictionary of number components and their corresponding lists of values in the draw."""
@@ -76,8 +77,8 @@ class DrawRecord:
     winning_ranks: list[WinningRank]
     """A list of winning ranks for the draw, ordered by rank."""
 
-    def to_dict(self) -> dict:
-        """Convert the DrawRecord instance to a dictionary.
+    def to_csv(self) -> dict:
+        """Convert the DrawRecord instance to a dictionary suitable for CSV export.
 
         Returns:
             dict: A dictionary representation of the DrawRecord instance.
@@ -94,7 +95,7 @@ class DrawRecord:
             ...         WinningRank(rank=2, winners=10, gain=50000.0)],
             ...     ]
             ... )
-            >>> record.to_dict()
+            >>> record.to_csv()
             {'period': '202201',
              'draw_date': '2022-01-15',
              'deadline_date': '2022-02-15',
@@ -130,9 +131,81 @@ class DrawRecord:
 
         return data
 
+    def to_json(self) -> dict:
+        """Convert the DrawRecord instance to a JSON-serializable dictionary.
+
+        Returns:
+            dict: A JSON-serializable dictionary representation of the DrawRecord instance.
+
+        Example:
+            >>> record = DrawRecord(
+            ...     period="202201",
+            ...     draw_date=datetime.date(2022, 1, 15),
+            ...     deadline_date=datetime.date(2022, 2, 15),
+            ...     combination=LotteryCombination(components={'main': ..., 'bonus': ...}),
+            ...     numbers={'main': [12, 5, 23], 'bonus': [7]},
+            ...     winning_ranks=[
+            ...         WinningRank(rank=1, winners=2, gain=1000000.0),
+            ...         WinningRank(rank=2, winners=10, gain=50000.0)
+            ...     ]
+            ... )
+            >>> record.to_json()
+            {'period': '202201',
+             'draw_date': '2022-01-15',
+             'deadline_date': '2022-02-15',
+             'combination': {'main': [12, 5, 23], 'bonus': [7]},
+             'numbers': [12, 5, 23, 7],
+             'winning_ranks': [
+                 {'rank': 1, 'winners': 2, 'gain': 1000000.0},
+                 {'rank': 2, 'winners': 10, 'gain': 50000.0}
+             ]}
+        """
+        return self.to_dict()
+
+    def to_dict(self) -> dict:
+        """Convert the DrawRecord instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the DrawRecord instance.
+
+        Example:
+            >>> record = DrawRecord(
+            ...     period="202201",
+            ...     draw_date=datetime.date(2022, 1, 15),
+            ...     deadline_date=datetime.date(2022, 2, 15),
+            ...     combination=LotteryCombination(components={'main': ..., 'bonus': ...}),
+            ...     numbers={'main': [12, 5, 23], 'bonus': [7]},
+            ...     winning_ranks=[
+            ...         WinningRank(rank=1, winners=2, gain=1000000.0),
+            ...         WinningRank(rank=2, winners=10, gain=50000.0)
+            ...     ]
+            ... )
+            >>> record.to_dict()
+            {'period': '202201',
+             'draw_date': '2022-01-15',
+             'deadline_date': '2022-02-15',
+             'combination': {'main': [12, 5, 23], 'bonus': [7]},
+             'numbers': [12, 5, 23, 7],
+             'winning_ranks': [
+                 {'rank': 1, 'winners': 2, 'gain': 1000000.0},
+                 {'rank': 2, 'winners': 10, 'gain': 50000.0}
+             ]}
+        """
+        return {
+            "period": self.period,
+            "draw_date": self.draw_date.isoformat(),
+            "deadline_date": self.deadline_date.isoformat(),
+            "combination": self.combination.to_dict(),
+            "numbers": self.combination.values,
+            "winning_ranks": [
+                {"rank": rank.rank, "winners": rank.winners, "gain": rank.gain}
+                for rank in self.winning_ranks
+            ],
+        }
+
     @staticmethod
-    def from_dict(data: dict, combination_factory: CombinationFactory | None = None) -> DrawRecord:
-        """Create a DrawRecord instance from a dictionary.
+    def from_csv(data: dict, combination_factory: CombinationFactory | None = None) -> DrawRecord:
+        """Create a DrawRecord instance from a CSV dictionary.
 
         Args:
             data (dict): A dictionary containing the draw record data.
@@ -160,7 +233,7 @@ class DrawRecord:
             ...     "rank_2_winners": 10,
             ...     "rank_2_gain": 50000.0,
             ... }
-            >>> record = DrawRecord.from_dict(data)
+            >>> record = DrawRecord.from_csv(data)
             >>> print(record)
             DrawRecord(
                 period='202201',
@@ -235,6 +308,122 @@ class DrawRecord:
             winning_ranks=winning_ranks,
         )
 
+    @classmethod
+    def from_json(
+        cls, data: dict, combination_factory: CombinationFactory | None = None
+    ) -> DrawRecord:
+        """Create a DrawRecord instance from a JSON dictionary.
+
+        Args:
+            data (dict): A dictionary containing the draw record data.
+            combination_factory (CombinationFactory | None): A factory function or class to create a
+                combination instance. If None, a default LotteryCombination instance will be used.
+                Default is None.
+
+        Returns:
+            DrawRecord: An instance of DrawRecord created from the input dictionary.
+
+        Example:
+            >>> data = {
+            ...     "period": "202201",
+            ...     "draw_date": "2022-01-15",
+            ...     "deadline_date": "2022-02-15",
+            ...     "combination": {'main': [12, 5, 23], 'bonus': [7]},
+            ...     "numbers": [12, 5, 23, 7],
+            ...     "winning_ranks": [
+            ...         {'rank': 1, 'winners': 2, 'gain': 1000000.0},
+            ...         {'rank': 2, 'winners': 10, 'gain': 50000.0}
+            ...     ]
+            ... }
+            >>> record = DrawRecord.from_json(data)
+            >>> print(record)
+            DrawRecord(
+                period='202201',
+                draw_date=datetime.date(2022, 1, 15),
+                deadline_date=datetime.date(2022, 2, 15),
+                combination=LotteryCombination(components={'main': ..., 'bonus': ...}),
+                numbers={'main': [12, 5, 23], 'bonus': [7]},
+                winning_ranks=[
+                    WinningRank(rank=1, winners=2, gain=1000000.0),
+                    WinningRank(rank=2, winners=10, gain=50000.0)
+                ]
+            )
+        """
+        return cls.from_dict(data, combination_factory=combination_factory)
+
+    @staticmethod
+    def from_dict(data: dict, combination_factory: CombinationFactory | None = None) -> DrawRecord:
+        """Create a DrawRecord instance from a dictionary.
+
+        Args:
+            data (dict): A dictionary containing the draw record data.
+            combination_factory (CombinationFactory | None): A factory function or class to create a
+                combination instance. If None, a default LotteryCombination instance will be used.
+                Default is None.
+
+        Returns:
+            DrawRecord: An instance of DrawRecord created from the input dictionary.
+
+        Example:
+            >>> data = {
+            ...     "period": "202201",
+            ...     "draw_date": "2022-01-15",
+            ...     "deadline_date": "2022-02-15",
+            ...     "combination": {'main': [12, 5, 23], 'bonus': [7]},
+            ...     "numbers": [12, 5, 23, 7],
+            ...     "winning_ranks": [
+            ...         {'rank': 1, 'winners': 2, 'gain': 1000000.0},
+            ...         {'rank': 2, 'winners': 10, 'gain': 50000.0}
+            ...     ]
+            ... }
+            >>> record = DrawRecord.from_dict(data)
+            >>> print(record)
+            DrawRecord(
+                period='202201',
+                draw_date=datetime.date(2022, 1, 15),
+                deadline_date=datetime.date(2022, 2, 15),
+                combination=LotteryCombination(components={'main': ..., 'bonus': ...}),
+                numbers={'main': [12, 5, 23], 'bonus': [7]},
+                winning_ranks=[
+                    WinningRank(rank=1, winners=2, gain=1000000.0),
+                    WinningRank(rank=2, winners=10, gain=50000.0)
+                ]
+            )
+        """
+        period = data.get("period", "")
+        draw_date = datetime.date.fromisoformat(data.get("draw_date", "1970-01-01"))
+        deadline_date = datetime.date.fromisoformat(data.get("deadline_date", "1970-01-01"))
+
+        combination_data = data.get("combination", {})
+        numbers = data.get("numbers", [])
+        winning_ranks_data = data.get("winning_ranks", [])
+
+        if callable(combination_factory):
+            combination = combination_factory(**combination_data)
+        else:
+            combination = LotteryCombination.from_dict(combination_data)
+        if numbers != combination.values:
+            raise ValueError("Numbers in JSON do not match the combination values.")
+
+        winning_ranks = []
+        for i, rank_data in enumerate(winning_ranks_data, start=1):
+            winning_ranks.append(
+                WinningRank(
+                    rank=rank_data.get("rank", i),
+                    winners=rank_data.get("winners", 0),
+                    gain=rank_data.get("gain", 0.0),
+                )
+            )
+
+        return DrawRecord(
+            period=period,
+            draw_date=draw_date,
+            deadline_date=deadline_date,
+            combination=combination,
+            numbers={name: component.values for name, component in combination.components.items()},
+            winning_ranks=winning_ranks,
+        )
+
 
 @dataclass
 class FoundCombination:
@@ -245,3 +434,203 @@ class FoundCombination:
 
     rank: CombinationRank
     """The rank of the found combination in the draw."""
+
+    match: CompoundCombination
+    """The matching combination that was found in the draw."""
+
+    def to_csv(self) -> dict:
+        """Convert the FoundCombination instance to a dictionary suitable for CSV export.
+
+        Returns:
+            dict: A dictionary representation of the FoundCombination instance.
+
+        Example:
+            >>> found = FoundCombination(
+            ...     record=DrawRecord(...),
+            ...     rank=CombinationRank(...),
+            ...     match=CompoundCombination(...)
+            ... )
+            >>> found.to_csv()
+            {'period': '202201',
+             'draw_date': '2022-01-15',
+             'deadline_date': '2022-02-15',
+             'main_1': 12,
+             'main_2': 5,
+             'main_3': 23,
+             'bonus_1': 7,
+             'main_rank': 1,
+             'bonus_rank': 2,
+             'combination_rank': 1,
+             'rank_1_winners': 2,
+             'rank_1_gain': 1000000.0,
+             'rank_2_winners': 10,
+             'rank_2_gain': 50000.0,
+             'rank': 1,
+             'match':'main: [5, 12, 23]  bonus: [7]'}
+        """
+        data = self.record.to_csv()
+        data["rank"] = self.rank
+        data["match"] = self.match.to_string()
+        return data
+
+    def to_json(self) -> dict:
+        """Convert the FoundCombination instance to a JSON-serializable dictionary.
+
+        Returns:
+            dict: A JSON-serializable dictionary representation of the FoundCombination instance.
+
+        Example:
+            >>> found = FoundCombination(
+            ...     record=DrawRecord(...),
+            ...     rank=CombinationRank(...)
+            ...     match=CompoundCombination(...)
+            ... )
+            >>> found.to_json()
+            {'record': {...}, 'rank': ..., 'match': {...}}
+        """
+        return self.to_dict()
+
+    def to_dict(self) -> dict:
+        """Convert the FoundCombination instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the FoundCombination instance.
+
+        Example:
+            >>> found = FoundCombination(
+            ...     record=DrawRecord(...),
+            ...     rank=CombinationRank(...),
+            ...     match=CompoundCombination(...)
+            ... )
+            >>> found.to_dict()
+            {'record': {...}, 'rank': ..., 'match': {...}}
+        """
+        return {
+            "record": self.record.to_dict(),
+            "rank": self.rank,
+            "match": self.match.dump(),
+        }
+
+    @staticmethod
+    def from_csv(
+        data: dict, combination_factory: CombinationFactory | None = None
+    ) -> FoundCombination:
+        """Create a FoundCombination instance from a CSV dictionary.
+
+        Args:
+            data (dict): A dictionary containing the found combination data.
+            combination_factory (CombinationFactory | None): A factory function or class to create a
+                combination instance. If None, a default LotteryCombination instance will be used.
+                Default is None.
+
+        Returns:
+            FoundCombination: An instance of FoundCombination created from the input dictionary.
+
+        Example:
+            >>> data = {
+            ...     'period': '202201',
+            ...     'draw_date': '2022-01-15',
+            ...     'deadline_date': '2022-02-15',
+            ...     'main_1': 12,
+            ...     'main_2': 5,
+            ...     'main_3': 23,
+            ...     'bonus_1': 7,
+            ...     'main_rank': 1,
+            ...     'bonus_rank': 2,
+            ...     'combination_rank': 1,
+            ...     'rank_1_winners': 2,
+            ...     'rank_1_gain': 1000000.0,
+            ...     'rank_2_winners': 10,
+            ...     'rank_2_gain': 50000.0,
+            ...     'rank': 1,
+            ...     'match': 'main: [5, 12, 23]  bonus: [7]'
+            ... }
+            >>> found = FoundCombination.from_csv(data)
+            >>> print(found)
+            FoundCombination(
+                record=DrawRecord(...),
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
+            )
+        """
+        record = DrawRecord.from_csv(data, combination_factory=combination_factory)
+        rank = get_int(data.get("rank", 0))
+
+        if callable(combination_factory):
+            match_data = LotteryCombination.from_string(data.get("match", ""))
+            match = combination_factory(**match_data)
+        else:
+            match = CompoundCombination.from_string(data.get("match", ""))
+
+        return FoundCombination(record=record, rank=rank, match=match)
+
+    @classmethod
+    def from_json(
+        cls, data: dict, combination_factory: CombinationFactory | None = None
+    ) -> FoundCombination:
+        """Create a FoundCombination instance from a JSON dictionary.
+
+        Args:
+            data (dict): A dictionary containing the found combination data.
+            combination_factory (CombinationFactory | None): A factory function or class to create a
+                combination instance. If None, a default LotteryCombination instance will be used.
+                Default is None.
+
+        Returns:
+            FoundCombination: An instance of FoundCombination created from the input dictionary.
+
+        Example:
+            >>> data = {
+            ...     'record': {...},
+            ...     'rank': ...,
+            ...     'match': {...},
+            ... }
+            >>> found = FoundCombination.from_json(data)
+            >>> print(found)
+            FoundCombination(
+                record=DrawRecord(...),
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
+            )
+        """
+        return cls.from_dict(data, combination_factory=combination_factory)
+
+    @staticmethod
+    def from_dict(
+        data: dict, combination_factory: CombinationFactory | None = None
+    ) -> FoundCombination:
+        """Create a FoundCombination instance from a dictionary.
+
+        Args:
+            data (dict): A dictionary containing the found combination data.
+            combination_factory (CombinationFactory | None): A factory function or class to create a
+                combination instance. If None, a default LotteryCombination instance will be used.
+                Default is None.
+
+        Returns:
+            FoundCombination: An instance of FoundCombination created from the input dictionary.
+
+        Example:
+            >>> data = {
+            ...     'record': {...},
+            ...     'rank': ...,
+            ...     'match': {...},
+            ... }
+            >>> found = FoundCombination.from_dict(data)
+            >>> print(found)
+            FoundCombination(
+                record=DrawRecord(...),
+                rank=CombinationRank(...),
+                match=CompoundCombination(...)
+            )
+        """
+        record = DrawRecord.from_dict(
+            data.get("record", {}), combination_factory=combination_factory
+        )
+
+        if callable(combination_factory):
+            match = combination_factory(**data.get("match", {}))
+        else:
+            match = CompoundCombination(**data.get("match", {}))
+
+        return FoundCombination(record=record, rank=data.get("rank"), match=match)

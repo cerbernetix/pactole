@@ -4,51 +4,30 @@ from __future__ import annotations
 
 from functools import cached_property
 from math import prod
-from typing import Any, Iterator, Protocol
+from typing import Any
 
 from .combination import (
     BoundCombination,
     CombinationInput,
     CombinationInputOrRank,
-    CombinationInputValues,
-    CombinationNumber,
     CombinationRank,
-    CombinationValues,
     generate,
 )
+from .compound_combination import (
+    CombinationFactory,
+    CombinationWinningRanks,
+    CompoundCombination,
+)
 
-CombinationWinningPattern = tuple[int, ...]
-CombinationWinningRanks = dict[CombinationWinningPattern, CombinationRank]
-CombinationComponents = dict[str, BoundCombination]
-
-
-class CombinationFactory(Protocol):
-    """Protocol for a combination factory."""
-
-    def __call__(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> LotteryCombination:
-        """Create a combination from the provided components.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The base combination to
-                build from. If None, uses the provided components.
-            **components (CombinationInputOrRank | LotteryCombination): The components to construct
-                the combination.
-
-        Returns:
-            LotteryCombination: An instance of LotteryCombination created from the provided
-                components.
-        """
+__all__ = ["LotteryCombination", "CombinationWinningRanks"]
 
 
-class LotteryCombination:
+class LotteryCombination(CompoundCombination):
     """Class representing a Lottery combination.
 
     A Lottery combination is a compound combination that can consist of multiple components
-    (e.g., main numbers, bonus numbers).
+    (e.g., main numbers, bonus numbers). Components are built from BoundCombination instances,
+    which provide capacity and rank information.
 
     Args:
         combination (LotteryCombination | None): The combination to copy from.
@@ -74,9 +53,6 @@ class LotteryCombination:
         [1, 2, 3, 4, 5, 6]
     """
 
-    _components: CombinationComponents
-    _winning_ranks: CombinationWinningRanks
-
     def __init__(
         self,
         combination: LotteryCombination | None = None,
@@ -84,62 +60,17 @@ class LotteryCombination:
         winning_ranks: CombinationWinningRanks | None = None,
         **components: BoundCombination,
     ) -> None:
-        if isinstance(combination, LotteryCombination):
-            components = {**combination._components, **components}
-            if winning_ranks is None:
-                winning_ranks = combination._winning_ranks.copy()
-
-        if winning_ranks is None:
-            winning_ranks = {}
-
         for component in components.values():
             if not isinstance(component, BoundCombination):
                 raise TypeError("All components must be instances of BoundCombination.")
-
-        self._components = components
-        self._winning_ranks = winning_ranks
-
-    @property
-    def components(self) -> CombinationComponents:
-        """Get the components of the combination.
-
-        Returns:
-            CombinationComponents: The components of the combination.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.components
-            {'main': BoundCombination(...), 'bonus': BoundCombination(...)}
-        """
-        return self._components.copy()
-
-    @cached_property
-    def values(self) -> CombinationValues:
-        """Get all numbers in the combination.
-
-        Returns:
-            CombinationValues: The list of all numbers in the combination.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.values
-            [1, 2, 3, 4, 5, 6]
-        """
-        return [value for component in self._components.values() for value in component.values]
+        super().__init__(combination, winning_ranks=winning_ranks, **components)
 
     @cached_property
     def rank(self) -> CombinationRank:
         """Get the lexicographic rank of the combination.
+
+        The rank is computed as a cross-product encoding of component ranks: each component's
+        rank is weighted by the product of the total combinations of all subsequent components.
 
         Returns:
             CombinationRank: The lexicographic rank of the combination.
@@ -162,30 +93,14 @@ class LotteryCombination:
         return rank
 
     @cached_property
-    def length(self) -> int:
-        """Get the total length of the combination.
-
-        Returns:
-            int: The total length of the combination.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.length
-            6
-        """
-        return sum(component.length for component in self._components.values())
-
-    @cached_property
     def count(self) -> int:
-        """Return the count of numbers in the combination.
+        """Return the total capacity (count) of the combination.
+
+        Unlike length (which counts actual values), count sums each component's max capacity
+        (its count attribute), giving the total number of slots available.
 
         Returns:
-            int: The count of numbers.
+            int: The total count.
 
         Examples:
             >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
@@ -204,7 +119,7 @@ class LotteryCombination:
         """Return the total number of possible combinations.
 
         Returns:
-            int: The total number of combinations.
+            int: The total number of combinations, or 0 if empty.
 
         Examples:
             >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
@@ -220,96 +135,22 @@ class LotteryCombination:
             return 0
         return prod(component.combinations for component in self._components.values())
 
-    @property
-    def winning_ranks(self) -> CombinationWinningRanks:
-        """Get the winning ranks mapping.
-
-        Returns:
-            CombinationWinningRanks: The winning ranks mapping.
-
-        Examples:
-            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-            >>> lottery_comb = LotteryCombination(winning_ranks=winning_ranks)
-            >>> lottery_comb.winning_ranks
-            {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-        """
-        return self._winning_ranks.copy()
-
-    @property
-    def nb_winning_ranks(self) -> int:
-        """Get the number of winning ranks.
-
-        Returns:
-            int: The number of winning ranks.
-
-        Examples:
-            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-            >>> lottery_comb = LotteryCombination(winning_ranks=winning_ranks)
-            >>> lottery_comb.nb_winning_ranks
-            4
-        """
-        if not self._winning_ranks:
-            return 0
-        min_rank = min(self._winning_ranks.values())
-        max_rank = max(self._winning_ranks.values())
-        return max_rank - min_rank + 1
-
-    @property
-    def min_winning_rank(self) -> int | None:
-        """Get the minimum winning rank.
-
-        Returns:
-            int | None: The minimum winning rank, or None if there are no winning ranks.
-
-        Examples:
-            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-            >>> lottery_comb = LotteryCombination(winning_ranks=winning_ranks)
-            >>> lottery_comb.min_winning_rank
-            1
-            >>> lottery_comb_empty = LotteryCombination()
-            >>> lottery_comb_empty.min_winning_rank
-            None
-        """
-        if not self._winning_ranks:
-            return None
-        return min(self._winning_ranks.values())
-
-    @property
-    def max_winning_rank(self) -> int | None:
-        """Get the maximum winning rank.
-
-        Returns:
-            int | None: The maximum winning rank, or None if there are no winning ranks.
-
-        Examples:
-            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-            >>> lottery_comb = LotteryCombination(winning_ranks=winning_ranks)
-            >>> lottery_comb.max_winning_rank
-            4
-            >>> lottery_comb_empty = LotteryCombination()
-            >>> lottery_comb_empty.max_winning_rank
-            None
-        """
-        if not self._winning_ranks:
-            return None
-        return max(self._winning_ranks.values())
-
     @staticmethod
     def get_combination_factory(
         combination_factory: CombinationFactory | LotteryCombination | Any,
     ) -> CombinationFactory:
         """Get the combination factory.
 
-        It check that the provided combination_factory is a callable, and if not, it returns a
-        default factory from LotteryCombination, which is in this case will produce combinations
-        with no components and no winning ranks.
+        It checks that the provided combination_factory is a callable, and if not, it returns a
+        default factory from LotteryCombination, which will produce combinations with no
+        components and no winning ranks.
 
         An instance of a LotteryCombination can be used to produce a factory.
 
         Args:
-            combination_factory (CombinationFactory | LotteryCombination | Any): A factory function
-                or class to create a combination instance. If None, a default LotteryCombination
-                instance will be used. Default is None.
+            combination_factory (CombinationFactory | LotteryCombination | Any): A factory
+                function or class to create a combination instance. If not callable,
+                a default LotteryCombination instance will be used.
 
         Returns:
             CombinationFactory: The combination factory.
@@ -323,27 +164,20 @@ class LotteryCombination:
             ... ))
             factory(main=[1, 2, 3, 4, 5])
             LotteryCombination(main=BoundCombination(...))
-            >>> factory = LotteryCombination.get_combination_factory(lambda **components:
-            ...     LotteryCombination(**{
-            ...         k: BoundCombination(start=min(v), end=max(v), count=len(v))
-            ...         for k, v in components.items()
-            ...     })
-            ... )
-            factory(main=[1, 2, 3, 4, 5], bonus=[6])
-            LotteryCombination(main=BoundCombination(...), bonus=BoundCombination(...))
         """
-        if isinstance(combination_factory, LotteryCombination):
+        if isinstance(combination_factory, CompoundCombination):
             return combination_factory.get_combination
         if not callable(combination_factory):
             return LotteryCombination().get_combination
         return combination_factory
 
     def generate(self, n: int = 1, partitions: int = 1) -> list[LotteryCombination]:
-        """Generate a list of random LotteryCombination with similar components.
+        """Generate a list of random LotteryCombination instances with similar components.
 
         Args:
             n (int): The number of combinations to generate. Defaults to 1.
-            partitions (int): The number of partitions to divide the generation into. Defaults to 1.
+            partitions (int): The number of partitions to divide the generation into.
+                Defaults to 1.
 
         Returns:
             list[LotteryCombination]: A list of generated LotteryCombination instances.
@@ -358,39 +192,11 @@ class LotteryCombination:
             >>> random_combs = lottery_comb.generate(n=3)
             >>> len(random_combs)
             3
-            >>> random_combs[0].values
-            [3, 15, 22, 34, 45, 7]
         """
         return [
             self.get_combination(rank)
             for rank in generate(self.combinations, n=n, partitions=partitions)
         ]
-
-    def copy(
-        self,
-        *,
-        winning_ranks: CombinationWinningRanks | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> LotteryCombination:
-        """Create a copy of the LotteryCombination with optional modifications.
-
-        Args:
-            winning_ranks (CombinationWinningRanks | None): The winning ranks mapping. If None,
-                uses the current instance's winning ranks.
-            **components (CombinationInputOrRank | LotteryCombination): The components to modify in
-                the copy. If not provided, the original component is used.
-
-        Returns:
-            LotteryCombination: A new LotteryCombination instance with the specified modifications.
-        """
-        if winning_ranks is None:
-            winning_ranks = self._winning_ranks
-
-        components = {
-            name: components.get(name) or values for name, values in self._components.items()
-        }
-
-        return self._create_combination(**components, winning_ranks=winning_ranks)
 
     def get_combination(
         self,
@@ -401,13 +207,18 @@ class LotteryCombination:
     ) -> LotteryCombination:
         """Get a LotteryCombination based on provided components.
 
+        Supports integer rank input to decode a rank into component values. For a flat list
+        of values, each component receives values based on its count (max capacity) rather than
+        its current length.
+
         Args:
             combination (CombinationInput | LotteryCombination | None): The base combination to
-                build from. If None, uses the provided components.
+                build from. If None, uses the provided components. An integer rank decodes into
+                each component's values using the cross-product encoding.
             winning_ranks (CombinationWinningRanks | None): The winning ranks mapping. If None,
                 uses the current instance's winning ranks.
-            **components (CombinationInputOrRank | LotteryCombination): The components to construct
-                the combination.
+            **components (CombinationInputOrRank | LotteryCombination): The components to
+                construct the combination.
 
         Returns:
             LotteryCombination: The constructed LotteryCombination.
@@ -428,10 +239,16 @@ class LotteryCombination:
         """
         components = self.get_components(**components)
 
-        if isinstance(combination, LotteryCombination):
-            components = {**combination._components, **components}
+        if isinstance(combination, CompoundCombination):
+            elevated = {}
+            for name, comp in combination.components.items():
+                if isinstance(comp, BoundCombination):
+                    elevated[name] = comp
+                elif name in self._components:
+                    elevated[name] = self._components[name].copy(values=comp.values)
+            components = {**elevated, **components}
             if winning_ranks is None:
-                winning_ranks = combination._winning_ranks.copy()
+                winning_ranks = combination._winning_ranks
         elif combination is not None:
             components_ = {}
             if isinstance(combination, int):
@@ -449,10 +266,10 @@ class LotteryCombination:
                         values = []
             components = {**components_, **components}
 
-        if winning_ranks is None:
-            winning_ranks = self._winning_ranks
-
-        return self._create_combination(**components, winning_ranks=winning_ranks)
+        return self._create_combination(
+            **components,
+            winning_ranks=self._winning_ranks if winning_ranks is None else winning_ranks,
+        )
 
     def _create_combination(
         self,
@@ -462,507 +279,83 @@ class LotteryCombination:
         """Create a correct class instance from the given components and winning ranks."""
         return LotteryCombination(**components, winning_ranks=winning_ranks)
 
-    def get_components(
-        self,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> CombinationComponents:
-        """Get the parameters for multiple components of the combination.
+    @classmethod
+    def from_string(cls, data: str) -> dict:
+        """Parse a string representation into lottery component values.
+
+        LotteryCombination cannot build BoundCombination components from string data alone,
+        because bounds and counts are game-specific. This parser therefore returns raw
+        component values for subclasses or callers that have the required metadata.
 
         Args:
-            **components (CombinationInputOrRank | LotteryCombination): The names and values of the
-                components.
+            data (str): A string representation of a LotteryCombination.
 
         Returns:
-            CombinationComponents: The parameters for the specified components.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
+            dict: Parsed component values keyed by component name.
 
         Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.get_components(main=[1, 2, 3, 4, 5], bonus=[6])
+            >>> data = 'numbers: [1, 2, 3, 4, 5]  extra: [6, 7, 8]'
+            >>> LotteryCombination.from_string(data)
+            {'numbers': [1, 2, 3, 4, 5], 'extra': [6, 7, 8]}
+        """
+        return cls.get_components_from_string(data)
+
+    @classmethod
+    def from_csv(cls, data: dict) -> dict:
+        """Parse a CSV-compatible dictionary into lottery component values.
+
+        LotteryCombination cannot build BoundCombination components from CSV data alone,
+        because bounds and counts are game-specific. This parser therefore returns raw
+        component values for subclasses or callers that have the required metadata.
+
+        Args:
+            data (dict): A CSV-compatible dictionary representation of a LotteryCombination.
+
+        Returns:
+            dict: Parsed component values keyed by component name.
+
+        Examples:
+            >>> data = {'numbers_1': 1, 'numbers_2': 2, 'extra_1': 6}
+            >>> LotteryCombination.from_csv(data)
+            {'numbers': [1, 2], 'extra': [6]}
+        """
+        return cls.get_components_from_csv(data)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> LotteryCombination:
+        """Create a LotteryCombination from a dictionary.
+
+        Args:
+            data (dict): A dictionary representation of a LotteryCombination.
+
+        Returns:
+            LotteryCombination: The created LotteryCombination instance.
+
+        Examples:
+            >>> data = {
+            ...     'components': {
+            ...         'main': {'values': [1, 2, 3, 4, 5], 'start': 1, 'end': 50, 'count': 5},
+            ...         'bonus': {'values': [6], 'start': 1, 'end': 10, 'count': 1}
+            ...     },
+            ...     'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            ... }
+            >>> lottery_comb = LotteryCombination.from_dict(data)
+            >>> lottery_comb.components
             {'main': BoundCombination(...), 'bonus': BoundCombination(...)}
-            >>> lottery_comb.get_components(main=[1, 2, 3])
-            {'main': BoundCombination(...)}
-            >>> lottery_comb.get_components(bonus=[7])
-            {'bonus': BoundCombination(...)}
-            >>> lottery_comb.get_components(extra=[8])
-            KeyError: 'Component "extra" does not exist in the combination.'
+            >>> lottery_comb.winning_ranks
+            {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
         """
-        return {
-            name: self._components[name].copy(values=values) for name, values in components.items()
-        }
-
-    def get_component(self, name: str) -> BoundCombination | None:
-        """Get the parameters for a specific component of the combination.
-
-        Args:
-            name (str): The name of the component.
-
-        Returns:
-            BoundCombination | None: The parameters for the specified component,
-                or None if not found.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.get_component('main')
-            BoundCombination(...)
-            >>> lottery_comb.get_component('bonus')
-            BoundCombination(...)
-            >>> lottery_comb.get_component('extra')
-            None
-        """
-        return self._components.get(name)
-
-    def get_component_values(self, name: str) -> CombinationValues:
-        """Get the values for a specific component of the combination.
-
-        Args:
-            name (str): The name of the component.
-
-        Returns:
-            CombinationValues: The values for the specified component.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number
-            ... )
-            >>> lottery_comb.get_component_values('main')
-            [1, 2, 3, 4, 5]
-            >>> lottery_comb.get_component_values('bonus')
-            [6]
-            >>> lottery_comb.get_component_values('extra')
-            []
-        """
-        component = self._components.get(name)
-        if component is None:
-            return []
-
-        return component.values
-
-    def get_winning_rank(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> int | None:
-        """Get the winning rank of the combination against a winning combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The winning combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the
-                winning combination.
-
-        Returns:
-            int | None: The winning rank, or None if not a winning combination.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
-            >>> lottery_comb = LotteryCombination(
-            ...     main=main_numbers,
-            ...     bonus=bonus_number,
-            ...     winning_ranks=winning_ranks
-            ... )
-            >>> winning_comb = lottery_comb.get_combination(main=[1, 2, 3, 4, 5], bonus=[6])
-            >>> lottery_comb.get_winning_rank(winning_comb)
-            1
-            >>> winning_comb = lottery_comb.get_combination(main=[1, 2, 3, 4, 5], bonus=[7])
-            >>> lottery_comb.get_winning_rank(winning_comb)
-            2
-            >>> winning_comb = lottery_comb.get_combination(main=[1, 2, 3, 4, 6], bonus=[6])
-            >>> lottery_comb.get_winning_rank(winning_comb)
-            3
-            >>> winning_comb = lottery_comb.get_combination(main=[1, 2, 3, 4, 6], bonus=[7])
-            >>> lottery_comb.get_winning_rank(winning_comb)
-            4
-            >>> winning_comb = lottery_comb.get_combination(main=[10, 11, 12, 13, 14], bonus=[15])
-            >>> lottery_comb.get_winning_rank(winning_comb)
-            None
-        """
-        winning_combination = self.intersection(combination, **components)
-        return self._winning_ranks.get(
-            tuple(component.length for component in winning_combination.components.values())
-        )
-
-    def equals(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> bool:
-        """Check if the combination is equal to another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            bool: True if equal, False otherwise.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.equals(lottery_comb2)
-            True
-        """
-        combination = self.get_combination(combination, **components)
-
-        if combination.length != self.length:
-            return False
-
-        if not combination.length and not self.length:
-            return True
-
-        return all(
-            self_name == other_name and self_comp == other_comp
-            for (self_name, self_comp), (other_name, other_comp) in zip(
-                self.components.items(), combination.components.items()
-            )
-        )
-
-    def includes(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> bool:
-        """Check if the combination includes another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            bool: True if includes, False otherwise.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.includes(lottery_comb2)
-            True
-            >>> main_numbers3 = BoundCombination(values=[1, 2, 6], start=1, end=50, count=5)
-            >>> lottery_comb3 = LotteryCombination(
-            ...     main=main_numbers3,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.includes(lottery_comb3)
-            False
-        """
-        combination = self.get_combination(combination, **components)
-
-        if not combination.length:
-            return True
-
-        return all(
-            self._components[other_name].includes(other_comp)
-            for other_name, other_comp in combination.components.items()
-        )
-
-    def intersects(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> bool:
-        """Check if the combination intersects with another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            bool: True if intersects, False otherwise.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[4, 5, 6], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.intersects(lottery_comb2)
-            True
-            >>> main_numbers3 = BoundCombination(values=[7, 8, 9], start=1, end=50, count=5)
-            >>> lottery_comb3 = LotteryCombination(
-            ...     main=main_numbers3,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.intersects(lottery_comb3)
-            False
-        """
-        combination = self.get_combination(combination, **components)
-
-        if not combination.length or not self.length:
-            return False
-
-        return all(
-            self._components[other_name].intersects(other_comp)
-            for other_name, other_comp in combination.components.items()
-            if other_comp.length > 0
-        )
-
-    def intersection(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> LotteryCombination:
-        """Get the intersection with another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            LotteryCombination: The intersection combination.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[4, 5, 6], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[7], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> intersection_comb = lottery_comb1.intersection(lottery_comb2)
-            >>> intersection_comb.components
-            {'main': BoundCombination(...), 'bonus': BoundCombination(...)}
-            >>> intersection_comb.values
-            [4, 5]
-        """
-        combination = self.get_combination(combination, **components)
-
-        return self.get_combination(
+        return cls(
             **{
-                other_name: self._components[other_name].intersection(other_comp)
-                for other_name, other_comp in combination.components.items()
-            }
+                name: BoundCombination.from_dict(component_data)
+                for name, component_data in data.get("components", {}).items()
+            },
+            winning_ranks=data.get("winning_ranks", {}),
         )
-
-    def compares(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> int:
-        """Compare the combination with another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            int: -1 if self < combination, 0 if self == combination, 1 if self > combination.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[7], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.compares(lottery_comb2)
-            -1
-        """
-        combination = self.get_combination(combination, **components)
-
-        if not combination.length and not self.length:
-            return 0
-
-        if not combination.length or not self.length:
-            return -1 if self.length < combination.length else 1
-
-        for other_name, other_comp in combination.components.items():
-            self_comp = self._components[other_name]
-            if self_comp < other_comp:
-                return -1
-            if self_comp > other_comp:
-                return 1
-        return 0
-
-    def similarity(
-        self,
-        combination: CombinationInput | LotteryCombination | None = None,
-        **components: CombinationInputOrRank | LotteryCombination,
-    ) -> float:
-        """Calculate the similarity with another combination.
-
-        Args:
-            combination (CombinationInput | LotteryCombination | None): The other combination to
-                compare against.
-            **components (CombinationInputOrRank | LotteryCombination): The components of the other
-                combination.
-
-        Returns:
-            float: Similarity ratio between 0 and 1.
-
-        Raises:
-            KeyError: If a component name does not exist in the current combination.
-
-        Examples:
-            >>> main_numbers1 = BoundCombination(values=[1, 2, 3, 4, 5], start=1, end=50, count=5)
-            >>> bonus_number1 = BoundCombination(values=[6], start=1, end=10, count=1)
-            >>> lottery_comb1 = LotteryCombination(
-            ...     main=main_numbers1,
-            ...     bonus=bonus_number1
-            ... )
-            >>> main_numbers2 = BoundCombination(values=[1, 2, 3, 6, 7], start=1, end=50, count=5)
-            >>> bonus_number2 = BoundCombination(values=[8], start=1, end=10, count=1)
-            >>> lottery_comb2 = LotteryCombination(
-            ...     main=main_numbers2,
-            ...     bonus=bonus_number2
-            ... )
-            >>> lottery_comb1.similarity(lottery_comb2)
-            0.375
-        """
-        combination = self.get_combination(combination, **components)
-
-        if not combination.length and not self.length:
-            return 1.0
-
-        if not combination.length or not self.length:
-            return 0.0
-
-        if all(
-            self_name == other_name and self_comp == other_comp
-            for (self_name, self_comp), (other_name, other_comp) in zip(
-                self.components.items(), combination.components.items()
-            )
-        ):
-            return 1.0
-
-        return (
-            self.get_combination(
-                **{
-                    other_name: self._components[other_name].intersection(other_comp)
-                    for other_name, other_comp in combination.components.items()
-                }
-            ).length
-            / self.length
-        )
-
-    def __eq__(self, combination: object) -> bool:
-        return self.equals(combination)
-
-    def __ne__(self, combination: object) -> bool:
-        return not self.equals(combination)
-
-    def __lt__(self, combination: CombinationInputOrRank | LotteryCombination) -> bool:
-        return self.compares(combination) == -1
-
-    def __gt__(self, combination: CombinationInputOrRank | LotteryCombination) -> bool:
-        return self.compares(combination) == 1
-
-    def __le__(self, combination: CombinationInputOrRank | LotteryCombination) -> bool:
-        return self.compares(combination) != 1
-
-    def __ge__(self, combination: CombinationInputOrRank | LotteryCombination) -> bool:
-        return self.compares(combination) != -1
-
-    def __contains__(
-        self, item: CombinationNumber | CombinationInputValues | LotteryCombination
-    ) -> bool:
-        if isinstance(item, CombinationNumber):
-            return item in self.values
-
-        return self.includes(item)
-
-    def __iter__(self) -> Iterator[CombinationNumber]:
-        yield from self.values
-
-    def __getitem__(self, index: int) -> CombinationNumber:
-        return self.values[index]
-
-    def __getattr__(self, name: str) -> BoundCombination:
-        if name in self._components:
-            return self._components[name]
-
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-
-    def __len__(self) -> int:
-        return self.length
-
-    def __str__(self) -> str:
-        return " ".join([f"{name}: {component}" for name, component in self._components.items()])
 
     def __repr__(self) -> str:
         params = ", ".join(
-            [f"{name}={repr(component)}" for name, component in self._components.items()]
+            f"{name}={repr(component)}" for name, component in self._components.items()
         )
         if params:
             params = params + ", "

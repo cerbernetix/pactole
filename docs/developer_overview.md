@@ -61,42 +61,100 @@ Pactole follows a layered architecture with clear separation of concerns:
 
 ### 1. Combination Layer
 
-Handles the mathematical modeling of lottery combinations.
+Handles the mathematical modeling of lottery combinations with a clear class hierarchy.
+
+#### Class Hierarchy
+
+The combination layer uses a hierarchy of classes:
+
+1. **Combination** - Represents a single component (e.g., main numbers)
+    - Manages value sets and lexicographic ranking
+    - Provides comparison, intersection, and similarity methods
+    - Supports serialization (to/from string, CSV, JSON, dict)
+
+2. **BoundCombination** (extends Combination) - Represents a bounded set of values
+    - Enforces value ranges (e.g., 1-50 for main numbers)
+    - Computes total possible combinations
+    - Used internally by lottery systems
+
+3. **CompoundCombination** - Represents multiple components together
+    - Manages multiple Combination instances
+    - Provides component access via get() and get_values()
+    - Handles winning rank mappings
+    - Supports serialization of compound structures
+    - Base class for lottery-specific combinations
+
+4. **LotteryCombination** (extends CompoundCombination) - Lottery-specific compound combination
+    - Validates all components are BoundCombination instances
+    - Calculates compound rank across all components
+    - Used as base for specific lottery implementations
 
 #### Key Classes
 
+**Combination** (`src/pactole/combinations/combination.py`)
+
+- Represents a single set of values
+- Calculates lexicographic rank for unique identification
+- Methods:
+    - `equals()`, `includes()`, `intersects()`: Comparison operations
+    - `intersection()`: Set intersection with another combination
+    - `to_string()`, `to_csv()`, `to_json()`, `to_dict()`: Serialization methods
+    - `from_string()`, `from_csv()`, `from_json()`, `from_dict()`: Deserialization methods
+
+**CompoundCombination** (`src/pactole/combinations/compound_combination.py`)
+
+- Manages multiple Combination instances as components
+- Provides component access and manipulation:
+    - `get(name)`: Get a specific component by name
+    - `get_values(name)`: Get values for a specific component
+    - `get_combination()`: Create new compound combinations
+- Methods:
+    - `equals()`, `includes()`, `intersects()`: Comparison operations
+    - `get_winning_rank()`: Compute winning pattern rank
+    - `to_string()`, `to_csv()`, `to_json()`, `to_dict()`: Serialization methods
+    - `from_string()`, `from_csv()`, `from_json()`, `from_dict()`: Deserialization methods
+
 **LotteryCombination** (`src/pactole/combinations/lottery_combination.py`)
 
-- Base class representing compound lottery combinations
-- Manages multiple components (e.g., main numbers + stars)
-- Calculates lexicographic rank for unique combination identification
-- Supports winning rank lookups
+- Extends CompoundCombination with BoundCombination validation
+- Calculates compound ranks using cross-product encoding
+- Keeps generic nested serialization (`components` + `winning_ranks`) via
+  `to_dict()` / `to_json()`
+- Provides parser helpers:
+    - `from_string()` and `from_csv()` return parsed component dictionaries
+    - `from_dict()` builds a full `LotteryCombination`
+- Properties:
+    - `rank`: Global rank across all components
+    - `combinations`: Total possible combinations
+    - `count`: Total slot count (sum of component counts)
+- Exposes `min_winning_rank` and `max_winning_rank` from winning ranks
 
-**BoundCombination** (`src/pactole/combinations/combination.py`)
+**BoundCombination** - Bounded permutation component
 
-- Represents a single component with bounded values
-- Enforces value ranges (e.g., 1-50 for main numbers)
-- Provides validation and uniqueness checks
-- Computes number of possible combinations
+- Used internally; enforces value ranges (e.g., 1-50 for main numbers)
+- Tracks component capacity and rank calculations
 
 **EuroMillionsCombination** (`src/pactole/combinations/euromillions_combination.py`)
 
 - Implements 5 main numbers (1-50) + 2 stars (1-12)
 - Total combinations: 139,838,160
 - Winning ranks based on matching pattern
+- Uses flat serialization payloads (`{'numbers': [...], 'stars': [...]}`)
 
 **EuroDreamsCombination** (`src/pactole/combinations/eurodreams_combination.py`)
 
 - Implements 6 main numbers (1-40) + 1 dream (1-5)
 - Total combinations: 19,191,900
 - Different winning rank structure
+- Uses flat serialization payloads (`{'numbers': [...], 'dream': [...]}`)
 
 #### Combination Lifecycle
 
 1. **Creation**: Via factory method or direct instantiation
 2. **Validation**: Values checked against bounds
 3. **Rank calculation**: Unique lexicographic position computed
-4. **Winning lookup**: Match pattern → winning rank
+4. **Serialization**: Convert to/from various formats (string, CSV, JSON, dict)
+5. **Winning lookup**: Match pattern → winning rank
 
 ### 2. Data Layer
 
@@ -229,6 +287,16 @@ class DrawRecord:
     winning_ranks: list[WinningRank] # Prize information
 ```
 
+Serialization behavior:
+
+- `to_csv()` exports flat fields, including per-component ranks (`*_rank`) and `combination_rank`.
+- `to_dict()` / `to_json()` export:
+    - `combination`: serialized combination payload
+    - `numbers`: flattened values list (`combination.values`)
+    - `winning_ranks`: list of `{rank, winners, gain}`
+- `from_dict()` / `from_json()` validate `numbers == combination.values` and raise
+  `ValueError` when they differ.
+
 ### WinningRank
 
 ```python
@@ -247,7 +315,13 @@ Result of searching for combinations in draw records.
 class FoundCombination:
     record: DrawRecord
     rank: int
+    match: CompoundCombination
 ```
+
+Serialization behavior:
+
+- `to_csv()` stores `match` as a string.
+- `to_dict()` / `to_json()` store `match` as dictionary data.
 
 ## Usage Examples
 

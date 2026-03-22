@@ -68,9 +68,132 @@ print(ticket.stars.values)          # [2, 9]
 print(ticket.values)                # [3, 15, 22, 28, 44, 2, 9]
 print(ticket.rank)                  # Global rank across all components
 print(ticket.combinations)          # 139_838_160 for EuroMillions
+print(ticket.count)                 # 7 (total number of slots: 5 numbers + 2 stars)
 print(ticket.min_winning_rank)      # 1
 print(ticket.max_winning_rank)      # 13
 ```
+
+## Access combination components
+
+Access individual components using dictionary-like methods.
+
+```python
+from pactole import EuroMillionsCombination
+
+ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+# Get a specific component by name
+print(ticket.get('numbers'))        # Combination([3, 15, 22, 28, 44])
+print(ticket.get('stars'))          # Combination([2, 9])
+print(ticket.get('invalid'))        # None
+
+# Get values for a specific component
+print(ticket.get_values('numbers')) # [3, 15, 22, 28, 44]
+print(ticket.get_values('stars'))   # [2, 9]
+print(ticket.get_values('invalid')) # []
+```
+
+## Serialize combinations
+
+Convert combinations to various formats for storage, transmission, or display.
+
+### String representation
+
+Use string conversion for human-readable display or configuration files.
+
+```python
+from pactole import EuroMillionsCombination
+
+ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+# Convert to string
+ticket_str = ticket.to_string()
+print(ticket_str)  # 'numbers: [3, 15, 22, 28, 44]  stars: [2, 9]'
+
+# Recreate from string
+restored = EuroMillionsCombination.from_string(ticket_str)
+print(restored.values)  # [3, 15, 22, 28, 44, 2, 9]
+```
+
+### CSV format
+
+Use CSV conversion for exporting to spreadsheets or data files.
+
+```python
+from pactole import EuroMillionsCombination
+
+ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+# Convert to CSV-friendly format
+csv_data = ticket.to_csv()
+print(csv_data)
+# {'numbers_1': 3, 'numbers_2': 15, 'numbers_3': 22, 'numbers_4': 28, 'numbers_5': 44,
+#  'stars_1': 2, 'stars_2': 9}
+
+# Recreate from CSV
+restored = EuroMillionsCombination.from_csv(csv_data)
+print(restored.values)  # [3, 15, 22, 28, 44, 2, 9]
+```
+
+### JSON format
+
+Use JSON conversion for APIs and web applications.
+
+```python
+from pactole import EuroMillionsCombination
+
+ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+# Convert to JSON-friendly dictionary
+json_data = ticket.to_json()
+print(json_data)
+# {
+#     'numbers': [3, 15, 22, 28, 44],
+#     'stars': [2, 9]
+# }
+
+# Recreate from JSON
+restored = EuroMillionsCombination.from_json(json_data)
+print(restored.values)  # [3, 15, 22, 28, 44, 2, 9]
+```
+
+### Dictionary format
+
+Use dictionary conversion for flexible storage and manipulation.
+
+```python
+from pactole import EuroMillionsCombination
+
+ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+# Convert to dictionary
+dict_data = ticket.to_dict()
+print(dict_data)
+# {
+#     'numbers': [3, 15, 22, 28, 44],
+#     'stars': [2, 9]
+# }
+
+# Recreate from dictionary
+restored = EuroMillionsCombination.from_dict(dict_data)
+print(restored.values)  # [3, 15, 22, 28, 44, 2, 9]
+```
+
+### Serialization shape by class
+
+For game-specific classes (`EuroMillionsCombination`, `EuroDreamsCombination`),
+`to_dict()` and `to_json()` are intentionally flat and return only component values.
+
+```python
+from pactole import EuroDreamsCombination
+
+ticket = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+print(ticket.to_dict())
+# {'numbers': [2, 3, 5, 7, 9, 38], 'dream': [3]}
+```
+
+For generic classes (`CompoundCombination`, `LotteryCombination`), `to_dict()` and
+`to_json()` return a nested structure with `components` and `winning_ranks`.
 
 ## Generate random combinations
 

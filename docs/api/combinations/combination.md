@@ -10,11 +10,18 @@
     - [BoundCombination().copy](#boundcombination()copy)
     - [BoundCombination().count](#boundcombination()count)
     - [BoundCombination().end](#boundcombination()end)
+    - [BoundCombination.from_dict](#boundcombinationfrom_dict)
     - [BoundCombination().generate](#boundcombination()generate)
+    - [BoundCombination().to_dict](#boundcombination()to_dict)
+    - [BoundCombination().to_string](#boundcombination()to_string)
   - [Combination](#combination-1)
     - [Combination().compares](#combination()compares)
     - [Combination().copy](#combination()copy)
     - [Combination().equals](#combination()equals)
+    - [Combination.from_csv](#combinationfrom_csv)
+    - [Combination.from_dict](#combinationfrom_dict)
+    - [Combination.from_json](#combinationfrom_json)
+    - [Combination.from_string](#combinationfrom_string)
     - [Combination().get_values](#combination()get_values)
     - [Combination().includes](#combination()includes)
     - [Combination().intersection](#combination()intersection)
@@ -24,6 +31,10 @@
     - [Combination().similarity](#combination()similarity)
     - [Combination().start](#combination()start)
     - [Combination().stored_rank](#combination()stored_rank)
+    - [Combination().to_csv](#combination()to_csv)
+    - [Combination().to_dict](#combination()to_dict)
+    - [Combination().to_json](#combination()to_json)
+    - [Combination().to_string](#combination()to_string)
     - [Combination().values](#combination()values)
   - [CombinationInputWithRank](#combinationinputwithrank)
   - [generate](#generate)
@@ -32,7 +43,7 @@
 
 ## BoundCombination
 
-[Show source in combination.py:585](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L585)
+[Show source in combination.py:748](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L748)
 
 A class representing a bound combination of values.
 
@@ -83,7 +94,7 @@ class BoundCombination(Combination):
 
 ### BoundCombination().combinations
 
-[Show source in combination.py:684](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L684)
+[Show source in combination.py:847](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L847)
 
 Return the total number of possible combinations.
 
@@ -108,7 +119,7 @@ def combinations(self) -> int: ...
 
 ### BoundCombination().copy
 
-[Show source in combination.py:722](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L722)
+[Show source in combination.py:885](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L885)
 
 Return a copy of the BoundCombination with optional modifications.
 
@@ -157,7 +168,7 @@ def copy(
 
 ### BoundCombination().count
 
-[Show source in combination.py:670](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L670)
+[Show source in combination.py:833](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L833)
 
 Return the count of numbers in the combination.
 
@@ -182,7 +193,7 @@ def count(self) -> int: ...
 
 ### BoundCombination().end
 
-[Show source in combination.py:656](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L656)
+[Show source in combination.py:819](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L819)
 
 Return the end value of the combination range.
 
@@ -205,9 +216,57 @@ Return the end value of the combination range.
 def end(self) -> int: ...
 ```
 
+### BoundCombination.from_dict
+
+[Show source in combination.py:986](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L986)
+
+Create a BoundCombination instance from a dictionary.
+
+#### Arguments
+
+- [Data](../data/index.md#data) *dict* - A dictionary containing the keys 'values', 'rank', 'start', 'end', 'count',
+    and 'combinations'.
+
+#### Returns
+
+- [BoundCombination](#boundcombination) - A new BoundCombination instance created from the dictionary data.
+
+#### Examples
+
+```python
+>>> data = {
+...     'values': [1, 2, 3],
+...     'rank': 0,
+...     'start': 1,
+...     'end': 50,
+...     'count': 5,
+...     'combinations': 2118760
+... }
+>>> bound_comb = BoundCombination.from_dict(data)
+>>> bound_comb.values
+[1, 2, 3]
+>>> bound_comb.rank
+0
+>>> bound_comb.start
+1
+>>> bound_comb.end
+50
+>>> bound_comb.count
+5
+>>> bound_comb.combinations
+2118760
+```
+
+#### Signature
+
+```python
+@staticmethod
+def from_dict(data: dict) -> BoundCombination: ...
+```
+
 ### BoundCombination().generate
 
-[Show source in combination.py:698](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L698)
+[Show source in combination.py:861](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L861)
 
 Generate a list of random combinations within the bounds.
 
@@ -238,11 +297,66 @@ Generate a list of random combinations within the bounds.
 def generate(self, n: int = 1, partitions: int = 1) -> list[BoundCombination]: ...
 ```
 
+### BoundCombination().to_dict
+
+[Show source in combination.py:959](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L959)
+
+Convert the BoundCombination instance to a dictionary.
+
+#### Returns
+
+- `dict` - A dictionary representation of the BoundCombination instance.
+
+#### Examples
+
+```python
+>>> bound_comb = BoundCombination(values=[1, 2, 3], start=1, end=50, count=5)
+>>> bound_comb.to_dict()
+{
+    'values': [1, 2, 3],
+    'rank': 0,
+    'start': 1,
+    'end': 50,
+    'count': 5,
+    'combinations': 2118760
+}
+```
+
+#### Signature
+
+```python
+def to_dict(self) -> dict: ...
+```
+
+### BoundCombination().to_string
+
+[Show source in combination.py:946](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L946)
+
+Convert the Combination instance to a string representation.
+
+#### Returns
+
+- `str` - A string representation of the combination values.
+
+#### Examples
+
+```python
+>>> combination = Combination([3, 1, 2], rank=123)
+>>> combination.to_string()
+'values: [1,2,3]  rank: 123'
+```
+
+#### Signature
+
+```python
+def to_string(self) -> str: ...
+```
+
 
 
 ## Combination
 
-[Show source in combination.py:164](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L164)
+[Show source in combination.py:168](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L168)
 
 A class representing a combination of values.
 
@@ -254,6 +368,10 @@ rank (CombinationRank | None, optional): The lexicographic rank of the combinati
     If not provided, it will be calculated on demand from the values. Defaults to None.
 - `start` *int, optional* - The starting offset for the combination values.
     Defaults to DEFAULT_START.
+
+#### Raises
+
+- `ValueError` - If the provided rank is negative or if the values are not valid.
 
 #### Examples
 
@@ -283,7 +401,7 @@ class Combination:
 
 ### Combination().compares
 
-[Show source in combination.py:471](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L471)
+[Show source in combination.py:485](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L485)
 
 Compare the combination with another combination or lexicographic rank.
 
@@ -320,7 +438,7 @@ def compares(self, combination: CombinationInput) -> int: ...
 
 ### Combination().copy
 
-[Show source in combination.py:297](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L297)
+[Show source in combination.py:311](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L311)
 
 Return a copy of the Combination with optional modifications.
 
@@ -368,7 +486,7 @@ def copy(
 
 ### Combination().equals
 
-[Show source in combination.py:356](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L356)
+[Show source in combination.py:370](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L370)
 
 Check if the combination is equal to another combination or lexicographic rank.
 
@@ -406,9 +524,140 @@ def equals(self, combination: CombinationInput) -> bool: ...
 
 - [CombinationInput](#combinationinput)
 
+### Combination.from_csv
+
+[Show source in combination.py:633](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L633)
+
+Create a Combination instance from CSV data.
+
+#### Arguments
+
+- [Data](../data/index.md#data) *CombinationValues* - A list of combination values from CSV.
+
+#### Returns
+
+- [Combination](#combination) - A new Combination instance created from the CSV data.
+
+#### Examples
+
+```python
+>>> data = [1, 2, 3]
+>>> combination = Combination.from_csv(data)
+>>> combination.values
+[1, 2, 3]
+```
+
+#### Signature
+
+```python
+@classmethod
+def from_csv(cls, data: CombinationValues) -> Combination: ...
+```
+
+#### See also
+
+- [CombinationValues](#combinationvalues)
+
+### Combination.from_dict
+
+[Show source in combination.py:671](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L671)
+
+Create a Combination instance from a dictionary.
+
+#### Arguments
+
+- [Data](../data/index.md#data) *dict* - A dictionary containing the keys 'values', 'rank', and 'start'.
+
+#### Returns
+
+- [Combination](#combination) - A new Combination instance created from the dictionary data.
+
+#### Examples
+
+```python
+>>> data = {'values': [1, 2, 3], 'rank': 0, 'start': 0}
+>>> combination = Combination.from_dict(data)
+>>> combination.values
+[1, 2, 3]
+>>> combination.rank
+0
+>>> combination.start
+0
+```
+
+#### Signature
+
+```python
+@staticmethod
+def from_dict(data: dict) -> Combination: ...
+```
+
+### Combination.from_json
+
+[Show source in combination.py:651](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L651)
+
+Create a Combination instance from JSON data.
+
+#### Arguments
+
+data (CombinationValues | dict): A list of combination values or a dictionary from JSON.
+
+#### Returns
+
+- [Combination](#combination) - A new Combination instance created from the JSON data.
+
+#### Examples
+
+```python
+>>> data = [1, 2, 3]
+>>> combination = Combination.from_json(data)
+>>> combination.values
+[1, 2, 3]
+```
+
+#### Signature
+
+```python
+@classmethod
+def from_json(cls, data: CombinationValues | dict) -> Combination: ...
+```
+
+### Combination.from_string
+
+[Show source in combination.py:599](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L599)
+
+Create a Combination instance from a string representation.
+
+#### Arguments
+
+- [Data](../data/index.md#data) *str* - A string representation of the combination, expected in the
+    - `format` *'values* - [1,2,3]  rank: 123'.
+
+#### Returns
+
+- [Combination](#combination) - A new Combination instance created from the string data.
+
+#### Examples
+
+```python
+>>> data = 'values: [1,2,3]  rank: 123'
+>>> combination = Combination.from_string(data)
+>>> combination.values
+[1, 2, 3]
+>>> combination.rank
+123
+```
+
+#### Signature
+
+```python
+@classmethod
+def from_string(cls, data: str) -> Combination: ...
+```
+
 ### Combination().get_values
 
-[Show source in combination.py:341](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L341)
+[Show source in combination.py:355](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L355)
 
 Get the values of the combination as a sorted list with an optional new start offset.
 
@@ -432,7 +681,7 @@ def get_values(self, start: int | None = None) -> CombinationValues: ...
 
 ### Combination().includes
 
-[Show source in combination.py:389](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L389)
+[Show source in combination.py:403](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L403)
 
 Check if the combination includes another combination.
 
@@ -464,7 +713,7 @@ def includes(self, combination: CombinationNumber | CombinationInputValues) -> b
 
 ### Combination().intersection
 
-[Show source in combination.py:444](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L444)
+[Show source in combination.py:458](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L458)
 
 Get the intersection of the combination with another combination.
 
@@ -501,7 +750,7 @@ def intersection(self, combination: CombinationInputValues) -> Combination: ...
 
 ### Combination().intersects
 
-[Show source in combination.py:418](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L418)
+[Show source in combination.py:432](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L432)
 
 Check if the combination intersects with another combination.
 
@@ -533,7 +782,7 @@ def intersects(self, combination: CombinationInputValues | Combination) -> bool:
 
 ### Combination().length
 
-[Show source in combination.py:266](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L266)
+[Show source in combination.py:280](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L280)
 
 Get the length of the combination.
 
@@ -558,7 +807,7 @@ def length(self) -> int: ...
 
 ### Combination().rank
 
-[Show source in combination.py:232](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L232)
+[Show source in combination.py:246](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L246)
 
 Get the lexicographic rank of the combination.
 
@@ -587,7 +836,7 @@ def rank(self) -> CombinationRank: ...
 
 ### Combination().similarity
 
-[Show source in combination.py:508](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L508)
+[Show source in combination.py:522](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L522)
 
 Calculate the similarity between the combination and another combination.
 
@@ -622,7 +871,7 @@ def similarity(self, combination: CombinationInputValues) -> float: ...
 
 ### Combination().start
 
-[Show source in combination.py:280](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L280)
+[Show source in combination.py:294](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L294)
 
 Get the starting offset of the combination.
 
@@ -650,7 +899,7 @@ def start(self) -> int: ...
 
 ### Combination().stored_rank
 
-[Show source in combination.py:248](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L248)
+[Show source in combination.py:262](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L262)
 
 Get the stored lexicographic rank of the combination without calculating it.
 
@@ -677,9 +926,113 @@ None
 def stored_rank(self) -> CombinationRank | None: ...
 ```
 
+### Combination().to_csv
+
+[Show source in combination.py:560](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L560)
+
+Convert the Combination instance to a format suitable for CSV export.
+
+#### Returns
+
+- [CombinationValues](#combination) - A list of combination values suitable for CSV export.
+
+#### Examples
+
+```python
+>>> combination = Combination([3, 1, 2])
+>>> combination.to_csv()
+[1, 2, 3]
+```
+
+#### Signature
+
+```python
+def to_csv(self) -> CombinationValues: ...
+```
+
+#### See also
+
+- [CombinationValues](#combinationvalues)
+
+### Combination().to_dict
+
+[Show source in combination.py:586](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L586)
+
+Convert the Combination instance to a dictionary.
+
+#### Returns
+
+- `dict` - A dictionary representation of the Combination instance.
+
+#### Examples
+
+```python
+>>> combination = Combination([3, 1, 2], start=0)
+>>> combination.to_dict()
+{'values': [1, 2, 3], 'rank': 0, 'start': 0}
+```
+
+#### Signature
+
+```python
+def to_dict(self) -> dict: ...
+```
+
+### Combination().to_json
+
+[Show source in combination.py:573](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L573)
+
+Convert the Combination instance to a JSON-serializable format.
+
+#### Returns
+
+- [CombinationValues](#combination) - A list of combination values suitable for JSON serialization.
+
+#### Examples
+
+```python
+>>> combination = Combination([3, 1, 2])
+>>> combination.to_json()
+[1, 2, 3]
+```
+
+#### Signature
+
+```python
+def to_json(self) -> CombinationValues: ...
+```
+
+#### See also
+
+- [CombinationValues](#combinationvalues)
+
+### Combination().to_string
+
+[Show source in combination.py:547](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L547)
+
+Convert the Combination instance to a string representation.
+
+#### Returns
+
+- `str` - A string representation of the combination values.
+
+#### Examples
+
+```python
+>>> combination = Combination([3, 1, 2], rank=123)
+>>> combination.to_string()
+'values: [1,2,3]  rank: 123'
+```
+
+#### Signature
+
+```python
+def to_string(self) -> str: ...
+```
+
 ### Combination().values
 
-[Show source in combination.py:218](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L218)
+[Show source in combination.py:232](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L232)
 
 Get the values of the combination as a sorted list.
 
@@ -710,7 +1063,7 @@ def values(self) -> CombinationValues: ...
 
 ## CombinationInputWithRank
 
-[Show source in combination.py:573](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L573)
+[Show source in combination.py:736](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L736)
 
 Type representing a combination input along with its lexicographic rank.
 
@@ -724,7 +1077,7 @@ class CombinationInputWithRank(TypedDict): ...
 
 ## generate
 
-[Show source in combination.py:135](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L135)
+[Show source in combination.py:139](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L139)
 
 Generate a list of random combination ranks within a given range.
 
@@ -758,7 +1111,7 @@ def generate(combinations: int, n: int = 1, partitions: int = 1) -> Iterator[int
 
 ## get_combination_from_rank
 
-[Show source in combination.py:77](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L77)
+[Show source in combination.py:81](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L81)
 
 Get the combination corresponding to a given lexicographic rank.
 
@@ -801,7 +1154,7 @@ def get_combination_from_rank(
 
 ## get_combination_rank
 
-[Show source in combination.py:44](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L44)
+[Show source in combination.py:48](https://github.com/cerbernetix/pactole/blob/main/src/pactole/combinations/combination.py#L48)
 
 Get the lexicographic rank of a given combination.
 
