@@ -369,7 +369,8 @@ class BaseLottery:
                     numbers={'number': [5, 12, 23, 34, 45], 'star': [2, 9]},
                     winning_ranks=[WinningRank(rank=1, winners=1, gain=1000000.0), ...]
                 ),
-                rank=1
+                rank=1,
+                match=CompoundCombination(main=[5, 12, 23, 34, 45], stars=[2, 9])
             ), ...]
         """
         combination = self._provider.combination_factory(combination, **components)
@@ -394,7 +395,11 @@ class BaseLottery:
         for record in self._provider.load(force=force):
             if record.combination.includes(combination):
                 winning_rank = record.combination.get_winning_rank(combination)
-                yield FoundCombination(record=record, rank=winning_rank)
+                yield FoundCombination(
+                    record=record,
+                    rank=winning_rank,
+                    match=record.combination.intersection(combination),
+                )
 
     def _find_records_by_winning_rank(
         self,
@@ -417,4 +422,8 @@ class BaseLottery:
         for record in self._provider.load(force=force):
             winning_rank = record.combination.get_winning_rank(combination)
             if matches(winning_rank):
-                yield FoundCombination(record=record, rank=winning_rank)
+                yield FoundCombination(
+                    record=record,
+                    rank=winning_rank,
+                    match=record.combination.intersection(combination),
+                )

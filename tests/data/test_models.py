@@ -6,7 +6,13 @@ import datetime
 
 import pytest
 
-from pactole.combinations import BoundCombination, CombinationInputWithRank, LotteryCombination
+from pactole.combinations import (
+    BoundCombination,
+    CombinationInputOrRank,
+    CombinationInputWithRank,
+    CompoundCombination,
+    LotteryCombination,
+)
 from pactole.data import DrawRecord, FoundCombination, WinningRank
 
 
@@ -362,21 +368,28 @@ class TestFoundCombination:
             winning_ranks=[WinningRank(rank=1, winners=1, gain=500_000.0)],
         )
 
+    def _make_match(self) -> CompoundCombination:
+        """Build a simple CompoundCombination for use in tests."""
+
+        return CompoundCombination(main=[5, 12], bonus=[])
+
     def test_found_combination_to_csv(self) -> None:
         """Test to_csv merges DrawRecord CSV data with the found rank."""
 
         record = self._make_record()
-        found = FoundCombination(record=record, rank=7)
+        match = self._make_match()
+        found = FoundCombination(record=record, rank=7, match=match)
 
         result = found.to_csv()
 
-        assert result == {**record.to_csv(), "rank": 7}
+        assert result == {**record.to_csv(), "rank": 7, "match": match.to_string()}
 
     def test_found_combination_to_json(self) -> None:
         """Test to_json returns the same payload as to_dict."""
 
         record = self._make_record()
-        found = FoundCombination(record=record, rank=42)
+        match = self._make_match()
+        found = FoundCombination(record=record, rank=42, match=match)
 
         assert found.to_json() == found.to_dict()
 
@@ -384,20 +397,26 @@ class TestFoundCombination:
         """Test to_dict returns record as JSON dict and rank."""
 
         record = self._make_record()
-        found = FoundCombination(record=record, rank=42)
+        match = self._make_match()
+        found = FoundCombination(record=record, rank=42, match=match)
 
         result = found.to_dict()
 
-        assert result == {"record": record.to_json(), "rank": 42}
+        assert result == {"record": record.to_dict(), "rank": 42, "match": match.dump()}
 
     def test_found_combination_from_csv_with_factory(self) -> None:
         """Test from_csv builds the record with the provided combination factory."""
 
         def factory(
-            main: CombinationInputWithRank,
-            bonus: CombinationInputWithRank,
+            main: CombinationInputOrRank,
+            bonus: CombinationInputOrRank,
         ) -> LotteryCombination:
             """Build a LotteryCombination with fixed bounds for tests."""
+
+            if isinstance(main, list):
+                main = {"values": main, "rank": None}
+            if isinstance(bonus, list):
+                bonus = {"values": bonus, "rank": None}
 
             return LotteryCombination(
                 main=BoundCombination(
@@ -429,16 +448,42 @@ class TestFoundCombination:
             "rank_1_winners": "2",
             "rank_1_gain": "1234.5",
             "rank": "9",
+            "match": "main: [3, 11, 5]  bonus: [9]",
         }
 
         found = FoundCombination.from_csv(data, combination_factory=factory)
 
         assert found.rank == 9
+        assert found.match == CompoundCombination(main=[3, 11, 5], bonus=[9])
         assert found.record.numbers == {"main": [3, 11, 5], "bonus": [9]}
         assert found.record.combination.components["main"].values == [3, 5, 11]
         assert found.record.combination.components["main"].rank == 5
         assert found.record.combination.components["bonus"].rank == 1
         assert found.record.winning_ranks == [WinningRank(rank=1, winners=2, gain=1234.5)]
+
+    def test_found_combination_from_csv_without_factory(self) -> None:
+        """Test from_csv falls back to DrawRecord.from_csv when no factory provided."""
+
+        data = {
+            "period": "202403",
+            "draw_date": "2024-03-10",
+            "deadline_date": "2024-04-10",
+            "main_1": 8,
+            "main_2": 14,
+            "rank_1_winners": 2,
+            "rank_1_gain": 100.0,
+            "rank": 5,
+            "match": "main: [8, 14]",
+        }
+
+        found = FoundCombination.from_csv(data)
+
+        assert found.rank == 5
+        assert found.match == CompoundCombination(main=[8, 14], bonus=[])
+        assert found.record.numbers == {"main": [8, 14]}
+        assert isinstance(found.record.combination, LotteryCombination)
+        assert found.record.combination.components == {}
+        assert found.record.winning_ranks == [WinningRank(rank=1, winners=2, gain=100.0)]
 
     def test_found_combination_from_json_with_factory(self) -> None:
         """Test from_json forwards combination_factory to DrawRecord.from_dict."""
@@ -461,11 +506,13 @@ class TestFoundCombination:
                 "winning_ranks": [{"winners": 1, "gain": 10.0}],
             },
             "rank": 3,
+            "match": {"main": [5, 12], "bonus": []},
         }
 
         found = FoundCombination.from_json(data, combination_factory=factory)
 
         assert found.rank == 3
+        assert found.match == CompoundCombination(main=[5, 12], bonus=[])
         assert found.record.period == "202405"
         assert found.record.combination.values == [1, 2, 3, 4]
         assert found.record.winning_ranks == [WinningRank(rank=1, winners=1, gain=10.0)]
@@ -491,11 +538,13 @@ class TestFoundCombination:
                 "winning_ranks": [{"rank": 1, "winners": 2, "gain": 1_000_000.0}],
             },
             "rank": 8,
+            "match": {"main": [5, 12], "bonus": []},
         }
 
         found = FoundCombination.from_dict(data, combination_factory=factory)
 
         assert found.rank == 8
+        assert found.match == CompoundCombination(main=[5, 12], bonus=[])
         assert found.record.combination.components["main"].values == [5, 12, 23]
         assert found.record.combination.components["bonus"].values == [7]
         assert found.record.winning_ranks == [WinningRank(rank=1, winners=2, gain=1_000_000.0)]
@@ -504,11 +553,13 @@ class TestFoundCombination:
         """Test from_dict restores the FoundCombination from a dictionary."""
 
         record = self._make_record()
-        data = {"record": record.to_json(), "rank": 42}
+        match = self._make_match()
+        data = {"record": record.to_json(), "rank": 42, "match": {"main": [5, 12], "bonus": []}}
 
         found = FoundCombination.from_dict(data)
 
         assert found.rank == 42
+        assert found.match == match
         assert found.record.period == record.period
         assert found.record.draw_date == record.draw_date
         assert found.record.combination.values == record.combination.values
@@ -518,11 +569,13 @@ class TestFoundCombination:
         """Test to_dict / from_dict roundtrip preserves all fields."""
 
         record = self._make_record()
-        original = FoundCombination(record=record, rank=7)
+        match = self._make_match()
+        original = FoundCombination(record=record, rank=7, match=match)
 
         restored = FoundCombination.from_dict(original.to_dict())
 
         assert restored.rank == original.rank
+        assert restored.match == original.match
         assert restored.record.period == original.record.period
         assert restored.record.draw_date == original.record.draw_date
         assert restored.record.deadline_date == original.record.deadline_date

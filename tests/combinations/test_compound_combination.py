@@ -166,18 +166,24 @@ class TestCompoundCombination:
         template = CompoundCombination(
             numbers=Combination([1, 2, 3, 4, 5]),
         )
+        template_combination = template.get_combination(numbers=[3, 4, 5, 6, 7])
 
         factory = CompoundCombination.get_combination_factory(template)
         assert callable(factory)
-        assert factory(numbers=[1, 2, 3, 4, 5]) == template.get_combination(numbers=[1, 2, 3, 4, 5])
+        assert factory(numbers=[3, 4, 5, 6, 7]) == template_combination
 
         fallback_factory = CompoundCombination.get_combination_factory(None)
+        assert fallback_factory is CompoundCombination
+        assert callable(fallback_factory)
+        assert fallback_factory(numbers=[3, 4, 5, 6, 7]) == template_combination
+
         fallback_combination = fallback_factory()
         assert isinstance(fallback_combination, CompoundCombination)
         assert not fallback_combination.components
         assert not fallback_combination.winning_ranks
 
         fallback_factory = CompoundCombination.get_combination_factory(object())
+        assert fallback_factory is CompoundCombination
         assert not fallback_factory().components
 
     def test_combination_copy(self):
@@ -709,6 +715,19 @@ class TestCompoundCombination:
         with pytest.raises(TypeError):
             hash(combination)
 
+    def test_combination_dump(self):
+        """Test dump returns a dict representation of the combination."""
+
+        numbers = Combination([1, 2, 3, 4, 5])
+        extra = Combination([6, 7, 8])
+
+        combination = CompoundCombination(numbers=numbers, extra=extra)
+
+        assert combination.dump() == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
     def test_combination_to_string(self):
         """Test to_string returns a string representation of the combination."""
 
@@ -783,6 +802,69 @@ class TestCompoundCombination:
         """Test to_dict on empty combination returns empty components and winning_ranks."""
 
         assert CompoundCombination().to_dict() == {"components": {}, "winning_ranks": {}}
+
+    def test_combination_get_components_from_string(self):
+        """Test get_components_from_string creates components from a string representation."""
+
+        data = "numbers: [ 1,  2,  3,  4,  5]  extra: [ 6,  7,  8]"
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_string_without_brackets(self):
+        """Test get_components_from_string creates components from a string without brackets."""
+
+        data = "numbers: 1, 2, 3, 4, 5  extra: 6, 7, 8"
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_string_empty(self):
+        """Test get_components_from_string with empty string returns empty components."""
+
+        data = ""
+        components = CompoundCombination.get_components_from_string(data)
+
+        assert isinstance(components, dict)
+        assert not components
+
+    def test_combination_get_components_from_csv(self):
+        """Test get_components_from_csv creates components from a CSV-compatible dictionary."""
+
+        data = {
+            "period": "2024-01-01",
+            "numbers_1": 1,
+            "numbers_2": 2,
+            "numbers_3": 3,
+            "numbers_4": 4,
+            "numbers_5": 5,
+            "extra_1": 6,
+            "extra_2": 7,
+            "extra_3": 8,
+        }
+        components = CompoundCombination.get_components_from_csv(data)
+
+        assert components == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
+    def test_combination_get_components_from_csv_empty(self):
+        """Test get_components_from_csv with empty dictionary returns empty components."""
+
+        data = {
+            "period": "2024-01-01",
+        }
+        components = CompoundCombination.get_components_from_csv(data)
+
+        assert isinstance(components, dict)
+        assert not components
 
     def test_combination_from_string(self):
         """Test from_string creates a CompoundCombination from a string representation."""

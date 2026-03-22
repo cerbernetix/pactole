@@ -1223,6 +1223,32 @@ class TestLotteryCombination:
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
 
+    def test_combination_dump(self):
+        """Test dump returns a dict representation of the combination."""
+
+        numbers = BoundCombination(
+            values=[1, 2, 3, 4, 5],
+            count=NUMBER_COUNT,
+            start=NUMBER_START,
+            end=NUMBER_END,
+            combinations=NUMBER_COMBINATIONS,
+        )
+
+        extra = BoundCombination(
+            values=[6, 7, 8],
+            count=EXTRA_COUNT,
+            start=EXTRA_START,
+            end=EXTRA_END,
+            combinations=EXTRA_COMBINATIONS,
+        )
+
+        combination = LotteryCombination(numbers=numbers, extra=extra)
+
+        assert combination.dump() == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
     def test_combination_to_string(self):
         """Test to_string returns a string representation of the combination."""
 

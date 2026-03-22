@@ -605,6 +605,16 @@ class TestEuroMillionsCombination:
         assert hash(combination1) != hash(combination3)
         assert hash(combination1) == combination1.rank
 
+    def test_combination_dump(self):
+        """Test dump returns a dict representation of the combination."""
+
+        combination = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+        assert combination.dump() == {
+            "numbers": [3, 15, 22, 28, 44],
+            "stars": [2, 9],
+        }
+
     def test_combination_to_string(self):
         """Test to_string returns a human-readable string representation."""
 

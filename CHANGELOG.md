@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `CompoundCombination` superclass to `LotteryCombination`
 - Added error handling for invalid values and negative rank in Combination class
 - Added dictionary-like access to combination components in `CompoundCombination` and derived classes
+- Added `dump` method to combinations for dict representation
+- Added `match` attribute to `FoundCombination` for storing matching combinations
+- Added static methods to parse components from string and CSV representations in `CompoundCombination`
 
 ### Changed
 
@@ -23,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DrawRecord now has custom methods for CSV and JSON import/export instead of generic to/from_dict
 - Renamed `CompoundCombination.get_component` to `CompoundCombination.get`
 - Renamed `CompoundCombination.get_component_values` to `CompoundCombination.get_values`
+
+### Fixed
+
+- Ensure values are converted to int in `Combination` and `BoundCombination`
+- Return `CompoundCombination` constructor as factory instead of `get_combination` from an empty instance
 
 ## v0.3.3 [2026-03-11]
 

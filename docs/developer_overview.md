@@ -118,6 +118,11 @@ The combination layer uses a hierarchy of classes:
 
 - Extends CompoundCombination with BoundCombination validation
 - Calculates compound ranks using cross-product encoding
+- Keeps generic nested serialization (`components` + `winning_ranks`) via
+  `to_dict()` / `to_json()`
+- Provides parser helpers:
+    - `from_string()` and `from_csv()` return parsed component dictionaries
+    - `from_dict()` builds a full `LotteryCombination`
 - Properties:
     - `rank`: Global rank across all components
     - `combinations`: Total possible combinations
@@ -134,12 +139,14 @@ The combination layer uses a hierarchy of classes:
 - Implements 5 main numbers (1-50) + 2 stars (1-12)
 - Total combinations: 139,838,160
 - Winning ranks based on matching pattern
+- Uses flat serialization payloads (`{'numbers': [...], 'stars': [...]}`)
 
 **EuroDreamsCombination** (`src/pactole/combinations/eurodreams_combination.py`)
 
 - Implements 6 main numbers (1-40) + 1 dream (1-5)
 - Total combinations: 19,191,900
 - Different winning rank structure
+- Uses flat serialization payloads (`{'numbers': [...], 'dream': [...]}`)
 
 #### Combination Lifecycle
 
@@ -280,6 +287,16 @@ class DrawRecord:
     winning_ranks: list[WinningRank] # Prize information
 ```
 
+Serialization behavior:
+
+- `to_csv()` exports flat fields, including per-component ranks (`*_rank`) and `combination_rank`.
+- `to_dict()` / `to_json()` export:
+    - `combination`: serialized combination payload
+    - `numbers`: flattened values list (`combination.values`)
+    - `winning_ranks`: list of `{rank, winners, gain}`
+- `from_dict()` / `from_json()` validate `numbers == combination.values` and raise
+  `ValueError` when they differ.
+
 ### WinningRank
 
 ```python
@@ -298,7 +315,13 @@ Result of searching for combinations in draw records.
 class FoundCombination:
     record: DrawRecord
     rank: int
+    match: CompoundCombination
 ```
+
+Serialization behavior:
+
+- `to_csv()` stores `match` as a string.
+- `to_dict()` / `to_json()` store `match` as dictionary data.
 
 ## Usage Examples
 

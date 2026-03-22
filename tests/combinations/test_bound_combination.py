@@ -131,6 +131,34 @@ class TestBoundCombination:
         assert combination.end == 50
         assert combination.count == 5
 
+    def test_combination_from_non_int_values(self):
+        """Test Combination construction with non-integer values."""
+
+        combination = BoundCombination([3.5, 2.5, 1.5], start=1, end=50, count=5)
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.length == 3
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+
+        combination = BoundCombination(["3", "2", "1"], start=1, end=50, count=5)
+        assert combination.values == [1, 2, 3]
+        assert combination.stored_rank is None
+        assert combination.rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.stored_rank == get_combination_rank([1, 2, 3], offset=1)
+        assert combination.length == 3
+        assert combination.start == 1
+        assert combination.end == 50
+        assert combination.count == 5
+
+        with pytest.raises(ValueError):
+            BoundCombination(["a", "b", "c"], start=1, end=50, count=5)
+        with pytest.raises(ValueError):
+            BoundCombination("abc", start=1, end=50, count=5)
+
     def test_combination_generate(self):
         """Test the generate method of BoundCombination."""
 

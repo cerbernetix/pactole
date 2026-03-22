@@ -108,7 +108,7 @@ class EuroDreamsCombination(LotteryCombination):
             >>> euro_comb.to_dict()
             {'numbers': [2, 3, 5, 7, 9, 38], 'dream': [3]}
         """
-        return {name: component.to_json() for name, component in self._components.items()}
+        return self.dump()
 
     @classmethod
     def from_dict(cls, data: dict) -> EuroDreamsCombination:
@@ -151,7 +151,7 @@ class EuroDreamsCombination(LotteryCombination):
             >>> euro_comb.dream.values
             [3]
         """
-        components = LotteryCombination.from_string(data)
+        components = LotteryCombination.get_components_from_string(data)
         return cls(**components)
 
     @classmethod
@@ -181,5 +181,5 @@ class EuroDreamsCombination(LotteryCombination):
             >>> euro_comb.dream.values
             [6]
         """
-        components = LotteryCombination.from_csv(data)
+        components = LotteryCombination.get_components_from_csv(data)
         return cls(**components)
