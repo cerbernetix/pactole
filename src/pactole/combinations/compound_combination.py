@@ -72,7 +72,7 @@ class CompoundCombination:
         ...     bonus=bonus_number
         ... )
         >>> compound_comb.components
-        {'main': Combination(...), 'bonus': Combination(...)}
+        {'main': Combination([1, 2, 3, 4, 5]), 'bonus': Combination([6])}
 
         You can also use lists directly:
 
@@ -120,7 +120,7 @@ class CompoundCombination:
             ...     bonus=bonus_number
             ... )
             >>> compound_comb.components
-            {'main': Combination(...), 'bonus': Combination(...)}
+            {'main': Combination([1, 2, 3, 4, 5]), 'bonus': Combination([6])}
         """
         return self._components.copy()
 
@@ -242,7 +242,7 @@ class CompoundCombination:
 
         It checks that the provided combination_factory is a callable, and if not, it returns a
         default factory from CompoundCombination, which in this case will produce combinations
-        with no components and no winning ranks.
+        with no winning ranks since the default CompoundCombination has no winning ranks.
 
         An instance of a CompoundCombination can be used to produce a factory.
 
@@ -256,13 +256,13 @@ class CompoundCombination:
 
         Examples:
             >>> factory = CompoundCombination.get_combination_factory(None)
-            factory(main=[1, 2, 3, 4, 5], bonus=[6])
-            CompoundCombination()
+            >>> factory(main=[1, 2, 3, 4, 5], bonus=[6])
+            CompoundCombination(main=Combination([1, 2, 3, 4, 5]), bonus=Combination([6]))
             >>> factory = CompoundCombination.get_combination_factory(CompoundCombination(
             ...     main=Combination([1, 2, 3, 4, 5])
             ... ))
-            factory(main=[1, 2, 3, 4, 5])
-            CompoundCombination(main=Combination(...))
+            >>> factory(main=[3, 4, 5, 6, 7])
+            CompoundCombination(main=Combination([3, 4, 5, 6, 7]), bonus=Combination([]))
         """
         if isinstance(combination_factory, CompoundCombination):
             return combination_factory.get_combination
@@ -288,6 +288,19 @@ class CompoundCombination:
         Returns:
             CompoundCombination: A new CompoundCombination instance with the specified
                 modifications.
+
+        Examples:
+            >>> main_numbers = Combination([1, 2, 3, 4, 5])
+            >>> bonus_number = Combination([6])
+            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            >>> compound_comb = CompoundCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number,
+            ...     winning_ranks=winning_ranks
+            ... )
+            >>> new_comb = compound_comb.copy(main=[1, 2, 3, 6, 7])
+            >>> new_comb.components
+            {'main': Combination([1, 2, 3, 6, 7]), 'bonus': Combination([6])}
         """
         if winning_ranks is None:
             winning_ranks = self._winning_ranks
@@ -336,7 +349,7 @@ class CompoundCombination:
             ... )
             >>> new_comb = compound_comb.get_combination(main=[1, 2, 3, 6, 7])
             >>> new_comb.components
-            {'main': Combination(...), 'bonus': Combination(...)}
+            {'main': Combination([1, 2, 3, 6, 7]), 'bonus': Combination([6])}
         """
         components = self.get_components(**components)
 
@@ -393,11 +406,11 @@ class CompoundCombination:
             ...     bonus=bonus_number
             ... )
             >>> compound_comb.get_components(main=[1, 2, 3, 4, 5], bonus=[6])
-            {'main': Combination(...), 'bonus': Combination(...)}
+            {'main': Combination([1, 2, 3, 4, 5]), 'bonus': Combination([6])}
             >>> compound_comb.get_components(main=[1, 2, 3])
-            {'main': Combination(...)}
+            {'main': Combination([1, 2, 3])}
             >>> compound_comb.get_components(bonus=[7])
-            {'bonus': Combination(...)}
+            {'bonus': Combination([7])}
             >>> compound_comb.get_components(extra=[8])
             KeyError: 'extra'
         """
@@ -422,9 +435,9 @@ class CompoundCombination:
             ...     bonus=bonus_number
             ... )
             >>> compound_comb.get('main')
-            Combination(...)
+            Combination([1, 2, 3, 4, 5])
             >>> compound_comb.get('bonus')
-            Combination(...)
+            Combination([6])
             >>> compound_comb.get('extra')
             None
         """
@@ -878,7 +891,13 @@ class CompoundCombination:
             ...     winning_ranks=winning_ranks
             ... )
             >>> compound_comb.to_json()
-            {'components': {...}, 'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}}
+            {
+                'components': {
+                    'main': {'values': [1, 2, 3, 4, 5], 'rank': None, 'start': 1},
+                    'bonus': {'values': [6], 'rank': None, 'start': 1}
+                },
+                'winning_ranks': {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            }
         """
         return self.to_dict()
 
@@ -989,7 +1008,7 @@ class CompoundCombination:
             ... }
             >>> compound_comb = CompoundCombination.from_json(data)
             >>> compound_comb.components
-            {'main': Combination(...), 'bonus': Combination(...)}
+            {'main': Combination([1, 2, 3, 4, 5]), 'bonus': Combination([6])}
         """
         return cls.from_dict(data)
 
@@ -1013,7 +1032,7 @@ class CompoundCombination:
             ... }
             >>> compound_comb = CompoundCombination.from_dict(data)
             >>> compound_comb.components
-            {'main': Combination(...), 'bonus': Combination(...)}
+            {'main': Combination([1, 2, 3, 4, 5]), 'bonus': Combination([6])}
             >>> compound_comb.winning_ranks
             {(5, 1): 1}
         """
