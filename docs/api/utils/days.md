@@ -25,7 +25,7 @@
 
 ## DrawDays
 
-[Show source in days.py:622](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L622)
+[Show source in days.py:625](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L625)
 
 Utility class to handle lottery draw days.
 
@@ -52,7 +52,7 @@ class DrawDays:
 
 ### DrawDays().days
 
-[Show source in days.py:641](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L641)
+[Show source in days.py:644](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L644)
 
 Return the draw days.
 
@@ -81,7 +81,7 @@ def days(self) -> tuple[Weekday, ...]: ...
 
 ### DrawDays().get_last_draw_date
 
-[Show source in days.py:655](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L655)
+[Show source in days.py:658](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L658)
 
 Return the date of the last lottery draw.
 
@@ -94,6 +94,8 @@ seconds since the epoch. When a string is provided, it must be in the ISO format
 'YYYY-MM-DD'. Finally, a date object can be provided directly.
 
 Defaults to None.
+
+- `closest` *bool* - If True, get the closest date (past or future). Defaults to True.
 
 #### Returns
 
@@ -122,7 +124,7 @@ def get_last_draw_date(
 
 ### DrawDays().get_next_draw_date
 
-[Show source in days.py:688](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L688)
+[Show source in days.py:693](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L693)
 
 Return the date of the next lottery draw.
 
@@ -135,6 +137,8 @@ seconds since the epoch. When a string is provided, it must be in the ISO format
 'YYYY-MM-DD'. Finally, a date object can be provided directly.
 
 Defaults to None.
+
+- `closest` *bool* - If True, get the closest date (past or future). Defaults to True.
 
 #### Returns
 
@@ -230,7 +234,7 @@ def _missing_(cls, value: Day | Weekday | None = None) -> None: ...
 
 ### Weekday().closest
 
-[Show source in days.py:252](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L252)
+[Show source in days.py:255](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L255)
 
 Get the number of days to the closest occurrence of a given weekday.
 
@@ -277,7 +281,7 @@ def closest(self, day: Day | Weekday | None = None) -> int: ...
 
 ### Weekday().closest_date
 
-[Show source in days.py:420](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L420)
+[Show source in days.py:423](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L423)
 
 Get the closest date for this weekday from a given date.
 
@@ -322,7 +326,7 @@ def closest_date(self, from_date: Day | None = None) -> date: ...
 
 ### Weekday().furthest
 
-[Show source in days.py:294](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L294)
+[Show source in days.py:297](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L297)
 
 Get the number of days to the furthest occurrence of a given weekday from this day.
 
@@ -369,7 +373,7 @@ def furthest(self, day: Day | Weekday | None = None) -> int: ...
 
 ### Weekday().furthest_date
 
-[Show source in days.py:459](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L459)
+[Show source in days.py:462](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L462)
 
 Get the furthest date for this weekday from a given date.
 
@@ -414,7 +418,7 @@ def furthest_date(self, from_date: Day | None = None) -> date: ...
 
 ### Weekday.get_date
 
-[Show source in days.py:567](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L567)
+[Show source in days.py:570](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L570)
 
 Get the date from a string, timestamp, or a date object.
 
@@ -467,7 +471,7 @@ def get_date(from_date: Day | None = None) -> date: ...
 
 ### Weekday.get_day
 
-[Show source in days.py:511](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L511)
+[Show source in days.py:514](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L514)
 
 Get the Weekday enumeration from an integer.
 
@@ -522,7 +526,7 @@ def get_day(cls, day: Day | Weekday | None = None) -> Weekday: ...
 
 ### Weekday().next
 
-[Show source in days.py:87](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L87)
+[Show source in days.py:90](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L90)
 
 Get a Weekday representing the next day of the week.
 
@@ -573,7 +577,7 @@ def next(
 
 ### Weekday().next_date
 
-[Show source in days.py:336](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L336)
+[Show source in days.py:339](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L339)
 
 Get the next date for this weekday from a given date.
 
@@ -621,7 +625,7 @@ def next_date(self, from_date: Day | None = None, closest: bool = False) -> date
 
 ### Weekday().previous
 
-[Show source in days.py:134](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L134)
+[Show source in days.py:137](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L137)
 
 Get a Weekday representing the previous day of the week.
 
@@ -672,7 +676,7 @@ def previous(
 
 ### Weekday().previous_date
 
-[Show source in days.py:378](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L378)
+[Show source in days.py:381](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L381)
 
 Get the previous date for this weekday from a given date.
 
@@ -720,7 +724,7 @@ def previous_date(self, from_date: Day | None = None, closest: bool = False) -> 
 
 ### Weekday().since
 
-[Show source in days.py:216](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L216)
+[Show source in days.py:219](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L219)
 
 Get the number of days since the previous occurrence of a given weekday.
 
@@ -769,7 +773,7 @@ def since(self, day: Day | Weekday | None = None) -> int: ...
 
 ### Weekday.today
 
-[Show source in days.py:498](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L498)
+[Show source in days.py:501](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L501)
 
 Get the current day of the week, as a Weekday enumeration.
 
@@ -793,7 +797,7 @@ def today(cls) -> Weekday: ...
 
 ### Weekday().until
 
-[Show source in days.py:181](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L181)
+[Show source in days.py:184](https://github.com/cerbernetix/pactole/blob/main/src/pactole/utils/days.py#L184)
 
 Get the number of days until the next occurrence of a given weekday.
 
