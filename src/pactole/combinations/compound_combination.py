@@ -267,7 +267,7 @@ class CompoundCombination:
         if isinstance(combination_factory, CompoundCombination):
             return combination_factory.get_combination
         if not callable(combination_factory):
-            return CompoundCombination().get_combination
+            return CompoundCombination
         return combination_factory
 
     def copy(

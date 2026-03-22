@@ -166,18 +166,24 @@ class TestCompoundCombination:
         template = CompoundCombination(
             numbers=Combination([1, 2, 3, 4, 5]),
         )
+        template_combination = template.get_combination(numbers=[3, 4, 5, 6, 7])
 
         factory = CompoundCombination.get_combination_factory(template)
         assert callable(factory)
-        assert factory(numbers=[1, 2, 3, 4, 5]) == template.get_combination(numbers=[1, 2, 3, 4, 5])
+        assert factory(numbers=[3, 4, 5, 6, 7]) == template_combination
 
         fallback_factory = CompoundCombination.get_combination_factory(None)
+        assert fallback_factory is CompoundCombination
+        assert callable(fallback_factory)
+        assert fallback_factory(numbers=[3, 4, 5, 6, 7]) == template_combination
+
         fallback_combination = fallback_factory()
         assert isinstance(fallback_combination, CompoundCombination)
         assert not fallback_combination.components
         assert not fallback_combination.winning_ranks
 
         fallback_factory = CompoundCombination.get_combination_factory(object())
+        assert fallback_factory is CompoundCombination
         assert not fallback_factory().components
 
     def test_combination_copy(self):
