@@ -148,11 +148,8 @@ ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
 json_data = ticket.to_json()
 print(json_data)
 # {
-#     'components': {
-#         'numbers': {'values': [3, 15, 22, 28, 44], 'rank': 123456, 'start': 1},
-#         'stars': {'values': [2, 9], 'rank': 7, 'start': 1}
-#     },
-#     'winning_ranks': {...}
+#     'numbers': [3, 15, 22, 28, 44],
+#     'stars': [2, 9]
 # }
 
 # Recreate from JSON
@@ -173,17 +170,30 @@ ticket = EuroMillionsCombination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
 dict_data = ticket.to_dict()
 print(dict_data)
 # {
-#     'components': {
-#         'numbers': {'values': [3, 15, 22, 28, 44], 'rank': 123456, 'start': 1},
-#         'stars': {'values': [2, 9], 'rank': 7, 'start': 1}
-#     },
-#     'winning_ranks': {...}
+#     'numbers': [3, 15, 22, 28, 44],
+#     'stars': [2, 9]
 # }
 
 # Recreate from dictionary
 restored = EuroMillionsCombination.from_dict(dict_data)
 print(restored.values)  # [3, 15, 22, 28, 44, 2, 9]
 ```
+
+### Serialization shape by class
+
+For game-specific classes (`EuroMillionsCombination`, `EuroDreamsCombination`),
+`to_dict()` and `to_json()` are intentionally flat and return only component values.
+
+```python
+from pactole import EuroDreamsCombination
+
+ticket = EuroDreamsCombination(numbers=[2, 3, 5, 7, 9, 38], dream=[3])
+print(ticket.to_dict())
+# {'numbers': [2, 3, 5, 7, 9, 38], 'dream': [3]}
+```
+
+For generic classes (`CompoundCombination`, `LotteryCombination`), `to_dict()` and
+`to_json()` return a nested structure with `components` and `winning_ranks`.
 
 ## Generate random combinations
 

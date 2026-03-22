@@ -96,6 +96,59 @@ for found in matches[:3]:
     print(found.record.draw_date, found.rank)
 ```
 
+## Understand returned models
+
+`get_records()` yields `DrawRecord` instances. A record includes:
+
+- `period`, `draw_date`, `deadline_date`
+- `combination` (lottery-specific combination object)
+- `numbers` (component values keyed by component name)
+- `winning_ranks` (list of `WinningRank` dataclasses)
+
+`find_records()` yields `FoundCombination` instances. Each one includes:
+
+- `record` (`DrawRecord`)
+- `rank` (winning rank for your query)
+- `match` (`CompoundCombination` representing the matched values)
+
+```python
+from pactole import EuroMillions
+
+lottery = EuroMillions()
+ticket = lottery.get_combination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
+
+records = list(lottery.get_records())
+found = list(lottery.find_records(ticket, strict=False))
+
+record = records[0]
+print(type(record).__name__, record.draw_date, record.combination.to_dict())
+
+if found:
+    first = found[0]
+    print(type(first).__name__, first.rank, first.match.to_string())
+```
+
+### DrawRecord serialization
+
+Use these helpers depending on target format:
+
+- `record.to_csv()`: flat export with `component_index` fields and rank fields
+  (for example `numbers_1`, `stars_2`, `numbers_rank`, `combination_rank`, `rank_1_gain`).
+- `record.to_dict()` / `record.to_json()`: API-friendly dictionary with:
+    - `combination`: serialized combination payload
+    - `numbers`: flattened list (`combination.values`)
+    - `winning_ranks`: list of `{rank, winners, gain}`
+
+Important validation rule:
+
+- `DrawRecord.from_dict()` and `DrawRecord.from_json()` validate that
+  `numbers == combination.values` and raise `ValueError` if they differ.
+
+### FoundCombination serialization
+
+- `found.to_csv()` stores `match` as a string (via `to_string()`).
+- `found.to_dict()` / `found.to_json()` store `match` as a dictionary (via `dump()`).
+
 ### Build a Pandas DataFrame from raw export
 
 Use `dump()` when you want tabular analysis (filtering, grouping, charts, exports).
