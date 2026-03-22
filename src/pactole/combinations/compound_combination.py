@@ -797,6 +797,29 @@ class CompoundCombination:
             / self.length
         )
 
+    def dump(self) -> dict:
+        """Dump the CompoundCombination to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the CompoundCombination.
+
+        Examples:
+            >>> main_numbers = Combination([1, 2, 3, 4, 5])
+            >>> bonus_number = Combination([6])
+            >>> winning_ranks = {(5, 1): 1, (5, 0): 2, (4, 1): 3, (4, 0): 4}
+            >>> compound_comb = CompoundCombination(
+            ...     main=main_numbers,
+            ...     bonus=bonus_number,
+            ...     winning_ranks=winning_ranks
+            ... )
+            >>> compound_comb.dump()
+            {
+                'main': [1, 2, 3, 4, 5],
+                'bonus': [6],
+            }
+        """
+        return {name: component.values for name, component in self._components.items()}
+
     def to_string(self) -> str:
         """Convert the CompoundCombination to a string representation.
 

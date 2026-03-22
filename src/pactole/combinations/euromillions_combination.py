@@ -111,7 +111,7 @@ class EuroMillionsCombination(LotteryCombination):
             >>> euro_comb.to_dict()
             {'numbers': [3, 15, 22, 28, 44], 'stars': [2, 9]}
         """
-        return {name: component.to_json() for name, component in self._components.items()}
+        return self.dump()
 
     @classmethod
     def from_dict(cls, data: dict) -> EuroMillionsCombination:

@@ -709,6 +709,19 @@ class TestCompoundCombination:
         with pytest.raises(TypeError):
             hash(combination)
 
+    def test_combination_dump(self):
+        """Test dump returns a dict representation of the combination."""
+
+        numbers = Combination([1, 2, 3, 4, 5])
+        extra = Combination([6, 7, 8])
+
+        combination = CompoundCombination(numbers=numbers, extra=extra)
+
+        assert combination.dump() == {
+            "numbers": [1, 2, 3, 4, 5],
+            "extra": [6, 7, 8],
+        }
+
     def test_combination_to_string(self):
         """Test to_string returns a string representation of the combination."""
 
