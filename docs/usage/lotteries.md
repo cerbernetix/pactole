@@ -89,7 +89,7 @@ raw_rows = lottery.dump(force=False)
 print(raw_rows[:1])
 
 records = list(lottery.get_records())
-matches = list(lottery.find_records(ticket, strict=False))
+matches = list(lottery.find_records(ticket))
 
 print(len(records))
 for found in matches[:3]:
@@ -118,7 +118,7 @@ lottery = EuroMillions()
 ticket = lottery.get_combination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
 
 records = list(lottery.get_records())
-found = list(lottery.find_records(ticket, strict=False))
+found = list(lottery.find_records(ticket))
 
 record = records[0]
 print(type(record).__name__, record.draw_date, record.combination.to_dict())
@@ -175,10 +175,15 @@ print(avg_rank1_gain.tail())
 
 ## Search with rank constraints
 
-Use `target_rank` to filter matches by prize category and `strict` to control matching behavior.
+Use `min_rank` and `max_rank` to filter matches by prize category.
 
-- `strict=False`: return matches whose rank is equal to or better than `target_rank`.
-- `strict=True`: return matches with exactly `target_rank`.
+- Without `strict`, bounds are inclusive.
+- With `strict=True`, bounds are exclusive, so only ranks strictly between
+  `min_rank` and `max_rank` are returned.
+- If you pass only `min_rank`, the upper bound defaults to the combination's maximum
+  winning rank.
+- If you pass only `max_rank`, the lower bound defaults to the combination's minimum
+  winning rank.
 
 ```python
 from pactole import EuroMillions
@@ -186,10 +191,13 @@ from pactole import EuroMillions
 lottery = EuroMillions()
 ticket = lottery.get_combination(numbers=[3, 15, 22, 28, 44], stars=[2, 9])
 
-at_least_rank_4 = list(lottery.find_records(ticket, target_rank=4, strict=False))
-exactly_rank_4 = list(lottery.find_records(ticket, target_rank=4, strict=True))
+ranks_1_to_4 = list(lottery.find_records(ticket, min_rank=1, max_rank=4))
+exactly_rank_4 = list(lottery.find_records(ticket, min_rank=4, max_rank=4))
+strictly_between_1_and_5 = list(
+        lottery.find_records(ticket, min_rank=1, max_rank=5, strict=True)
+)
 
-print(len(at_least_rank_4), len(exactly_rank_4))
+print(len(ranks_1_to_4), len(exactly_rank_4), len(strictly_between_1_and_5))
 ```
 
 ## Build your own lottery class

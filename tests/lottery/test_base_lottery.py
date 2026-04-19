@@ -187,7 +187,7 @@ class TestBaseLottery:
         provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_match, record_other])
         lottery = BaseLottery(provider)
 
-        records = list(lottery.find_records(combination=[1], force=True))
+        records = list(lottery.find_records(combination=[1], strict=True, force=True))
 
         assert records == [
             FoundCombination(
@@ -197,7 +197,7 @@ class TestBaseLottery:
         assert provider.load_calls == [True]
 
     def test_find_records_filters_by_winning_rank(self) -> None:
-        """Filter records using the target winning rank."""
+        """Filter records using an inclusive winning-rank range."""
 
         factory, template = build_combination_factory()
         record_match = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
@@ -205,16 +205,17 @@ class TestBaseLottery:
         provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_match, record_other])
         lottery = BaseLottery(provider)
 
-        records = list(lottery.find_records(combination=[1], target_rank=2))
+        records = list(lottery.find_records(combination=[1], min_rank=2, max_rank=2, force=True))
 
         assert records == [
             FoundCombination(
                 record=record_match, rank=2, match=CompoundCombination(main=[1], bonus=[])
             )
         ]
+        assert provider.load_calls == [True]
 
-    def test_find_records_defaults_to_min_winning_rank(self) -> None:
-        """Use the minimum winning rank when no target rank is provided."""
+    def test_find_records_by_partial_combination(self) -> None:
+        """Filter records by a partial combination."""
 
         factory, template = build_combination_factory()
         record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
@@ -238,8 +239,8 @@ class TestBaseLottery:
             ),
         ]
 
-    def test_find_records_allows_non_strict_pattern(self) -> None:
-        """Return records matching higher winning ranks when non-strict."""
+    def test_find_records_filters_with_min_rank_only(self) -> None:
+        """Use the combination maximum winning rank as the default upper bound."""
 
         factory, template = build_combination_factory()
         record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
@@ -247,7 +248,41 @@ class TestBaseLottery:
         provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_rank1, record_rank2])
         lottery = BaseLottery(provider)
 
-        records = list(lottery.find_records(combination=[1, 2], target_rank=1, strict=False))
+        records = list(lottery.find_records(combination=[1, 2], min_rank=2))
+
+        assert records == [
+            FoundCombination(
+                record=record_rank2, rank=2, match=CompoundCombination(main=[1], bonus=[])
+            ),
+        ]
+
+    def test_find_records_filters_with_max_rank_only(self) -> None:
+        """Use the combination minimum winning rank as the default lower bound."""
+
+        factory, template = build_combination_factory()
+        record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
+        record_rank2 = build_record("202402", date(2024, 1, 9), template.get_combination([1, 3]))
+        provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_rank1, record_rank2])
+        lottery = BaseLottery(provider)
+
+        records = list(lottery.find_records(combination=[1, 2], max_rank=1))
+
+        assert records == [
+            FoundCombination(
+                record=record_rank1, rank=1, match=CompoundCombination(main=[1, 2], bonus=[])
+            )
+        ]
+
+    def test_find_records_allows_non_strict_rank_range(self) -> None:
+        """Return records with winning ranks inside an inclusive range."""
+
+        factory, template = build_combination_factory()
+        record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
+        record_rank2 = build_record("202402", date(2024, 1, 9), template.get_combination([1, 3]))
+        provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_rank1, record_rank2])
+        lottery = BaseLottery(provider)
+
+        records = list(lottery.find_records(combination=[1, 2], min_rank=1, max_rank=2))
 
         assert records == [
             FoundCombination(
@@ -258,8 +293,8 @@ class TestBaseLottery:
             ),
         ]
 
-    def test_find_records_strict_pattern_requires_exact_rank(self) -> None:
-        """Return only exact winning ranks when strict."""
+    def test_find_records_strict_pattern_uses_exclusive_range(self) -> None:
+        """Return only records with winning ranks strictly inside the range."""
 
         factory, template = build_combination_factory()
         record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
@@ -267,13 +302,29 @@ class TestBaseLottery:
         provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_rank1, record_rank2])
         lottery = BaseLottery(provider)
 
-        records = list(lottery.find_records(combination=[1, 2], target_rank=1, strict=True))
+        records = list(
+            lottery.find_records(combination=[1, 2], min_rank=1, max_rank=3, strict=True)
+        )
 
         assert records == [
             FoundCombination(
-                record=record_rank1, rank=1, match=CompoundCombination(main=[1, 2], bonus=[])
+                record=record_rank2, rank=2, match=CompoundCombination(main=[1], bonus=[])
             )
         ]
+
+    def test_find_records_strict_pattern_excludes_equal_bounds(self) -> None:
+        """Exclude results equal to the boundaries when strict filtering is enabled."""
+
+        factory, template = build_combination_factory()
+        record_rank1 = build_record("202401", date(2024, 1, 2), template.get_combination([1, 2]))
+        provider = DummyProvider(DrawDays([Weekday.TUESDAY]), factory, [record_rank1])
+        lottery = BaseLottery(provider)
+
+        records = list(
+            lottery.find_records(combination=[1, 2], min_rank=1, max_rank=1, strict=True)
+        )
+
+        assert not records
 
     def test_find_records_strict_without_target_rank_uses_combination_includes(self) -> None:
         """Filter records by combination inclusion when strict without a rank."""

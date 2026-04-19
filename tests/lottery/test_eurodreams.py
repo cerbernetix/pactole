@@ -58,7 +58,7 @@ class TestEuroDreams:
 
         assert provider.archives_page == "eurodreams"
         assert provider.draw_days == ["MONDAY", "THURSDAY"]
-        assert provider.draw_day_refresh_time == "22:00"
+        assert provider.draw_day_refresh_time == "21:30"
         assert provider.combination_factory is EuroDreamsCombination
         assert provider.cache_name == "eurodreams"
 

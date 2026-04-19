@@ -74,10 +74,10 @@ matches = list(lottery.find_records(ticket))
 
 print(total_records, len(records), len(matches))
 
-# Optional: keep only rank 4 (strict) or better than/equal to rank 4 (non-strict)
-exact_rank_4 = list(lottery.find_records(ticket, target_rank=4, strict=True))
-at_least_rank_4 = list(lottery.find_records(ticket, target_rank=4, strict=False))
-print(len(exact_rank_4), len(at_least_rank_4))
+# Optional: keep only rank 4, or keep ranks 1 through 4
+rank_4_only = list(lottery.find_records(ticket, min_rank=4, max_rank=4))
+ranks_1_to_4 = list(lottery.find_records(ticket, min_rank=1, max_rank=4))
+print(len(rank_4_only), len(ranks_1_to_4))
 ```
 
 ### EuroDreams: same workflow, different components
@@ -116,7 +116,8 @@ print(len(records), len(matches))
 - `count()`: total number of cached draw records.
 - `get_records(force=False)`: iterate over structured `DrawRecord` objects.
 - `dump(force=False)`: export raw dictionary rows (ready for tools like Pandas).
-- `find_records(..., target_rank=..., strict=...)`: search matches in history.
+- `find_records(..., min_rank=..., max_rank=..., strict=...)`: search matches in history,
+  with inclusive bounds by default and exclusive bounds when `strict=True`.
 
 See detailed usage guides:
 
