@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `BaseLottery.find_records()` to filter results by `min_rank` and `max_rank` ranges instead of a single `target_rank`, with inclusive or strict exclusive bound handling.
+
 ### Fixed
 
 - Improved provider refresh timing for `EuroDreams` and `EuroMillions` by moving the default draw-day refresh threshold to 21:30 and correcting cache refresh checks when the current day is a draw day.
