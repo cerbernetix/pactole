@@ -222,11 +222,6 @@ class PublicProvider(BaseProvider):
 
         self._build_cache(manifest)
 
-    def need_refresh(self) -> bool:
-        """Expose refresh check for tests."""
-
-        return self._need_refresh()
-
     def set_refresh_timeout(self, seconds: float) -> None:
         """Update refresh timeout duration for tests."""
 
@@ -748,6 +743,100 @@ class TestBaseProvider:
             result = provider.need_refresh()
 
         assert result is True
+
+    def test_need_refresh_returns_true_when_previous_draw_update_is_after_threshold(self) -> None:
+        """Test previous-draw updates refresh once the next draw-day threshold is reached."""
+
+        cache_name = "refresh-previous-draw-update-after-threshold"
+        draw_days = DrawDays([Weekday.MONDAY])
+        frozen_today = datetime.date(2024, 6, 10)
+        frozen_now = datetime.datetime(2024, 6, 10, 20, 10)
+        previous_draw_date = datetime.date(2024, 6, 3)
+        provider = PublicProvider(
+            resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            draw_day_refresh_time="20:00",
+            cache_name=cache_name,
+            refresh_timeout=0,
+        )
+        payload = build_source_csv(
+            [
+                {
+                    "draw_date": previous_draw_date.isoformat(),
+                    "deadline_date": (previous_draw_date + datetime.timedelta(days=7)).isoformat(),
+                    "main_1": "5",
+                    "main_2": "12",
+                    "rank_1_winners": "1",
+                    "rank_1_gain": "100.0",
+                }
+            ]
+        )
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: payload.encode("utf-8"),
+        ):
+            provider.refresh(force=True)
+        previous_refresh_time = datetime.datetime.combine(
+            previous_draw_date,
+            datetime.time(20, 10),
+        ).timestamp()
+        path = data_path(cache_name)
+        os.utime(path, (previous_refresh_time, previous_refresh_time))
+
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
+
+        assert result is True
+
+    def test_need_refresh_returns_false_before_threshold_for_previous_draw_update(self) -> None:
+        """Test previous-draw updates remain fresh before the next draw-day threshold."""
+
+        cache_name = "refresh-previous-draw-update-before-threshold"
+        draw_days = DrawDays([Weekday.MONDAY])
+        frozen_today = datetime.date(2024, 6, 10)
+        frozen_now = datetime.datetime(2024, 6, 10, 19, 50)
+        previous_draw_date = datetime.date(2024, 6, 3)
+        provider = PublicProvider(
+            resolver=SampleResolver({"archive-1": "https://local.test/archive-1.csv"}),
+            parser=SampleParser(),
+            draw_days=draw_days,
+            combination_factory=build_combination,
+            draw_day_refresh_time="20:00",
+            cache_name=cache_name,
+            refresh_timeout=0,
+        )
+        payload = build_source_csv(
+            [
+                {
+                    "draw_date": previous_draw_date.isoformat(),
+                    "deadline_date": (previous_draw_date + datetime.timedelta(days=7)).isoformat(),
+                    "main_1": "5",
+                    "main_2": "12",
+                    "rank_1_winners": "1",
+                    "rank_1_gain": "100.0",
+                }
+            ]
+        )
+        with patch.object(
+            base_provider_module,
+            "fetch_content",
+            lambda **_kwargs: payload.encode("utf-8"),
+        ):
+            provider.refresh(force=True)
+        previous_refresh_time = datetime.datetime.combine(
+            previous_draw_date,
+            datetime.time(20, 10),
+        ).timestamp()
+        path = data_path(cache_name)
+        os.utime(path, (previous_refresh_time, previous_refresh_time))
+
+        with freeze_provider_clock(today=frozen_today, now=frozen_now):
+            result = provider.need_refresh()
+
+        assert result is False
 
     def test_load_skips_refresh_until_timeout_expires(self) -> None:
         """Test load skips refresh checks while timeout has not expired."""

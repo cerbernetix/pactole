@@ -320,22 +320,29 @@ class BaseProvider:
             self._build_cache(manifest)
         self._refresh_timeout.start()
 
-    def _refresh_if_needed(self, force: bool = False) -> None:
-        """Refresh the provider's cache if necessary."""
-        if force or self._need_refresh():
-            self.refresh(force=force)
+    def need_refresh(self) -> bool:
+        """Check if the cache needs to be refreshed based on the last draw date.
 
-    def _need_refresh(self) -> bool:
-        """Check if the cache needs to be refreshed based on the last draw date."""
+        Rules:
+        - When the cache is missing, it needs to be refreshed.
+        - If the refresh timeout is active and not expired, the cache is considered still valid.
+        - If the cache is outdated or if the cache is empty, it needs to be refreshed.
+        - Otherwise, it checks the last draw date from the manifest of archives and compares it with
+            the last draw date from the cache.
+
+        Returns:
+            bool: True if the cache needs to be refreshed, False otherwise.
+        """
         if not self._cache.exists():
             return True
 
         if self._refresh_timeout.started and not self._refresh_timeout.expired:
             return False
 
-        # Is the current time is before the refresh threshold on a draw day?
-        last_draw_date = self._draw_days.get_last_draw_date(closest=True)
+        after_refresh_time = datetime.datetime.now().time() >= self._draw_day_refresh_time
+        last_draw_date = self._draw_days.get_last_draw_date(closest=after_refresh_time)
         last_draw_datetime = datetime.datetime.combine(last_draw_date, self._draw_day_refresh_time)
+
         if self._cache.date() < last_draw_datetime:
             return True
 
@@ -343,8 +350,12 @@ class BaseProvider:
         if not records:
             return True
 
-        # Is the last record's draw date before the last draw date according to the draw days?
-        return records[-1].draw_date < self._draw_days.get_last_draw_date(closest=False)
+        return records[-1].draw_date < last_draw_date
+
+    def _refresh_if_needed(self, force: bool = False) -> None:
+        """Refresh the provider's cache if necessary."""
+        if force or self.need_refresh():
+            self.refresh(force=force)
 
     def _load_manifest(self, force: bool) -> Manifest:
         """Load the manifest of archives."""
