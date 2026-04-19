@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pactole"
-version = "0.4.0"
+version = "0.4.1"
 description = "A library for managing lottery results."
 readme = "README.md"
 license = "MIT"
@@ -42,6 +42,9 @@ doc = [
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.2",
 ]
+
+[tool.uv]
+exclude-newer = "7 days"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pactole"]

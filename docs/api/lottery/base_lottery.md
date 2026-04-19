@@ -72,7 +72,7 @@ class BaseLottery:
 
 ### BaseLottery()._find_records_by_combination
 
-[Show source in base_lottery.py:388](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L388)
+[Show source in base_lottery.py:409](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L409)
 
 Find lottery results based on a combination.
 
@@ -86,7 +86,7 @@ def _find_records_by_combination(
 
 ### BaseLottery()._find_records_by_winning_rank
 
-[Show source in base_lottery.py:404](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L404)
+[Show source in base_lottery.py:425](https://github.com/cerbernetix/pactole/blob/main/src/pactole/lottery/base_lottery.py#L425)
 
 Find lottery results based on a combination and an optional target rank.
 
@@ -96,7 +96,8 @@ Find lottery results based on a combination and an optional target rank.
 def _find_records_by_winning_rank(
     self,
     combination: LotteryCombination,
-    target_rank: CombinationRank,
+    min_rank: CombinationRank | None = None,
+    max_rank: CombinationRank | None = None,
     strict: bool = False,
     force: bool = False,
 ) -> Iterator[FoundCombination]: ...
@@ -263,16 +264,37 @@ def dump(self, force: bool = False) -> list[dict]: ...
 
 Find lottery results based on a query.
 
+Given a combination and optional rank criteria, this method searches through the cached
+lottery records and yields FoundCombination instances that match the search criteria.
+The search primarily focuses on a specific combination. A range of winning ranks can also
+be specified.
+
+When only a combination is provided, the method returns all records that include that
+combination, along with their winning ranks. This means that if a full combination is
+provided, it will only return records where that exact combination was drawn. Otherwise,
+if a partial combination is provided, it will return records where the drawn combination
+includes the provided combination as a subset. In any case, the winning rank of the provided
+combination within each record is determined and included in the results.
+
+When min_rank and/or max_rank are also provided, the method filters the results to include
+only those records where the winning rank of the combination falls within the specified
+range. The strict parameter allows for exclusive filtering of the rank range. If strict is
+True, only records with winning ranks strictly between min_rank and max_rank will be
+returned. If strict is False, records with winning ranks equal to min_rank or max_rank will
+also be included in the results.
+
 #### Arguments
 
 combination (CombinationInput | LotteryCombination | None, optional): A combination to
     search for. Defaults to None.
-target_rank (CombinationRank | None, optional): If provided, only results with the
-    specified winning rank will be returned. Defaults to None.
-- `strict` *bool, optional* - If True, the search will be strict, meaning that only
-    records that exactly match the provided combination and target rank will be
-    returned. If False, the search will be more flexible, allowing for partial matches
-    as long as a winning rank is found. Defaults to False.
+min_rank (CombinationRank | None, optional): If provided, only results with the
+    specified minimum winning rank will be returned. Defaults to None.
+max_rank (CombinationRank | None, optional): If provided, only results with the
+    specified maximum winning rank will be returned. Defaults to None.
+- `strict` *bool, optional* - This only applies when either min_rank or max_rank is provided.
+    If True, only results with winning ranks strictly between min_rank and max_rank will
+    be returned. If False, results with winning ranks equal to min_rank or max_rank will
+    also be returned. Defaults to False.
 - `force` *bool, optional* - If True, forces a refresh of the cache before searching for
     results. Defaults to False.
 **components (CombinationInputOrRank | LotteryCombination): Additional
@@ -318,7 +340,8 @@ target_rank (CombinationRank | None, optional): If provided, only results with t
 def find_records(
     self,
     combination: CombinationInput | LotteryCombination | None = None,
-    target_rank: CombinationRank | None = None,
+    min_rank: CombinationRank | None = None,
+    max_rank: CombinationRank | None = None,
     strict: bool = False,
     force: bool = False,
     **components: CombinationInputOrRank | LotteryCombination

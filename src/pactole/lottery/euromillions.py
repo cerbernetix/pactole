@@ -56,7 +56,7 @@ class EuroMillions(BaseLottery):
     DEFAULT_PROVIDER = "pactole.data.providers.fdj.FDJProvider"
     DEFAULT_ARCHIVES_PAGE = "euromillions-my-million"
     DEFAULT_DRAW_DAYS = "TUESDAY,FRIDAY"
-    DEFAULT_DRAW_DAY_REFRESH_TIME = "22:00"
+    DEFAULT_DRAW_DAY_REFRESH_TIME = "21:30"
     DEFAULT_CACHE_NAME = "euromillions"
 
     def __init__(self, provider: BaseProvider | None = None) -> None:
