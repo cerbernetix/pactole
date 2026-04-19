@@ -43,6 +43,9 @@ doc = [
     "mkdocs-material>=9.7.2",
 ]
 
+[tool.uv]
+exclude-newer = "7 days"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/pactole"]
 
