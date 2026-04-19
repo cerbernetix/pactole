@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Improved provider refresh timing for `EuroDreams` and `EuroMillions` by moving the default draw-day refresh threshold to 21:30 and correcting cache refresh checks when the current day is a draw day.
+
 ## v0.4.0 [2026-03-22]
 
 ### Added
