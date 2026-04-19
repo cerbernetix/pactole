@@ -58,7 +58,7 @@ class TestEuroMillions:
 
         assert provider.archives_page == "euromillions-my-million"
         assert provider.draw_days == ["TUESDAY", "FRIDAY"]
-        assert provider.draw_day_refresh_time == "22:00"
+        assert provider.draw_day_refresh_time == "21:30"
         assert provider.combination_factory is EuroMillionsCombination
         assert provider.cache_name == "euromillions"
 
