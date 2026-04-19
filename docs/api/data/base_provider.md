@@ -16,7 +16,6 @@
     - [BaseProvider()._load_record](#baseprovider()_load_record)
     - [BaseProvider()._load_record_list](#baseprovider()_load_record_list)
     - [BaseProvider()._load_source](#baseprovider()_load_source)
-    - [BaseProvider()._need_refresh](#baseprovider()_need_refresh)
     - [BaseProvider()._parse_archive](#baseprovider()_parse_archive)
     - [BaseProvider()._parse_source](#baseprovider()_parse_source)
     - [BaseProvider()._refresh_archive](#baseprovider()_refresh_archive)
@@ -26,6 +25,7 @@
     - [BaseProvider().draw_days](#baseprovider()draw_days)
     - [BaseProvider().load](#baseprovider()load)
     - [BaseProvider().load_raw](#baseprovider()load_raw)
+    - [BaseProvider().need_refresh](#baseprovider()need_refresh)
     - [BaseProvider().refresh](#baseprovider()refresh)
 
 ## BaseProvider
@@ -101,7 +101,7 @@ class BaseProvider:
 
 ### BaseProvider()._build_cache
 
-[Show source in base_provider.py:435](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L435)
+[Show source in base_provider.py:446](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L446)
 
 Build the data file from the manifest of archives.
 
@@ -113,7 +113,7 @@ def _build_cache(self, manifest: Manifest) -> None: ...
 
 ### BaseProvider()._check_archive_chain
 
-[Show source in base_provider.py:395](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L395)
+[Show source in base_provider.py:406](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L406)
 
 Check the chain of archives to ensure there are no gaps in the data.
 
@@ -125,7 +125,7 @@ def _check_archive_chain(self, manifest: Manifest) -> bool: ...
 
 ### BaseProvider()._check_archives
 
-[Show source in base_provider.py:375](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L375)
+[Show source in base_provider.py:386](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L386)
 
 Check the list of archives match the list of archives from the resolver.
 
@@ -137,7 +137,7 @@ def _check_archives(self, manifest: Manifest) -> bool: ...
 
 ### BaseProvider()._check_last_archive
 
-[Show source in base_provider.py:414](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L414)
+[Show source in base_provider.py:425](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L425)
 
 Check the last archive to ensure it is up to date with the latest draw date.
 
@@ -149,7 +149,7 @@ def _check_last_archive(self, manifest: Manifest) -> bool: ...
 
 ### BaseProvider()._get_archive_path
 
-[Show source in base_provider.py:464](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L464)
+[Show source in base_provider.py:475](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L475)
 
 Get the file path for the archive file of a given archive name.
 
@@ -161,7 +161,7 @@ def _get_archive_path(self, name: str) -> Path: ...
 
 ### BaseProvider()._get_source_path
 
-[Show source in base_provider.py:460](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L460)
+[Show source in base_provider.py:471](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L471)
 
 Get the file path for the source file of a given archive name.
 
@@ -173,7 +173,7 @@ def _get_source_path(self, name: str) -> Path: ...
 
 ### BaseProvider()._load_manifest
 
-[Show source in base_provider.py:349](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L349)
+[Show source in base_provider.py:360](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L360)
 
 Load the manifest of archives.
 
@@ -185,7 +185,7 @@ def _load_manifest(self, force: bool) -> Manifest: ...
 
 ### BaseProvider()._load_record
 
-[Show source in base_provider.py:450](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L450)
+[Show source in base_provider.py:461](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L461)
 
 Load a DrawRecord instance from a dictionary of data.
 
@@ -197,7 +197,7 @@ def _load_record(self, data: dict) -> DrawRecord: ...
 
 ### BaseProvider()._load_record_list
 
-[Show source in base_provider.py:454](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L454)
+[Show source in base_provider.py:465](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L465)
 
 Load a list of DrawRecord instances from a list of dictionaries.
 
@@ -209,7 +209,7 @@ def _load_record_list(self, data: list[dict] | None) -> list[DrawRecord]: ...
 
 ### BaseProvider()._load_source
 
-[Show source in base_provider.py:468](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L468)
+[Show source in base_provider.py:479](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L479)
 
 Load the archive content from the given URL and store it in the specified path.
 
@@ -219,21 +219,9 @@ Load the archive content from the given URL and store it in the specified path.
 def _load_source(self, url: str, path: Path) -> None: ...
 ```
 
-### BaseProvider()._need_refresh
-
-[Show source in base_provider.py:328](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L328)
-
-Check if the cache needs to be refreshed based on the last draw date.
-
-#### Signature
-
-```python
-def _need_refresh(self) -> bool: ...
-```
-
 ### BaseProvider()._parse_archive
 
-[Show source in base_provider.py:483](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L483)
+[Show source in base_provider.py:494](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L494)
 
 Parse the archive file and extract relevant information.
 
@@ -245,7 +233,7 @@ def _parse_archive(self, archive: Path) -> ArchiveContentInfo: ...
 
 ### BaseProvider()._parse_source
 
-[Show source in base_provider.py:479](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L479)
+[Show source in base_provider.py:490](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L490)
 
 Parse the source file and store the results in the archive path.
 
@@ -257,7 +245,7 @@ def _parse_source(self, source: Path, archive: Path) -> None: ...
 
 ### BaseProvider()._refresh_archive
 
-[Show source in base_provider.py:356](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L356)
+[Show source in base_provider.py:367](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L367)
 
 Refresh a specific archive.
 
@@ -269,7 +257,7 @@ def _refresh_archive(self, name: str, url: str, force: bool = False) -> ArchiveI
 
 ### BaseProvider()._refresh_if_needed
 
-[Show source in base_provider.py:323](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L323)
+[Show source in base_provider.py:355](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L355)
 
 Refresh the provider's cache if necessary.
 
@@ -474,6 +462,29 @@ to Pandas DataFrame or performing custom analyses.
 
 ```python
 def load_raw(self, force: bool = False) -> list[dict]: ...
+```
+
+### BaseProvider().need_refresh
+
+[Show source in base_provider.py:323](https://github.com/cerbernetix/pactole/blob/main/src/pactole/data/base_provider.py#L323)
+
+Check if the cache needs to be refreshed based on the last draw date.
+
+Rules:
+- When the cache is missing, it needs to be refreshed.
+- If the refresh timeout is active and not expired, the cache is considered still valid.
+- If the cache is outdated or if the cache is empty, it needs to be refreshed.
+- Otherwise, it checks the last draw date from the manifest of archives and compares it with
+    the last draw date from the cache.
+
+#### Returns
+
+- `bool` - True if the cache needs to be refreshed, False otherwise.
+
+#### Signature
+
+```python
+def need_refresh(self) -> bool: ...
 ```
 
 ### BaseProvider().refresh
