@@ -13,6 +13,7 @@ import pytest
 import requests
 
 from pactole.utils import (
+    DEFAULT_USER_AGENT,
     EnhancedJSONEncoder,
     ensure_directory,
     fetch_content,
@@ -193,10 +194,12 @@ class TestFetchContent:
         mock_response.text = "Sample text content"
         mock_response.raise_for_status = Mock()
 
-        with patch("pactole.utils.file.requests.get", return_value=mock_response):
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
             result = fetch_content("https://local.test/data.txt")
             assert result == "Sample text content"
             assert isinstance(result, str)
+            assert "headers" in mock_get.call_args.kwargs
+            assert mock_get.call_args.kwargs["headers"]["User-Agent"] == DEFAULT_USER_AGENT
 
     def test_fetch_content_binary_success(self):
         """Test fetching binary content successfully."""
@@ -205,10 +208,12 @@ class TestFetchContent:
         mock_response.content = b"Binary data"
         mock_response.raise_for_status = Mock()
 
-        with patch("pactole.utils.file.requests.get", return_value=mock_response):
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
             result = fetch_content("https://local.test/image.png", binary=True)
             assert result == b"Binary data"
             assert isinstance(result, bytes)
+            assert "headers" in mock_get.call_args.kwargs
+            assert mock_get.call_args.kwargs["headers"]["User-Agent"] == DEFAULT_USER_AGENT
 
     def test_fetch_content_default_timeout(self):
         """Test that default timeout is used."""
@@ -219,7 +224,11 @@ class TestFetchContent:
 
         with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
             fetch_content("https://local.test/data.txt")
-            mock_get.assert_called_once_with(url="https://local.test/data.txt", timeout=(6, 30))
+            mock_get.assert_called_once_with(
+                url="https://local.test/data.txt",
+                timeout=(6, 30),
+                headers={"User-Agent": DEFAULT_USER_AGENT},
+            )
 
     def test_fetch_content_custom_timeout(self):
         """Test fetching content with custom timeout."""
@@ -230,7 +239,50 @@ class TestFetchContent:
 
         with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
             fetch_content("https://local.test/data.txt", timeout=10)
-            mock_get.assert_called_once_with(url="https://local.test/data.txt", timeout=10)
+            mock_get.assert_called_once_with(
+                url="https://local.test/data.txt",
+                timeout=10,
+                headers={"User-Agent": DEFAULT_USER_AGENT},
+            )
+
+    def test_fetch_content_uses_explicit_user_agent_header(self):
+        """Test that an explicit User-Agent in headers takes priority."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+
+        custom_ua = "CustomBot/1.0"
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content(
+                "https://local.test/data.txt",
+                headers={"User-Agent": custom_ua},
+            )
+            assert mock_get.call_args.kwargs["headers"]["User-Agent"] == custom_ua
+
+    def test_fetch_content_uses_env_var_user_agent(self, monkeypatch):
+        """Test that USER_AGENT env var is used when no header User-Agent is given."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+        monkeypatch.setenv("USER_AGENT", "EnvBot/2.0")
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content("https://local.test/data.txt")
+            assert mock_get.call_args.kwargs["headers"]["User-Agent"] == "EnvBot/2.0"
+
+    def test_fetch_content_fallback_to_default_user_agent(self, monkeypatch):
+        """Test that DEFAULT_USER_AGENT is used when no header or env var is set."""
+
+        mock_response = Mock()
+        mock_response.text = "Content"
+        mock_response.raise_for_status = Mock()
+        monkeypatch.delenv("USER_AGENT", raising=False)
+
+        with patch("pactole.utils.file.requests.get", return_value=mock_response) as mock_get:
+            fetch_content("https://local.test/data.txt")
+            assert mock_get.call_args.kwargs["headers"]["User-Agent"] == DEFAULT_USER_AGENT
 
     def test_fetch_content_with_kwargs(self):
         """Test fetching content with additional kwargs."""
@@ -244,7 +296,7 @@ class TestFetchContent:
             mock_get.assert_called_once_with(
                 url="https://local.test/data.txt",
                 timeout=(6, 30),
-                headers={"Authorization": "Bearer token"},
+                headers={"Authorization": "Bearer token", "User-Agent": DEFAULT_USER_AGENT},
             )
 
     def test_fetch_content_raises_on_error(self):

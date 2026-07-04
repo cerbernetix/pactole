@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v0.4.2 [2026-07-04]
+
+### Added
+
+- Added support for `USER_AGENT` environment variable in `fetch_content()` to override the default user-agent when not provided via headers.
+
 ## v0.4.1 [2026-04-19]
 
 ### Changed

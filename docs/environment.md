@@ -6,6 +6,19 @@ Pactole can be configured with environment variables to override built-in defaul
 and lotteries. These settings are read when creating a lottery instance without explicitly
 providing a provider.
 
+## Global user agent
+
+HTTP user-agent string used by `pactole.utils.file.fetch_content()`.
+
+| Name         | Default value                                                                          | Description                                       |
+| ------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `USER_AGENT` | `Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0` | Custom user-agent string sent with HTTP requests. |
+
+Notes:
+
+- The user-agent is only applied when no `User-Agent` header is already present in the request headers.
+- If neither the request headers nor `USER_AGENT` is set, the hardcoded default in `DEFAULT_USER_AGENT` is used.
+
 ## Global provider cache
 
 Base provider cache root configuration used by `pactole.data.base_provider.BaseProvider`.
