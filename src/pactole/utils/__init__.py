@@ -3,6 +3,7 @@
 __all__ = [
     "assert_non_negative_integer",
     "Day",
+    "DEFAULT_USER_AGENT",
     "DrawDays",
     "EnhancedJSONEncoder",
     "ensure_directory",
@@ -28,6 +29,7 @@ __all__ = [
 from .cache import FileCache, MemoryCache, TimeoutCache
 from .days import Day, DrawDays, Weekday
 from .file import (
+    DEFAULT_USER_AGENT,
     EnhancedJSONEncoder,
     File,
     FileType,
