@@ -129,6 +129,7 @@ See detailed usage guides:
 Built-in lotteries and providers can be configured with environment variables.
 
 - `PACTOLE_CACHE_ROOT`
+- `USER_AGENT`
 - `FDJ_ARCHIVES_PAGE_URL`
 - `EUROMILLIONS_PROVIDER_CLASS`, `EUROMILLIONS_DRAW_DAYS`,
   `EUROMILLIONS_DRAW_DAY_REFRESH_TIME`, `EUROMILLIONS_CACHE_NAME`,

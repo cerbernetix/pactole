@@ -6,6 +6,7 @@ import csv
 import datetime
 import json
 import logging
+import os
 import zipfile
 from dataclasses import asdict, is_dataclass
 from enum import Enum
@@ -23,6 +24,10 @@ CACHE_PATH = Path("~/.cache")
 # The amount of bytes to read for auto-detecting the CSV dialect
 CSV_SAMPLE_SIZE = 4096
 CSV_MAX_TRIES = 8
+
+DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0"
+)
 
 
 def ensure_directory(path: Path | str) -> None:
@@ -80,6 +85,9 @@ def fetch_content(
 ) -> str | bytes:
     """Fetch content from a URL.
 
+    If not provided through headers, the User-Agent header is set from the USER_AGENT environment
+    variable or defaults to a predefined value. See DEFAULT_USER_AGENT for the default value.
+
     Args:
         url (str): The URL to fetch content from.
         binary (bool, optional): Whether to return content as bytes. Defaults to False.
@@ -100,7 +108,15 @@ def fetch_content(
         >>> print(binary_content)
         b'...'
     """
-    response = requests.get(url=url, timeout=timeout, **kwargs)
+    headers = kwargs.pop("headers", None) or {}
+    keys = {key.lower(): key for key in headers.keys()}
+    user_agent = headers.pop(keys.get("user-agent", "User-Agent"), None)
+
+    if not user_agent:
+        user_agent = os.getenv("USER_AGENT", DEFAULT_USER_AGENT)
+    headers["User-Agent"] = user_agent
+
+    response = requests.get(url=url, timeout=timeout, headers=headers, **kwargs)
     response.raise_for_status()
     return response.content if binary else response.text
 
