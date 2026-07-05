@@ -23,7 +23,7 @@ pygments==2.20.0
 pylint==4.0.6
 pytest==9.1.1
 pytest-cov==7.1.0
-python-discovery==1.4.2
+python-discovery==1.4.3
 pyyaml==6.0.3
 requests==2.34.2
 ruff==0.15.20
